@@ -21,7 +21,7 @@ class UsuariosController extends Controller
             array("nombre" => "Arturo",
             "apaterno" => "Gallegos",
             "amaterbo" => "Floriano",
-            "Prueba" => "Prueba"),
+            "Prueba" => "Pruebaerror"),
             
         );        
 

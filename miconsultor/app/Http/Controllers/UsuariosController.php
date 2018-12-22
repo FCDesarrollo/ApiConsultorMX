@@ -18,8 +18,8 @@ class UsuariosController extends Controller
             "apaterno" => "Gomez",
             "amaterbo" => "Floriano",
             "Prueba" => "Prueba"),
-            array("nombre" => "Gustavo",
-            "apaterno" => "Gomez",
+            array("nombre" => "Arturo",
+            "apaterno" => "Gallegos",
             "amaterbo" => "Floriano",
             "Prueba" => "Prueba"),
             

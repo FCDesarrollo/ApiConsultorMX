@@ -18,6 +18,11 @@ class UsuariosController extends Controller
             "apaterno" => "Gomez",
             "amaterbo" => "Floriano",
             "Prueba" => "Prueba"),
+            array("nombre" => "Gustavo",
+            "apaterno" => "Gomez",
+            "amaterbo" => "Floriano",
+            "Prueba" => "Prueba"),
+            
         );        
 
         return json_encode($data);

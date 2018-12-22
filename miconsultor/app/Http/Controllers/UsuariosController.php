@@ -11,7 +11,7 @@ class UsuariosController extends Controller
     {
         $data = array(
 
-            array("nombre" => "Enrique",
+            array("nombre" => "Enrique Javier",
             "apaterno" => "Aramburo",
             "amaterbo" => "Juarez"),
             array("nombre" => "Gustavo",

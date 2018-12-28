@@ -24,13 +24,14 @@ Route::get('Pruebas', 'UsuariosController@Pruebas');
 Route::get('ListaEmpresas/{idusuario}', 'EmpresasController@ListaEmpresas');
 Route::get('DatosEmpresaAD/{idempresa}', 'EmpresasController@DatosEmpresaAD'); 
 Route::post('EliminarEmpresaAD', 'EmpresasController@EliminarEmpresaAD');
+Route::post('GuardarEmpresaAD', 'EmpresasController@GuardarEmpresaAD');
 
 ///Usuarios
 Route::post('Login', 'UsuariosController@Login');
+Route::get('DatosUsuario/{idusuario}', 'UsuariosController@DatosUsuario'); 
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 
 Route::get('ListaUsuariosAdmin', 'UsuariosController@ListaUsuariosAdmin'); 
-Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
 Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
 Route::post('GuardarEmpresa', 'EmpresasController@GuardarEmpresa');
 

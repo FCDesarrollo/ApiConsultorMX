@@ -62,14 +62,6 @@ class UsuariosController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
-    public function EliminarUsuario(Request $request)
-    {
-       ConnectDatabase($request->idcliente);
-
-        $id = $request->idusuario;
-        DB::table('mc1001')->where("idusuario", $id)->update(["status"=>"0"]);
-        return $id;
-    }
 
     function ListaUsuariosAdmin()
     {
@@ -97,10 +89,28 @@ class UsuariosController extends Controller
             $data = $request->input();
             $id = $data["idusuario"];
             unset($data["idusuario"]);
-            DB::table('mc1001')->where("idusuario", $id)->update($data);
+            DB::connection("General")->table('mc1001')->where("idusuario", $id)->update($data);
         }
         return $id;
     }
 
+    function DatosUsuario($idusuario)
+    {
+       $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE idusuario='$idusuario'");    
+
+
+        $datos = array(
+            "usuario" => $usuario,
+        );        
+
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function EliminarUsuario(Request $request)
+    {                
+        $id = $request->idusuario;
+        DB::connection("General")->table('MC1001')->where("idusuario", $id)->update(["status"=>"0"]);
+        return $id;
+    }
 
 }

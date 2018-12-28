@@ -55,15 +55,15 @@ class EmpresasController extends Controller
         return $id;
     }
 
-    public function GuardarEmpresasAD(Request $request)
+    public function GuardarEmpresaAD(Request $request)
     {
-        if($request->idempleado==0){
+        if($request->idempresa==0){
             $id = DB::connection("General")->table('MC1000')->insertGetId($request->input());
         }else{
             $data = $request->input();
-            $id = $data["idempleado"];
-            unset($data["idempleado"]);
-            DB::table('empleados')->where("id", $id)->update($data);
+            $id = $data["idempresa"];
+            unset($data["idempresa"]);
+            DB::connection("General")->table('MC1000')->where("idempresa", $id)->update($data);
         }
         return $id;
     }

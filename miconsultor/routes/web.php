@@ -31,5 +31,7 @@ Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 
 Route::get('ListaUsuariosAdmin', 'UsuariosController@ListaUsuariosAdmin'); 
 Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
+Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
+Route::post('GuardarEmpresa', 'EmpresasController@GuardarEmpresa');
 
 

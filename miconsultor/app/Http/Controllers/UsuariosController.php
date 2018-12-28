@@ -87,4 +87,20 @@ class UsuariosController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
+    public function GuardaUsuario(Request $request)
+    {
+        if($request->idusuario==0){
+            $data = $request->input();
+            unset($data["idusuario"]);
+            $id = DB::connection("General")->table('mc1001')->insertGetId($data);
+        }else{
+            $data = $request->input();
+            $id = $data["idusuario"];
+            unset($data["idusuario"]);
+            DB::table('mc1001')->where("idusuario", $id)->update($data);
+        }
+        return $id;
+    }
+
+
 }

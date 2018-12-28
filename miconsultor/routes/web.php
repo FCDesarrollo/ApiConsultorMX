@@ -30,3 +30,6 @@ Route::post('Login', 'UsuariosController@Login');
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 
 Route::get('ListaUsuariosAdmin', 'UsuariosController@ListaUsuariosAdmin'); 
+Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
+
+

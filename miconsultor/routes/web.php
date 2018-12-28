@@ -21,3 +21,7 @@ Route::get('ListaSucursales/{idempresa}', 'EmpresasController@ListaSucursales');
 
 Route::post('Login', 'UsuariosController@Login');
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
+
+Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
+
+

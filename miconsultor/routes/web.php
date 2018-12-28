@@ -23,5 +23,6 @@ Route::post('Login', 'UsuariosController@Login');
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 
 Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
+Route::post('GuardarEmpresa', 'EmpresasController@GuardarEmpresa');
 
 

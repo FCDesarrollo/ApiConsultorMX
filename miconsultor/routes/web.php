@@ -15,9 +15,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+///Pruebas
 Route::get('Pruebas', 'UsuariosController@Pruebas');
 
-Route::get('ListaSucursales/{idempresa}', 'EmpresasController@ListaSucursales');
+//Route::get('ListaSucursales/{idempresa}', 'EmpresasController@ListaSucursales');
 
+//Empresas
+Route::get('ListaEmpresas/{idusuario}', 'EmpresasController@ListaEmpresas');
+Route::get('DatosEmpresaAD/{idempresa}', 'EmpresasController@DatosEmpresaAD'); 
+Route::post('EliminarEmpresaAD', 'EmpresasController@EliminarEmpresaAD');
+
+///Usuarios
 Route::post('Login', 'UsuariosController@Login');
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
+
+Route::get('ListaUsuariosAdmin', 'UsuariosController@ListaUsuariosAdmin'); 

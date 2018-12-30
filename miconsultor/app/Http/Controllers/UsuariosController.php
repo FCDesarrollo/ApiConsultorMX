@@ -47,7 +47,7 @@ class UsuariosController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
-    function ListaUsuarios($idcliente)
+    public function ListaUsuarios($idcliente)
     {
        // ConnectDatabase($idcliente);
 
@@ -63,7 +63,7 @@ class UsuariosController extends Controller
     }
 
 
-    function ListaUsuariosAdmin()
+    public function ListaUsuariosAdmin($idusuario)
     {
       
 
@@ -109,7 +109,7 @@ class UsuariosController extends Controller
     public function EliminarUsuario(Request $request)
     {                
         $id = $request->idusuario;
-        DB::connection("General")->table('MC1001')->where("idusuario", $id)->update(["status"=>"0"]);
+        DB::connection("General")->table('mc1001')->where("idusuario", $id)->update(["status"=>"0"]);
         return $id;
     }
 

@@ -51,22 +51,25 @@ class EmpresasController extends Controller
     public function EliminarEmpresaAD(Request $request)
     {                
         $id = $request->idempresa;
-        DB::connection("General")->table('MC1000')->where("idempresa", $id)->update(["status"=>"0"]);
+        DB::connection("General")->table('mc1000')->where("idempresa", $id)->update(["status"=>"0"]);
         return $id;
     }
 
     public function GuardarEmpresaAD(Request $request)
     {
         if($request->idempresa==0){
-            $id = DB::connection("General")->table('MC1000')->insertGetId($request->input());
+            $data = $request->input();
+            unset($data["idempresa"]);
+            $id = DB::connection("General")->table('mc1000')->insertGetId($request->input());
         }else{
             $data = $request->input();
             $id = $data["idempresa"];
             unset($data["idempresa"]);
-            DB::connection("General")->table('MC1000')->where("idempresa", $id)->update($data);
+            DB::connection("General")->table('mc1000')->where("idempresa", $id)->update($data);
         }
         return $id;
     }
+
      public function GuardarEmpresa(Request $request)
         {
             if($request->idempresa==0){

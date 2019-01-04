@@ -22,11 +22,18 @@ class EmpresasController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
-    function ListaEmpresas($idusuario)
+    function ListaEmpresas(Request $request)
     {
        
-      
-        $empresas = DB::connection("General")->select("SELECT * FROM mc1000 ");
+        $idusuario = $request->idusuario;
+        if ($request->tipo==3){
+            $empresas = DB::connection("General")->select("SELECT * FROM mc1000 ");
+        }else{
+            $empresas = DB::connection("General")->select("SELECT e.*,u.* FROM mc1000 e 
+                                            INNER JOIN mc1002 r ON e.idempresa=r.idempresa 
+                                    INNER JOIN mc1001 u ON r.idusuario=u.idusuario WHERE u.idusuario='$idusuario'");
+        }
+        
        
 
         $datos = array(

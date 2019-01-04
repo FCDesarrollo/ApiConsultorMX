@@ -63,14 +63,26 @@ class UsuariosController extends Controller
     }
 
 
-    public function ListaUsuariosAdmin($idusuario)
+    public function ListaUsuariosAdmin($idempresa)
     {
       
-
-        $usuarios = DB::connection("General")->select("SELECT DISTINCT u.*,r.*,coalesce((select nombreempresa from mc1000 where idempresa = r.idempresa),'') AS nombreempresa
+        if ($idempresa == 0 ) {
+            $usuarios = DB::connection("General")->select("SELECT DISTINCT u.*,e.* FROM mc1001 u 
+                                                            LEFT JOIN mc1002 r ON u.idusuario=r.idusuario
+                                                            LEFT JOIN mc1000 e ON r.idempresa=e.idempresa WHERE cel IS NOT NULL" 
+                                                      );
+            //$usuarios = DB::connection("General")->select("SELECT DISTINCT u.*,r.*,coalesce((select nombreempresa from mc1000 where idempresa = r.idempresa),'') AS nombreempresa
+             //                                           FROM mc1001 u 
+              //                                          INNER JOIN mc1002 r ON u.idusuario=r.idusuario" 
+                //                                        );
+        }else{
+            $usuarios = DB::connection("General")->select("SELECT DISTINCT u.*,r.*,coalesce((select nombreempresa from mc1000 where idempresa = r.idempresa),'') AS nombreempresa
                                                         FROM mc1001 u 
-                                                        INNER JOIN mc1002 r ON u.idusuario=r.idusuario" 
-                                                        );    
+                                                        INNER JOIN mc1002 r ON u.idusuario=r.idusuario
+                                                        WHERE r.idempresa='$idempresa'" 
+                                                        );
+        }
+            
 
         $datos = array(
             "usuarios" => $usuarios,

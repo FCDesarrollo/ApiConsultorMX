@@ -30,6 +30,7 @@ Route::post('GuardarEmpresaAD', 'EmpresasController@GuardarEmpresaAD');
 Route::post('Login', 'UsuariosController@Login');
 Route::get('DatosUsuario/{idusuario}', 'UsuariosController@DatosUsuario'); 
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
+Route::post('Desvincular', 'UsuariosController@Desvincular');
 
 Route::get('ListaUsuariosAdmin/{idempresa}', 'UsuariosController@ListaUsuariosAdmin'); 
 Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');

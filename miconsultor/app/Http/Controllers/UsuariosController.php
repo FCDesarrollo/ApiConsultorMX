@@ -38,7 +38,7 @@ class UsuariosController extends Controller
                                             WHERE u.cel='$request->cel' AND u.password='$request->contra' 
                                             AND u.status=1");*/
        
-        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE cel='$request->cel' AND password='$request->contra' AND status=1");
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$request->correo' AND password='$request->contra' AND status=1");
        
         $datos = array(
             "usuario" => $usuario,
@@ -67,7 +67,7 @@ class UsuariosController extends Controller
     {
       
         if ($idempresa == 0 ) {
-            $usuarios = DB::connection("General")->select("SELECT DISTINCT u.*,e.* FROM mc1001 u 
+            $usuarios = DB::connection("General")->select("SELECT DISTINCT u.*,e.*,u.status AS st FROM mc1001 u 
                                                             LEFT JOIN mc1002 r ON u.idusuario=r.idusuario
                                                             LEFT JOIN mc1000 e ON r.idempresa=e.idempresa WHERE cel IS NOT NULL" 
                                                       );
@@ -109,8 +109,6 @@ class UsuariosController extends Controller
     function DatosUsuario($idusuario)
     {
        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE idusuario='$idusuario'");    
-
-
         $datos = array(
             "usuario" => $usuario,
         );        
@@ -122,6 +120,14 @@ class UsuariosController extends Controller
     {                
         $id = $request->idusuario;
         DB::connection("General")->table('mc1001')->where("idusuario", $id)->update(["status"=>"0"]);
+        return $id;
+    }
+
+    public function Desvincular(Request $request)
+    {                
+        $id = $request->idusuario;
+        $idem= $request->idemp;
+        DB::connection("General")->table('mc1002')->where("idusuario", $id)->where("idempresa", $idem)->delete();
         return $id;
     }
 

@@ -22,11 +22,18 @@ class EmpresasController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
-    function ListaEmpresas($idusuario)
+    function ListaEmpresas(Request $request)
     {
        
-      
-        $empresas = DB::connection("General")->select("SELECT * FROM mc1000 ");
+        $idusuario = $request->idusuario;
+        if ($request->tipo==3){
+            $empresas = DB::connection("General")->select("SELECT * FROM mc1000 ");
+        }else{
+            $empresas = DB::connection("General")->select("SELECT e.*,u.* FROM mc1000 e 
+                                            INNER JOIN mc1002 r ON e.idempresa=r.idempresa 
+                                    INNER JOIN mc1001 u ON r.idusuario=u.idusuario WHERE u.idusuario='$idusuario'");
+        }
+        
        
 
         $datos = array(
@@ -51,22 +58,25 @@ class EmpresasController extends Controller
     public function EliminarEmpresaAD(Request $request)
     {                
         $id = $request->idempresa;
-        DB::connection("General")->table('MC1000')->where("idempresa", $id)->update(["status"=>"0"]);
+        DB::connection("General")->table('mc1000')->where("idempresa", $id)->update(["status"=>"0"]);
         return $id;
     }
 
     public function GuardarEmpresaAD(Request $request)
     {
         if($request->idempresa==0){
-            $id = DB::connection("General")->table('MC1000')->insertGetId($request->input());
+            $data = $request->input();
+            unset($data["idempresa"]);
+            $id = DB::connection("General")->table('mc1000')->insertGetId($request->input());
         }else{
             $data = $request->input();
             $id = $data["idempresa"];
             unset($data["idempresa"]);
-            DB::connection("General")->table('MC1000')->where("idempresa", $id)->update($data);
+            DB::connection("General")->table('mc1000')->where("idempresa", $id)->update($data);
         }
         return $id;
     }
+
      public function GuardarEmpresa(Request $request)
         {
             if($request->idempresa==0){

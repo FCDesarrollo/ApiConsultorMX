@@ -113,4 +113,20 @@ class UsuariosController extends Controller
         return $id;
     }
 
+    public function VerificaUsuario(Request $request)
+    {      
+        DB::connection("General")->table('MC1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["tipo"=>"1"]);
+        return $id;        
+    }
+
+    public function ObtenerUsuarioNuevo(Request $request)
+    {        
+        $identificador = $request->identificador;
+
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE identificador='$identificador'");    
+        $datos = array(
+            "usuario" => $usuario,
+        );
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }    
 }

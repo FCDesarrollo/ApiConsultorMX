@@ -148,4 +148,16 @@ class UsuariosController extends Controller
         );
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }    
+
+    public function ValidarCorreo(Request $request)
+    {        
+        $correo = $request->correo;
+
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$correo'");    
+        $datos = array(
+            "usuario" => $usuario,
+        );
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    } 
+
 }

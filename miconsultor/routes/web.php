@@ -39,5 +39,6 @@ Route::post('GuardarEmpresa', 'EmpresasController@GuardarEmpresa');
 //Verifica Usuario por correo
 Route::post('ObtenerUsuarioNuevo', 'UsuariosController@ObtenerUsuarioNuevo');
 Route::post('VerificaUsuario', 'UsuariosController@VerificaUsuario');
+Route::post('ValidarCorreo', 'UsuariosController@ValidarCorreo');
 
 

@@ -79,15 +79,13 @@ class EmpresasController extends Controller
 
      public function GuardarEmpresa(Request $request)
         {
+            
             if($request->idempresa==0){
                 $data = $request->input();
-                unset($data["idempresa"]);                
+                $password = $data["password"];
+                unset($data["idempresa"]); 
+                $data['password'] = md5($password);              
                 $id = DB::connection("General")->table('mc1000')->insertGetId($data);
-            /*}else{
-                $data = $request->input();
-                $id = $data["idempresa"];
-                unset($data["idempresa"]);
-                DB::table('mc1000')->where("id", $id)->update($data);*/
             }
             return $id;
         }

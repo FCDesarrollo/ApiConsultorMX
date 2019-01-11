@@ -133,6 +133,7 @@ class UsuariosController extends Controller
 
     public function VerificaUsuario(Request $request)
     {      
+        $id = $request->idusuario;
         DB::connection("General")->table('MC1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["tipo"=>"1"]);
         return $id;        
     }
@@ -242,5 +243,17 @@ class UsuariosController extends Controller
         }
         return $idp;
     }
+    }    
+
+    public function ValidarCorreo(Request $request)
+    {        
+        $correo = $request->correo;
+
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$correo'");    
+        $datos = array(
+            "usuario" => $usuario,
+        );
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    } 
 
 }

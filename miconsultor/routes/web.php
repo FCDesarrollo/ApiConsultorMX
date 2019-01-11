@@ -40,4 +40,12 @@ Route::post('GuardarEmpresa', 'EmpresasController@GuardarEmpresa');
 Route::post('ObtenerUsuarioNuevo', 'UsuariosController@ObtenerUsuarioNuevo');
 Route::post('VerificaUsuario', 'UsuariosController@VerificaUsuario');
 
-
+//MODULOS Y PERFILES
+Route::get('Modulos', 'UsuariosController@Modulos');
+Route::get('DatosModulo/{IDMod}', 'UsuariosController@DatosModulo'); 
+Route::get('Perfiles', 'UsuariosController@Perfiles');
+Route::get('DatosPerfil/{IDPer}', 'UsuariosController@DatosPerfil'); 
+Route::get('ListaPermisos/{IDPer}', 'UsuariosController@ListaPermisos');
+Route::post('EliminaPermiso', 'UsuariosController@EliminaPermiso'); 
+Route::post('GuardaPermiso', 'UsuariosController@GuardaPermiso');
+Route::post('GuardaPerfil', 'UsuariosController@GuardaPerfil');

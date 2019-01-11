@@ -146,5 +146,101 @@ class UsuariosController extends Controller
             "usuario" => $usuario,
         );
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
-    }    
+    }  
+    
+     public function Modulos(Request $request)
+    {
+
+        $modulos = DB::connection("General")->select("SELECT * FROM modulos");    
+        $datos = array(
+            "modulos" => $modulos,
+        );
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function DatosModulo($IDMod)
+    {
+        $modulo = DB::connection("General")->select("SELECT * FROM modulos WHERE idmodulo='$IDMod'");    
+        $datos = array(
+            "modulo" => $modulo,
+        );        
+
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function Perfiles(Request $request)
+    {
+
+        $modulos = DB::connection("General")->select("SELECT * FROM perfiles");    
+        $datos = array(
+            "perfiles" => $modulos,
+        );
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function DatosPerfil($IDPer)
+    {
+        $modulo = DB::connection("General")->select("SELECT * FROM perfiles WHERE idperfil='$IDPer'");    
+        $datos = array(
+            "perfil" => $modulo,
+        );        
+
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function ListaPermisos($IDPer)
+    {
+        $permisos = DB::connection("General")->select("SELECT p.*,m.* FROM permisos p INNER JOIN 
+                                                    modulos m ON p.idmodulo=m.idmodulo WHERE idperfil='$IDPer'");    
+        $datos = array(
+            "permisos" => $permisos,
+        );        
+
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function EliminaPermiso(Request $request){
+        $IDPermiso = $request->idpermiso;
+        DB::connection("General")->table('permisos')->where("id", $IDPermiso)->delete();
+        return $IDPermiso;
+    }
+
+    public function GuardaPermiso(Request $request)
+    {
+
+        $IDPerfil = $request->idperfil;
+        $IDModulo = $request->idmodulo;
+        if (DB::connection("General")->select("SELECT * FROM permisos
+                                         WHERE idperfil='$IDPerfil' AND idmodulo='$IDModulo'")){
+        //$permiso["id"]>0){
+            DB::connection("General")->table('permisos')->where("idperfil", $IDPerfil)->
+                    where("idmodulo", $IDModulo)->update(["tipopermiso"=>$request->tipopermiso]);
+        }else{
+            $inserted = DB::connection("General")->table('permisos')->insert(
+                ['idperfil' => $IDPerfil,'idmodulo' => $IDModulo,'tipopermiso' => $request->tipopermiso ]);
+            //$id = DB::connection("General")->table('permisos')->insertGetId($request->input());
+        } 
+        return $IDPerfil;
+    }
+
+    public function GuardaPerfil(Request $request)
+    {
+        if($request->id==0){
+            $ulidperfil = DB::connection("General")->select("SELECT max(idperfil) + 1  FROM perfiles");
+            if ($ulidperfil <= 3){
+                $ulidperfil=4;   
+            }
+            $data = $request->input();
+            unset($data["id"]);
+            $data["idperfil"]=$ulidperfil;
+            $idp = DB::connection("General")->table('perfiles')->insertGetId($data);
+        }else{
+            $data = $request->input();
+            $idp = $data["id"];
+            unset($data["id"]);
+            DB::connection("General")->table('perfiles')->where("id", $idp)->update($data);
+        }
+        return $idp;
+    }
+
 }

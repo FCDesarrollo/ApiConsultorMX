@@ -243,8 +243,7 @@ class UsuariosController extends Controller
         }
         return $idp;
     }
-    }    
-
+ 
     public function ValidarCorreo(Request $request)
     {        
         $correo = $request->correo;

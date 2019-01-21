@@ -50,3 +50,8 @@ Route::get('ListaPermisos/{IDPer}', 'UsuariosController@ListaPermisos');
 Route::post('EliminaPermiso', 'UsuariosController@EliminaPermiso'); 
 Route::post('GuardaPermiso', 'UsuariosController@GuardaPermiso');
 Route::post('GuardaPerfil', 'UsuariosController@GuardaPerfil');
+
+//Checa BD Disponible
+Route::get('BDDisponible', 'EmpresasController@BDDisponible');
+Route::post('AsignaBD', 'EmpresasController@AsignaBD');
+Route::post('CrearTablasEmpresa', 'EmpresasController@CrearTablasEmpresa');

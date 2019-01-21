@@ -136,7 +136,7 @@ class UsuariosController extends Controller
     public function VerificaUsuario(Request $request)
     {      
         $id = $request->idusuario;
-        DB::connection("General")->table('MC1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["tipo"=>"1"]);
+        DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["tipo"=>"1"]);
         return $id;        
     }
 

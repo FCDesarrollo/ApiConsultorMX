@@ -59,3 +59,7 @@ Route::get('PerfileEmpresa/{idempresa}', 'GeneralesController@PerfilesEmpresa');
 Route::post('EliminarPerfilEmpresa', 'GeneralesController@EliminarPerfilEmpresa');
 Route::get('DatosPerfilEmpresa', 'GeneralesController@DatosPerfilEmpresa');
 Route::get('PermisosPerfil', 'GeneralesController@PermisosPerfil');   
+//Checa BD Disponible
+Route::get('BDDisponible', 'EmpresasController@BDDisponible');
+Route::post('AsignaBD', 'EmpresasController@AsignaBD');
+Route::post('CrearTablasEmpresa', 'EmpresasController@CrearTablasEmpresa');

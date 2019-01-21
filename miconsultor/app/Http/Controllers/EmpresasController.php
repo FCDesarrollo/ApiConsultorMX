@@ -26,7 +26,7 @@ class EmpresasController extends Controller
     {
        
         $idusuario = $request->idusuario;
-        if ($request->tipo==3){
+        if ($request->tipo==4){
             $empresas = DB::connection("General")->select("SELECT * FROM mc1000 ");
         }else{
             $empresas = DB::connection("General")->select("SELECT e.*,u.* FROM mc1000 e 

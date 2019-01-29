@@ -253,6 +253,13 @@ class UsuariosController extends Controller
             "usuario" => $usuario,
         );
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
-    } 
+    }
+    
+    public function RestablecerContraseña(Request $request)
+    {      
+        $id = $request->idusuario;        
+        DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->update(["password"=>$request->password]);
+        return $id;        
+    }    
 
 }

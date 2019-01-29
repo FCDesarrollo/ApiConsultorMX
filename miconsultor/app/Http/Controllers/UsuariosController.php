@@ -47,16 +47,18 @@ class UsuariosController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
-    public function ListaUsuarios($idcliente)
+    public function ListaUsuarios($idempresa)
     {
        // ConnectDatabase($idcliente);
 
         //$empleados = DB::select("SELECT *, coalesce((select nombre from sucursales where id = empleados.idsucursal),'') AS sucursal FROM empleados WHERE status=1 ORDER BY nombre");
 
-        $empleados = DB::connection("General")->select("SELECT * FROM mc1001 WHERE  status=1");
+        $empleados = DB::connection("General")->select("SELECT u.*,u.idusuario AS iduser FROM mc1001 u 
+        INNER JOIN MC1002 r ON u.idusuario=r.idusuario 
+        INNER JOIN mc1000 e ON r.idempresa=e.idempresa WHERE r.idempresa='$idempresa'");
 
         $datos = array(
-            "usuario" => $empleados,
+            "usuarios" => $empleados,
         );        
 
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
@@ -261,5 +263,7 @@ class UsuariosController extends Controller
         DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->update(["password"=>$request->password]);
         return $id;        
     }    
+
+   
 
 }

@@ -33,6 +33,7 @@ Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 Route::post('Desvincular', 'UsuariosController@Desvincular');
 
 Route::get('ListaUsuariosAdmin/{idempresa}', 'UsuariosController@ListaUsuariosAdmin'); 
+Route::get('ListaUsuarios/{idempresa}', 'UsuariosController@ListaUsuarios'); 
 Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
 Route::post('GuardarEmpresa', 'EmpresasController@GuardarEmpresa');
 
@@ -53,3 +54,15 @@ Route::get('ListaPermisos/{IDPer}', 'UsuariosController@ListaPermisos');
 Route::post('EliminaPermiso', 'UsuariosController@EliminaPermiso'); 
 Route::post('GuardaPermiso', 'UsuariosController@GuardaPermiso');
 Route::post('GuardaPerfil', 'UsuariosController@GuardaPerfil');
+
+Route::get('PerfilUsuario', 'GeneralesController@PerfilUsuario');
+Route::get('PermisosUsuario', 'GeneralesController@PermisosUsuario');
+Route::post('VinculaEmpresa', 'GeneralesController@VinculaEmpresa');
+Route::get('PerfileEmpresa/{idempresa}', 'GeneralesController@PerfilesEmpresa');
+Route::post('EliminarPerfilEmpresa', 'GeneralesController@EliminarPerfilEmpresa');
+Route::get('DatosPerfilEmpresa', 'GeneralesController@DatosPerfilEmpresa');
+Route::get('PermisosPerfil', 'GeneralesController@PermisosPerfil');   
+//Checa BD Disponible
+Route::get('BDDisponible', 'EmpresasController@BDDisponible');
+Route::post('AsignaBD', 'EmpresasController@AsignaBD');
+Route::post('CrearTablasEmpresa', 'EmpresasController@CrearTablasEmpresa');

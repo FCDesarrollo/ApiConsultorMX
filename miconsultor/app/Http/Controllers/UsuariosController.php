@@ -54,7 +54,7 @@ class UsuariosController extends Controller
         //$empleados = DB::select("SELECT *, coalesce((select nombre from sucursales where id = empleados.idsucursal),'') AS sucursal FROM empleados WHERE status=1 ORDER BY nombre");
 
         $empleados = DB::connection("General")->select("SELECT u.*,u.idusuario AS iduser FROM mc1001 u 
-        INNER JOIN MC1002 r ON u.idusuario=r.idusuario 
+        INNER JOIN mc1002 r ON u.idusuario=r.idusuario 
         INNER JOIN mc1000 e ON r.idempresa=e.idempresa WHERE r.idempresa='$idempresa'");
 
         $datos = array(

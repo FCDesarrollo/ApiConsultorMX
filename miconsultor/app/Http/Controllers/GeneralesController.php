@@ -32,15 +32,24 @@ class GeneralesController extends Controller
         $idusuario = $request->idusuario;
         ConnectDatabase($idempresa);
 
-        $permisos= DB::select("SELECT u.*,p.*,per.* FROM usuarioperfil u 
-        INNER JOIN perfiles p ON u.idperfil=p.idperfil 
-        INNER JOIN permisos per ON p.idperfil=per.idperfil WHERE u.idusuario='$idusuario'");
+        $permisos= DB::select("SELECT u.*,p.nombre FROM usuariopermiso u 
+        INNER JOIN perfiles p ON u.idperfil=p.idperfil WHERE idusuario='$idusuario'");
         
         $datos = array(
             "permisos" => $permisos,
         );           
 
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    function updatePermisoUsuario(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        $idmodulo = $request->idmodulo;
+        ConnectDatabase($idempresa);
+
+        DB::table('usuariopermiso')->where("idusuario", $idusuario)->where("idmodulo", $idmodulo)->update(["tipopermiso"=>$request->tipopermiso]);
+        return $idusuario;
     }
 
     function VinculaEmpresa(Request $request){
@@ -62,6 +71,14 @@ class GeneralesController extends Controller
             $idP = DB::table('usuarioperfil')->insert(
                 ['idusuario' => $iduser,'idperfil' => $idperfil]);
 
+            $perfil = DB::select("SELECT idmodulo,tipopermiso FROM perfiles p 
+                            INNER JOIN permisos per ON p.idperfil=per.idperfil WHERE p.idperfil='$idperfil'");     
+            
+            foreach($perfil as $t){
+                $idU = DB::table('usuariopermiso')->insert(
+                    ['idusuario' => $iduser,'idperfil' => $idperfil,
+                    'idmodulo' => $t->idmodulo,'tipopermiso' => $t->tipopermiso ]);
+            }
         }
         return $idempresa;
     }
@@ -83,7 +100,8 @@ class GeneralesController extends Controller
         
         $id = $request->idperfil;
         DB::table('perfiles')->where("idperfil", $id)->update(["status"=>"0"]);
-        return $id;
+        return response($id, 200);
+        //return $id;
     }
 
     public function DatosPerfilEmpresa(Request $request)
@@ -112,5 +130,52 @@ class GeneralesController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
+    public function GuardaPerfilEmpresa(Request $request)
+    {
+        $idP=0;
+        $now = date('Y-m-d');
+        ConnectDatabase($request->idempresa);
+
+        $uperfil = DB::select("SELECT max(idperfil) + 1 as idper  FROM perfiles");
+        if ($uperfil[0]->idper <= 3){
+            $uidperfil=4;   
+        }else{
+            $uidperfil = $uperfil[0]->idper;
+        }
+        
+        $idP = DB::table('perfiles')->insertGetId(
+            ['idperfil' => $uidperfil,'nombre' => $request->nombre,
+            'descripcion' => $request->desc,'fecha' => $now,'status' =>"1" ]);
+
+               
+        $Permisos = $request->todos;
+        foreach($Permisos as $t){
+           $idU = DB::table('permisos')->insert(
+                ['idperfil' => $uidperfil,
+                'idmodulo' => $t['idmod'],'tipopermiso' => $t['permiso'] ]);
+        }   
+
+        $idP = $uidperfil;    
+        
+        return $idP;
+    }
+
+    public function EditarPerfilEmpresa(Request $request){
+        ConnectDatabase($request->idempresa);
+        $idp = $request->idperfil;
+        DB::table('perfiles')->where("idperfil", $idp)->update(['nombre' => $request->nombre,
+        'descripcion' => $request->desc,'status' => $request->status ]);
+        return $idp;
+    }
+
+    function updatePermisoPerfil(Request $request){
+        $idempresa = $request->idempresa;
+        $idperfil = $request->idperfil;
+        $idmodulo = $request->idmodulo;
+        ConnectDatabase($idempresa);
+
+        DB::table('permisos')->where("idperfil", $idperfil)->where("idmodulo", $idmodulo)->update(["tipopermiso"=>$request->tipopermiso]);
+        return $idperfil;
+    }
 
 }

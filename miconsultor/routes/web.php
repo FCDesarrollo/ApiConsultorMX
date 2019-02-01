@@ -58,7 +58,12 @@ Route::post('VinculaEmpresa', 'GeneralesController@VinculaEmpresa');
 Route::get('PerfileEmpresa/{idempresa}', 'GeneralesController@PerfilesEmpresa');
 Route::post('EliminarPerfilEmpresa', 'GeneralesController@EliminarPerfilEmpresa');
 Route::get('DatosPerfilEmpresa', 'GeneralesController@DatosPerfilEmpresa');
-Route::get('PermisosPerfil', 'GeneralesController@PermisosPerfil');   
+Route::get('PermisosPerfil', 'GeneralesController@PermisosPerfil');
+Route::post('updatePermisoUsuario', 'GeneralesController@updatePermisoUsuario');
+Route::post('GuardaPerfilEmpresa', 'GeneralesController@GuardaPerfilEmpresa');
+Route::post('EditarPerfilEmpresa', 'GeneralesController@EditarPerfilEmpresa');
+Route::post('updatePermisoPerfil', 'GeneralesController@updatePermisoPerfil');
+
 //Checa BD Disponible
 Route::get('BDDisponible', 'EmpresasController@BDDisponible');
 Route::post('AsignaBD', 'EmpresasController@AsignaBD');

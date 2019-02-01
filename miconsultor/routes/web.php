@@ -42,6 +42,9 @@ Route::post('ObtenerUsuarioNuevo', 'UsuariosController@ObtenerUsuarioNuevo');
 Route::post('VerificaUsuario', 'UsuariosController@VerificaUsuario');
 Route::post('ValidarCorreo', 'UsuariosController@ValidarCorreo');
 
+//Restablece Contraseña
+Route::post('RestablecerContraseña', 'UsuariosController@RestablecerContraseña');
+
 //MODULOS Y PERFILES
 Route::get('Modulos', 'UsuariosController@Modulos');
 Route::get('DatosModulo/{IDMod}', 'UsuariosController@DatosModulo'); 

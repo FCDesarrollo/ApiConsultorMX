@@ -75,3 +75,6 @@ Route::post('CrearTablasEmpresa', 'EmpresasController@CrearTablasEmpresa');
 //PERMISOS
 Route::get('PermisoModulos', 'PermisosController@PermisoModulos');
 Route::get('PermisoMenus', 'PermisosController@PermisoMenus');
+Route::get('PermisoSubMenus', 'PermisosController@PermisoSubMenus');
+Route::get('NombreModulo', 'PermisosController@NombreModulo');
+Route::get('NombreMenu', 'PermisosController@NombreMenu');

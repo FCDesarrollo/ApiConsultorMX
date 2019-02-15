@@ -71,3 +71,7 @@ Route::post('updatePermisoPerfil', 'GeneralesController@updatePermisoPerfil');
 Route::get('BDDisponible', 'EmpresasController@BDDisponible');
 Route::post('AsignaBD', 'EmpresasController@AsignaBD');
 Route::post('CrearTablasEmpresa', 'EmpresasController@CrearTablasEmpresa');
+
+//PERMISOS
+Route::get('PermisoModulos', 'PermisosController@PermisoModulos');
+Route::get('PermisoMenus', 'PermisosController@PermisoMenus');

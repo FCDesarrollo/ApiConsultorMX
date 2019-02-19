@@ -73,4 +73,52 @@ class PermisosController extends Controller
         $datos = $Modulo;
         return $datos;
     }
+
+    public function Modulos(){
+        $Modulo = DB::connection("General")->select("SELECT * FROM mc1003 WHERE Status = '1'");
+        $datos = $Modulo;   
+        return $datos;
+    }
+
+    public function Menus(){
+        $Modulo = DB::connection("General")->select("SELECT * FROM mc1004 WHERE Status = '1'");
+        $datos = $Modulo;   
+        return $datos;
+    }    
+
+    public function SubMenus(){
+        $Modulo = DB::connection("General")->select("SELECT * FROM mc1005 WHERE Status = '1'");
+        $datos = $Modulo;   
+        return $datos;
+    }     
+
+
+    function UpdatePermisoModulo(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        $idmodulo = $request->idmodulo;
+        ConnectDatabase($idempresa);
+
+        DB::table('mc_usermod')->where("idusuario", $idusuario)->where("idmodulo", $idmodulo)->update(["tipopermiso"=>$request->tipopermiso]);
+        return $idusuario;
+    }
+    function UpdatePermisoMenu(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        $idmenu = $request->idmenu;
+        ConnectDatabase($idempresa);
+
+        DB::table('mc_usermenu')->where("idusuario", $idusuario)->where("idmenu", $idmenu)->update(["tipopermiso"=>$request->tipopermiso]);
+        return $idusuario;
+    }
+    function UpdatePermisoSubMenu(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        $idsubmenu = $request->idsubmenu;
+        ConnectDatabase($idempresa);
+
+        DB::table('mc_usersubmenu')->where("idusuario", $idusuario)->where("idsubmenu", $idsubmenu)->update(["tipopermiso"=>$request->tipopermiso]);
+        return $idusuario;
+    }
+
 }

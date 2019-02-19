@@ -78,3 +78,11 @@ Route::get('PermisoMenus', 'PermisosController@PermisoMenus');
 Route::get('PermisoSubMenus', 'PermisosController@PermisoSubMenus');
 Route::get('NombreModulo', 'PermisosController@NombreModulo');
 Route::get('NombreMenu', 'PermisosController@NombreMenu');
+Route::get('Modulos', 'PermisosController@Modulos');
+Route::get('Menus', 'PermisosController@Menus');
+Route::get('SubMenus', 'PermisosController@SubMenus');
+
+//UPDATES PERMISOS
+Route::post('UpdatePermisoModulo', 'PermisosController@UpdatePermisoModulo');
+Route::post('UpdatePermisoMenu', 'PermisosController@UpdatePermisoMenu');
+Route::post('UpdatePermisoSubMenu', 'PermisosController@UpdatePermisoSubMenu');

@@ -87,7 +87,7 @@ class GeneralesController extends Controller
 
         ConnectDatabase($idempresa);
 
-        $modulos = DB::select("SELECT * FROM perfiles");    
+        $modulos = DB::select("SELECT * FROM mc_profiles");    
         $datos = array(
             "perfiles" => $modulos,
         );
@@ -99,7 +99,7 @@ class GeneralesController extends Controller
         ConnectDatabase($request->idempresa);
         
         $id = $request->idperfil;
-        DB::table('perfiles')->where("idperfil", $id)->update(["status"=>"0"]);
+        DB::table('mc_profiles')->where("idperfil", $id)->update(["status"=>"0"]);
         return response($id, 200);
         //return $id;
     }

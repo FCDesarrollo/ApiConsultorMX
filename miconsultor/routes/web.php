@@ -78,3 +78,4 @@ Route::get('PermisoMenus', 'PermisosController@PermisoMenus');
 Route::get('PermisoSubMenus', 'PermisosController@PermisoSubMenus');
 Route::get('NombreModulo', 'PermisosController@NombreModulo');
 Route::get('NombreMenu', 'PermisosController@NombreMenu');
+Route::get('NombreSubMenu', 'PermisosController@NombreSubMenu');

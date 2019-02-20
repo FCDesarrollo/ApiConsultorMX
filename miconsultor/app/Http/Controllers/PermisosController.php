@@ -73,4 +73,13 @@ class PermisosController extends Controller
         $datos = $Modulo;
         return $datos;
     }
+
+    public function NombreSubMenu(Request $request)
+    {        
+        $IdSubMenu = $request->idsubmenu;
+
+        $Modulo = DB::connection("General")->select("SELECT * FROM mc1005 WHERE idsubmenu='$IdSubMenu'");    
+        $datos = $Modulo;
+        return $datos;
+    }
 }

@@ -89,13 +89,15 @@ class PermisosController extends Controller
     }
 
     public function Menus(){
-        $Modulo = DB::connection("General")->select("SELECT * FROM mc1004 WHERE Status = '1'");
+        $Modulo = DB::connection("General")->select("SELECT men.*,modu.nombre_modulo FROM mc1004 men  
+                            INNER JOIN mc1003 modu ON men.idmodulo=modu.idmodulo WHERE men.Status = '1'");
         $datos = $Modulo;   
         return $datos;
     }    
 
     public function SubMenus(){
-        $Modulo = DB::connection("General")->select("SELECT * FROM mc1005 WHERE Status = '1'");
+        $Modulo = DB::connection("General")->select("SELECT sub.*,men.nombre_menu FROM mc1005 sub 
+                                INNER JOIN mc1004 men ON sub.idmenu=men.idmenu WHERE sub.Status = '1'");
         $datos = $Modulo;   
         return $datos;
     }     

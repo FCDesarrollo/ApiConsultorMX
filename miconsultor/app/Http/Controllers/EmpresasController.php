@@ -103,7 +103,7 @@ class EmpresasController extends Controller
     {      
         $id = $request->id;
         $rfc = $request->rfc;
-        DB::connection("General")->table('MC1003')->where("id", $request->id)->update(["rfc"=>$rfc,"estatus"=>"1"]);
+        DB::connection("General")->table('mc1003')->where("id", $request->id)->update(["rfc"=>$rfc,"estatus"=>"1"]);
         return $id;        
     }
 

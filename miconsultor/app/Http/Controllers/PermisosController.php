@@ -115,7 +115,7 @@ class PermisosController extends Controller
     }     
 
 
-    function UpdatePermisoModulo(Request $request){
+    public function UpdatePermisoModulo(Request $request){
         $idempresa = $request->idempresa;
         $idusuario = $request->idusuario;
         $idmodulo = $request->idmodulo;
@@ -124,8 +124,7 @@ class PermisosController extends Controller
         DB::table('mc_usermod')->where("idusuario", $idusuario)->where("idmodulo", $idmodulo)->update(["tipopermiso"=>$request->tipopermiso]);
         return $idusuario;
     }
-    
-    function UpdatePermisoMenu(Request $request){
+    public function UpdatePermisoMenu(Request $request){
         $idempresa = $request->idempresa;
         $idusuario = $request->idusuario;
         $idmenu = $request->idmenu;
@@ -134,7 +133,7 @@ class PermisosController extends Controller
         DB::table('mc_usermenu')->where("idusuario", $idusuario)->where("idmenu", $idmenu)->update(["tipopermiso"=>$request->tipopermiso]);
         return $idusuario;
     }
-    function UpdatePermisoSubMenu(Request $request){
+    public function UpdatePermisoSubMenu(Request $request){
         $idempresa = $request->idempresa;
         $idusuario = $request->idusuario;
         $idsubmenu = $request->idsubmenu;

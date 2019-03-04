@@ -89,7 +89,8 @@ class EmpresasController extends Controller
             }
             return $id;
         }
-        public function BDDisponible()
+    
+    public function BDDisponible()
     {
         $consulta = DB::connection("General")->select("SELECT * FROM mc1003 WHERE id = (SELECT IF(ISNULL(MAX(id)),1,MAX(id) +1) AS idDisponible FROM mc1003 WHERE estatus <> 0);");    
         
@@ -124,4 +125,16 @@ class EmpresasController extends Controller
 
        return 1;
     }
+
+    public function Parametros()
+    {      
+        $consulta = DB::connection("General")->select("SELECT * FROM mc0000");  
+
+        $datos = array(
+            "parametros" => $consulta,
+        );       
+
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);     
+    }
+
 }

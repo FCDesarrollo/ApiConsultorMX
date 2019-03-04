@@ -264,6 +264,23 @@ class UsuariosController extends Controller
         return $id;        
     }    
 
-   
+    public function VerificaCelular(Request $request)
+    {      
+        $id = $request->idusuario;
+        DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["verificacel"=>"1"]);
+        return $id;        
+    }    
+
+    public function NotificacionesUsuario(Request $request)
+    {      
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        ConnectDatabase($idempresa);
+
+        $permisos= DB::select("SELECT mc_usersubmenu.idsubmenu, mc_usersubmenu.notificaciones, mc_usermod.idmodulo, mc_usermod.tipopermiso, mc_usermenu.idmenu, mc_usermenu.tipopermiso FROM mc_usersubmenu LEFT JOIN mc_usermenu ON mc_usermenu.idmenu = mc_usersubmenu.idmenu LEFT JOIN  mc_usermod ON mc_usermod.idmodulo = mc_usermenu.idmodulo WHERE mc_usersubmenu.idusuario = '$idusuario' AND mc_usermod.tipopermiso <> 0");
+        
+        $datos = $permisos;       
+        return $datos;     
+    }       
 
 }

@@ -13,30 +13,48 @@ class PermisosController extends Controller
         ConnectDatabase($idempresa);
 
         $permisos= DB::select("SELECT u.*,p.nombre FROM mc_usermod u 
-        INNER JOIN mc_profiles p ON u.idperfil=p.idperfil WHERE idusuario='$idusuario'");
+        INNER JOIN mc_profiles p ON u.idperfil=p.idperfil WHERE u.idusuario='$idusuario'");
         
         $datos = $permisos;       
         return $datos;
         //return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
     
+    function MenusPermiso(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        ConnectDatabase($idempresa);
+
+        $permisos= DB::select("SELECT u.* FROM mc_usermenu u WHERE u.idusuario='$idusuario'");
+        
+        $datos = $permisos;       
+        return $datos;
+    }
+
+
     function PermisoMenus(Request $request){
         $idempresa = $request->idempresa;
         $idusuario = $request->idusuario;
         $idModulo = $request->idmodulo;
         ConnectDatabase($idempresa);
 
-        $permisos= DB::select("SELECT u.* FROM mc_usermenu u WHERE idusuario='$idusuario' and idmodulo='$idModulo'");
+        $permisos= DB::select("SELECT u.* FROM mc_usermenu u WHERE u.idusuario='$idusuario' and u.idmodulo='$idModulo'");
         
         $datos = $permisos;       
         return $datos;
-
-        /*$datos = array(
-            "permisoMenu" => $permisos,
-        );*/           
-
-       // return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
+
+    function SubMenuPermiso(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        ConnectDatabase($idempresa);
+
+        $permisos= DB::select("SELECT u.* FROM mc_usersubmenu u WHERE idusuario='$idusuario'");
+        
+        $datos = $permisos;       
+        return $datos;
+    }
+
 
     function PermisoSubMenus(Request $request){
         $idempresa = $request->idempresa;
@@ -48,12 +66,6 @@ class PermisosController extends Controller
         
         $datos = $permisos;       
         return $datos;
-
-        /*$datos = array(
-            "permisoMenu" => $permisos,
-        );*/           
-
-       // return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
     public function NombreModulo(Request $request)
@@ -112,6 +124,7 @@ class PermisosController extends Controller
         DB::table('mc_usermod')->where("idusuario", $idusuario)->where("idmodulo", $idmodulo)->update(["tipopermiso"=>$request->tipopermiso]);
         return $idusuario;
     }
+    
     function UpdatePermisoMenu(Request $request){
         $idempresa = $request->idempresa;
         $idusuario = $request->idusuario;

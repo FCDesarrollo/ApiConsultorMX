@@ -82,6 +82,8 @@ Route::get('NombreSubMenu', 'PermisosController@NombreSubMenu');
 Route::get('Modulos', 'PermisosController@Modulos');
 Route::get('Menus', 'PermisosController@Menus');
 Route::get('SubMenus', 'PermisosController@SubMenus');
+Route::get('MenusPermiso', 'PermisosController@MenusPermiso');
+Route::get('SubMenuPermiso', 'PermisosController@SubMenuPermiso');
 
 //UPDATES PERMISOS
 Route::post('UpdatePermisoModulo', 'PermisosController@UpdatePermisoModulo');

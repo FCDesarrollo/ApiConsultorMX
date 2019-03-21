@@ -31,6 +31,8 @@ Route::post('Login', 'UsuariosController@Login');
 Route::get('DatosUsuario/{idusuario}', 'UsuariosController@DatosUsuario'); 
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 Route::post('Desvincular', 'UsuariosController@Desvincular');
+Route::get('NotificacionesUsuario', 'UsuariosController@NotificacionesUsuario');
+route::post('ModificaNotificacion', 'UsuariosController@ModificaNotificacion');
 
 Route::get('ListaUsuariosAdmin/{idempresa}', 'UsuariosController@ListaUsuariosAdmin'); 
 Route::get('ListaUsuarios/{idempresa}', 'UsuariosController@ListaUsuarios'); 
@@ -41,6 +43,7 @@ Route::post('GuardarEmpresa', 'EmpresasController@GuardarEmpresa');
 Route::post('ObtenerUsuarioNuevo', 'UsuariosController@ObtenerUsuarioNuevo');
 Route::post('VerificaUsuario', 'UsuariosController@VerificaUsuario');
 Route::post('ValidarCorreo', 'UsuariosController@ValidarCorreo');
+Route::post('VerificaCelular', 'UsuariosController@VerificaCelular');
 
 //Restablece Contraseña
 Route::post('RestablecerContraseña', 'UsuariosController@RestablecerContraseña');
@@ -48,7 +51,7 @@ Route::post('RestablecerContraseña', 'UsuariosController@RestablecerContraseña
 //MODULOS Y PERFILES
 Route::get('Modulos', 'UsuariosController@Modulos');
 Route::get('DatosModulo/{IDMod}', 'UsuariosController@DatosModulo'); 
-Route::get('Perfiles', 'UsuariosController@Perfiles');
+Route::get('Perfiles', 'GeneralesController@PerfilesGen');
 Route::get('DatosPerfil/{IDPer}', 'UsuariosController@DatosPerfil'); 
 Route::get('ListaPermisos/{IDPer}', 'UsuariosController@ListaPermisos');
 Route::post('EliminaPermiso', 'UsuariosController@EliminaPermiso'); 
@@ -83,8 +86,13 @@ Route::get('NombreSubMenu', 'PermisosController@NombreSubMenu');
 Route::get('Modulos', 'PermisosController@Modulos');
 Route::get('Menus', 'PermisosController@Menus');
 Route::get('SubMenus', 'PermisosController@SubMenus');
+Route::get('MenusPermiso', 'PermisosController@MenusPermiso');
+Route::get('SubMenuPermiso', 'PermisosController@SubMenuPermiso');
 
 //UPDATES PERMISOS
 Route::post('UpdatePermisoModulo', 'PermisosController@UpdatePermisoModulo');
 Route::post('UpdatePermisoMenu', 'PermisosController@UpdatePermisoMenu');
 Route::post('UpdatePermisoSubMenu', 'PermisosController@UpdatePermisoSubMenu');
+
+//PARAMETROS GENERALES
+Route::post('Parametros', 'EmpresasController@Parametros');

@@ -89,7 +89,7 @@ class EmpresasController extends Controller
             }
             return $id;
         }
-        public function BDDisponible()
+    public function BDDisponible()
     {
         $consulta = DB::connection("General")->select("SELECT * FROM mc1010 WHERE id = (SELECT IF(ISNULL(MAX(id)),1,MAX(id) +1) AS idDisponible FROM mc1010 WHERE estatus <> 0);");    
         
@@ -112,16 +112,80 @@ class EmpresasController extends Controller
         $empresaBD = $request->empresaBD;
         ConnectaEmpresaDatabase($empresaBD);
 
-        $QueryRubros = 'create table if not exists Rubros(id int(255),nombre varchar(250) COLLATE utf8_spanish_ci DEFAULT NULL,status int(11) DEFAULT 1, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;';
-        DB::statement($QueryRubros);   
+        //$QueryRubros = 'create table if not exists Rubros(id int(255),nombre varchar(250) COLLATE utf8_spanish_ci DEFAULT NULL,status int(11) DEFAULT 1, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;';
+        //DB::statement($QueryRubros);   
+        $QueryPerfiles = "create table if not exists mc_profiles (
+            id INT(11) NOT NULL,
+            idperfil INT(11) NOT NULL,
+            nombre VARCHAR(120) COLLATE latin1_spanish_ci DEFAULT NULL,
+            descripcion VARCHAR(254) COLLATE latin1_spanish_ci DEFAULT NULL,
+            fecha DATE DEFAULT NULL,
+            STATUS INT(11) DEFAULT '1'
+        ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+        DB::statement($QueryPerfiles);   
 
-        $QueryPerfiles = "create table if not exists Perfiles(id int(11) NOT NULL, perfiles varchar(250) DEFAULT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+        $modpermis = "create table if not exists mc_modpermis (
+            id INT(11) NOT NULL,
+            idperfil INT(11) DEFAULT NULL,
+            idmodulo INT(11) DEFAULT NULL,
+            tipopermiso INT(11) DEFAULT NULL
+          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+        DB::statement($modpermis); 
+
+        $menupermis = "create table if not exists mc_menupermis (
+            id INT(11) NOT NULL,
+            idperfil INT(11) DEFAULT NULL,
+            idmodulo INT(11) DEFAULT NULL,
+            idmenu INT(11) DEFAULT NULL,
+            tipopermiso INT(11) DEFAULT NULL
+          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+        DB::statement($menupermis); 
+        
+        $submenupermis = "create table if not exists mc_submenupermis (
+            id INT(11) NOT NULL,
+            idperfil INT(11) DEFAULT NULL,
+            idmenu INT(11) DEFAULT NULL,
+            idsubmenu INT(11) DEFAULT NULL,
+            tipopermiso INT(11) DEFAULT NULL
+          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+        DB::statement($submenupermis); 
+        
+        $mc_profiles = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
+        DB::statement($mc_profiles);
+
+        $mc_profiles = "insert ".$empresaBD.".mc_modpermis SELECT * FROM dublockc_MCGenerales.mc1007;";
+        DB::statement($mc_profiles);
+        
+        $mc_profiles = "insert ".$empresaBD.".mc_menupermis SELECT * FROM dublockc_MCGenerales.mc1008;";
+        DB::statement($mc_profiles);
+        
+        $mc_profiles = "insert ".$empresaBD.".mc_submenupermis SELECT * FROM dublockc_MCGenerales.mc1009;";
+        DB::statement($mc_profiles);
+
+        /*$QueryPerfiles = "create table if not exists mc_profiles(id int(11) NOT NULL, perfiles varchar(250) DEFAULT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
         DB::statement($QueryPerfiles);   
         
         $QueryPermisos = "create table if not exists Permisos (id int(11) NOT NULL,idUsuario int(11) DEFAULT NULL, idPerfil int(11) DEFAULT NULL,idModulo int(11) DEFAULT NULL,Permiso varchar(11) COLLATE utf8_spanish_ci DEFAULT NULL,
             PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";
         DB::statement($QueryPermisos); 
 
+        $QueryRubros = 'create table if not exists Rubros(id int(255),nombre varchar(250) COLLATE utf8_spanish_ci DEFAULT NULL,status int(11) DEFAULT 1, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;';
+        DB::statement($QueryRubros); */
+
        return 1;
     }
+    public function UsuarioEmpresa(Request $request)
+        {  
+            $usuario = $request->idusuario;
+            $empresa = $request->idempresa;  
+            if($usuario==0 && $empresa==0){   
+                $respuesta = 0; 
+                
+            }else{
+                DB::connection("General")->table("mc1002")->insert(["idusuario" => $usuario, "idempresa" => $empresa]);            
+                $respuesta = 1;
+            }
+            return $respuesta;
+        }
+    
 }

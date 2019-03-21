@@ -283,4 +283,16 @@ class UsuariosController extends Controller
         return $datos;     
     }       
 
+    public function ModificaNotificacion(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        $idsubmenu = $request->idsubmenu;
+        
+        ConnectDatabase($idempresa);        
+
+        DB::table('mc_usersubmenu')->where("idusuario", $idusuario)->where("idsubmenu", $idsubmenu)->update(["notificaciones"=>$request->tiponotificacion]);
+        return $idsubmenu;
+    }
+
 }

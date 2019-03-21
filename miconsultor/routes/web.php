@@ -32,6 +32,7 @@ Route::get('DatosUsuario/{idusuario}', 'UsuariosController@DatosUsuario');
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 Route::post('Desvincular', 'UsuariosController@Desvincular');
 Route::get('NotificacionesUsuario', 'UsuariosController@NotificacionesUsuario');
+route::post('ModificaNotificacion', 'UsuariosController@ModificaNotificacion');
 
 Route::get('ListaUsuariosAdmin/{idempresa}', 'UsuariosController@ListaUsuariosAdmin'); 
 Route::get('ListaUsuarios/{idempresa}', 'UsuariosController@ListaUsuarios'); 

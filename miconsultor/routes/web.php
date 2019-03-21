@@ -50,7 +50,7 @@ Route::post('RestablecerContraseña', 'UsuariosController@RestablecerContraseña
 //MODULOS Y PERFILES
 Route::get('Modulos', 'UsuariosController@Modulos');
 Route::get('DatosModulo/{IDMod}', 'UsuariosController@DatosModulo'); 
-Route::get('Perfiles', 'UsuariosController@Perfiles');
+Route::get('Perfiles', 'GeneralesController@PerfilesGen');
 Route::get('DatosPerfil/{IDPer}', 'UsuariosController@DatosPerfil'); 
 Route::get('ListaPermisos/{IDPer}', 'UsuariosController@ListaPermisos');
 Route::post('EliminaPermiso', 'UsuariosController@EliminaPermiso'); 

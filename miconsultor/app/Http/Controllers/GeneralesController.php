@@ -68,17 +68,39 @@ class GeneralesController extends Controller
                 ['idusuario' => $iduser,'idempresa' => $idempresa]);
             
             ConnectDatabase($idempresa);
-            $idP = DB::table('usuarioperfil')->insert(
+            $idP = DB::table('mc_userprofile')->insert(
                 ['idusuario' => $iduser,'idperfil' => $idperfil]);
-
-            $perfil = DB::select("SELECT idmodulo,tipopermiso FROM perfiles p 
-                            INNER JOIN permisos per ON p.idperfil=per.idperfil WHERE p.idperfil='$idperfil'");     
             
+            //SELECCIONAMOS LOS PERMISOS A LOS MODULOS DEL PERFIL
+            $perfil = DB::select("SELECT idmodulo,tipopermiso FROM mc_modpermis WHERE idperfil='$idperfil'");     
+            
+            //INSERTAMOS LOS PERMISOS DE MODULOS DEL PERFIL AL USUARIO
             foreach($perfil as $t){
-                $idU = DB::table('usuariopermiso')->insert(
+                $idU = DB::table('mc_usermod')->insert(
                     ['idusuario' => $iduser,'idperfil' => $idperfil,
                     'idmodulo' => $t->idmodulo,'tipopermiso' => $t->tipopermiso ]);
             }
+
+            //SELECCIONAMOS LOS PERMISOS A LOS MENUS DEL PERFIL
+            $perfil = DB::select("SELECT idmodulo,idmenu,tipopermiso FROM mc_menupermis WHERE idperfil='$idperfil'");     
+            
+            //INSERTAMOS LOS PERMISOS DE MENU DEL PERFIL AL USUARIO
+            foreach($perfil as $t){
+                $idU = DB::table('mc_usermenu')->insert(
+                    ['idusuario' => $iduser,'idperfil' => $idperfil,
+                    'idmodulo' => $t->idmodulo,'idmenu' => $t->idmenu,'tipopermiso' => $t->tipopermiso ]);
+            }
+
+            //SELECCIONAMOS LOS PERMISOS A LOS SUBMENUS DEL PERFIL
+            $perfil = DB::select("SELECT idmenu,idsubmenu,tipopermiso,notificaciones FROM mc_submenupermis WHERE idperfil='$idperfil'");     
+            
+            //INSERTAMOS LOS PERMISOS DE SUBMENU DEL PERFIL AL USUARIO
+            foreach($perfil as $t){
+                $idU = DB::table('mc_usersubmenu')->insert(
+                    ['idusuario' => $iduser,'idperfil' => $idperfil,
+                    'idmenu' => $t->idmenu,'idsubmenu' => $t->idsubmenu,'tipopermiso' => $t->tipopermiso,'notificaciones' => $t->notificaciones ]);
+            }
+
         }
         return $idempresa;
     }
@@ -136,14 +158,14 @@ class GeneralesController extends Controller
         $now = date('Y-m-d');
         ConnectDatabase($request->idempresa);
 
-        $uperfil = DB::select("SELECT max(idperfil) + 1 as idper  FROM perfiles");
+        $uperfil = DB::select("SELECT max(idperfil) + 1 as idper  FROM mc_profiles");
         if ($uperfil[0]->idper <= 3){
             $uidperfil=4;   
         }else{
             $uidperfil = $uperfil[0]->idper;
         }
         
-        $idP = DB::table('perfiles')->insertGetId(
+        $idP = DB::table('mc_profiles')->insertGetId(
             ['idperfil' => $uidperfil,'nombre' => $request->nombre,
             'descripcion' => $request->desc,'fecha' => $now,'status' =>"1" ]);
 
@@ -176,6 +198,16 @@ class GeneralesController extends Controller
 
         DB::table('permisos')->where("idperfil", $idperfil)->where("idmodulo", $idmodulo)->update(["tipopermiso"=>$request->tipopermiso]);
         return $idperfil;
+    }
+
+    public function PerfilesGen(Request $request)
+    {
+
+        $modulos = DB::connection("General")->select("SELECT * FROM mc1006");    
+        $datos = array(
+            "perfiles" => $modulos,
+        );
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
 }

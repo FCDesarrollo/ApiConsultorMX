@@ -171,15 +171,6 @@ class UsuariosController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
-    public function Perfiles(Request $request)
-    {
-
-        $modulos = DB::connection("General")->select("SELECT * FROM perfiles");    
-        $datos = array(
-            "perfiles" => $modulos,
-        );
-        return json_encode($datos, JSON_UNESCAPED_UNICODE);
-    }
 
     public function DatosPerfil($IDPer)
     {

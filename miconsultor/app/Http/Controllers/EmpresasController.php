@@ -110,11 +110,11 @@ class EmpresasController extends Controller
 
     public function CrearTablasEmpresa(Request $request)
     {  
-        $empresaBD = $request->empresaBD;
-        ConnectaEmpresaDatabase($empresaBD);
+        $empresaBD = $request->empresaBD;        
+        ConnectaEmpresaDatabase($empresaBD);                
 
         $QueryPerfiles = "create table if not exists mc_profiles (
-            id INT(11) NOT NULL,
+            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
             idperfil INT(11) NOT NULL,
             nombre VARCHAR(120) COLLATE latin1_spanish_ci DEFAULT NULL,
             descripcion VARCHAR(254) COLLATE latin1_spanish_ci DEFAULT NULL,
@@ -124,7 +124,7 @@ class EmpresasController extends Controller
         DB::statement($QueryPerfiles);   
 
         $modpermis = "create table if not exists mc_modpermis (
-            id INT(11) NOT NULL,
+            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
             idperfil INT(11) DEFAULT NULL,
             idmodulo INT(11) DEFAULT NULL,
             tipopermiso INT(11) DEFAULT NULL
@@ -132,23 +132,61 @@ class EmpresasController extends Controller
         DB::statement($modpermis); 
 
         $menupermis = "create table if not exists mc_menupermis (
-            id INT(11) NOT NULL,
+            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
             idperfil INT(11) DEFAULT NULL,
             idmodulo INT(11) DEFAULT NULL,
             idmenu INT(11) DEFAULT NULL,
             tipopermiso INT(11) DEFAULT NULL
           ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
         DB::statement($menupermis); 
-        
-        /*$submenupermis = "create table if not exists mc_submenupermis (
-            id INT(11) NOT NULL,
+
+        $userprofile = "create table if not exists mc_userprofile (
+            id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            idusuario int(11) DEFAULT NULL,
+            idperfil int(11) DEFAULT NULL
+          ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+          DB::statement($userprofile); 
+
+          $usermod = "create table if not exists mc_usermod (
+            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            idusuario INT(11) DEFAULT NULL,
+            idperfil INT(11) DEFAULT NULL,
+            idmodulo INT(11) DEFAULT NULL,
+            tipopermiso INT(11) DEFAULT NULL
+          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+          ";
+          DB::statement($usermod); 
+
+          $usermenu = "create table if not exists mc_usermenu (
+            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            idusuario INT(11) NOT NULL,
+            idperfil INT(11) NOT NULL,
+            idmodulo INT(11) NOT NULL,
+            idmenu INT(11) NOT NULL,
+            tipopermiso INT(11) NOT NULL
+          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+          DB::statement($usermenu); 
+
+          $usersubmenu = "create table if not exists mc_usersubmenu (
+            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            idusuario INT(11) NOT NULL,
+            idperfil INT(11) NOT NULL,
+            idmenu INT(11) NOT NULL,
+            idsubmenu INT(11) NOT NULL,
+            tipopermiso INT(11) NOT NULL,
+            notificaciones INT(11) DEFAULT '0'
+          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+          DB::statement($usersubmenu); 
+
+        $submenupermis = "create table if not exists mc_submenupermis (
+            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
             idperfil INT(11) DEFAULT NULL,
             idmenu INT(11) DEFAULT NULL,    
             idsubmenu INT(11) DEFAULT NULL,
             tipopermiso INT(11) DEFAULT NULL,
-            notificaciones` INT(11) DEFAULT '0'
+            notificaciones INT(11) DEFAULT '0'
           ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-        DB::statement($submenupermis); */
+        DB::statement($submenupermis);
         
         $mc_profiles = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
         DB::statement($mc_profiles);
@@ -159,9 +197,9 @@ class EmpresasController extends Controller
         $mc_profiles = "insert ".$empresaBD.".mc_menupermis SELECT * FROM dublockc_MCGenerales.mc1008;";
         DB::statement($mc_profiles);
         
-        /*$mc_profiles = "insert ".$empresaBD.".mc_submenupermis SELECT * FROM dublockc_MCGenerales.mc1009;";
-        DB::statement($mc_profiles);*/
-
+        $mc_profiles = "insert ".$empresaBD.".mc_submenupermis SELECT * FROM dublockc_MCGenerales.mc1009;";
+        DB::statement($mc_profiles);
+                
        return 1;
     }
     public function UsuarioEmpresa(Request $request)
@@ -178,7 +216,25 @@ class EmpresasController extends Controller
             return $respuesta;
         }
     
+    public function UsuarioProfile(Request $request)
+    {
+        $usuario = $request->idusuario;
+        $empresaBD = $request->empresaBD;        
+        ConnectaEmpresaDatabase($empresaBD);
 
+        if ($usuario != 0 && $empresaBD != 0) {
+            $id = DB::table('mc_userprofile')->insertGetId(
+                array('idusuario' => $usuario, 'idperfil' => 1)
+            );
+        }else {
+            $id = 0;
+        }
+        
+
+        return $id;
+        /*$userprofile = "insert into ".$empresaBD.".mc_userprofile (idusuario, idperfil) values (".$usuario.",1);";
+        DB::statement($userprofile);*/
+    }
     public function Parametros()
     {      
         $consulta = DB::connection("General")->select("SELECT * FROM mc0000");  

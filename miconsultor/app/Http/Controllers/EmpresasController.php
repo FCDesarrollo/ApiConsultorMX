@@ -210,8 +210,8 @@ class EmpresasController extends Controller
         /*DB::table('mc_userprofile')->insert(
             ['idUsuario' => $idUsuario, 'idPerfil' => 1]
         );*/
-
-       return $id;
+        return $usuario;
+       //return $id;
     }
     public function UsuarioEmpresa(Request $request)
         {  

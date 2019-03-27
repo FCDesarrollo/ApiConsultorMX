@@ -131,7 +131,7 @@ class GeneralesController extends Controller
         ConnectDatabase($request->idempresa);
         $IDPer = $request->idperfil;
 
-        $perfil = DB::select("SELECT * FROM perfiles WHERE idperfil='$IDPer'");    
+        $perfil = DB::select("SELECT * FROM mc_profiles WHERE idperfil='$IDPer'");    
         $datos = array(
             "perfil" => $perfil,
         );        
@@ -154,32 +154,69 @@ class GeneralesController extends Controller
 
     public function GuardaPerfilEmpresa(Request $request)
     {
-        $idP=0;
+        $idP=$request->idperfil;
         $now = date('Y-m-d');
         ConnectDatabase($request->idempresa);
+        
+        if ($idP == 0 ){
+            $uperfil = DB::select("SELECT max(idperfil) + 1 as idper  FROM mc_profiles");
+            if ($uperfil[0]->idper <= 4){
+                $uidperfil=5;   
+            }else{
+                $uidperfil = $uperfil[0]->idper;
+            }
+            
+            $idP = DB::table('mc_profiles')->insertGetId(
+                ['idperfil' => $uidperfil,'nombre' => $request->nombre,
+                'descripcion' => $request->desc,'fecha' => $now,'status' =>"1" ]); 
 
-        $uperfil = DB::select("SELECT max(idperfil) + 1 as idper  FROM mc_profiles");
-        if ($uperfil[0]->idper <= 3){
-            $uidperfil=4;   
+            $idP = $uidperfil;    
         }else{
-            $uidperfil = $uperfil[0]->idper;
+
         }
-        
-        $idP = DB::table('mc_profiles')->insertGetId(
-            ['idperfil' => $uidperfil,'nombre' => $request->nombre,
-            'descripcion' => $request->desc,'fecha' => $now,'status' =>"1" ]);
-
-               
-        $Permisos = $request->todos;
-        foreach($Permisos as $t){
-           $idU = DB::table('permisos')->insert(
-                ['idperfil' => $uidperfil,
-                'idmodulo' => $t['idmod'],'tipopermiso' => $t['permiso'] ]);
-        }   
-
-        $idP = $uidperfil;    
-        
         return $idP;
+    }
+
+    public function ModulosPerfil(Request $request)
+    {
+        $idU = $request->id;
+        ConnectDatabase($request->idempresa);
+        if ($idU == 0){
+            $idU = DB::table('mc_modpermis')->insertGetId(
+                ['idperfil' => $request->idperfil,'idmodulo' => $request->idmodulo,'tipopermiso' => $request->tipopermiso]); 
+        }else{
+
+        }
+        return $idU;
+    }
+
+    public function MenuPerfil(Request $request)
+    {
+        $idU = $request->id;
+        ConnectDatabase($request->idempresa);
+        if ($idU == 0){
+            $idU = DB::table('mc_menupermis')->insertGetId(
+                ['idperfil' => $request->idperfil,'idmodulo' => $request->idmodulo,
+                'idmenu' => $request->idmenu,'tipopermiso' => $request->tipopermiso]);
+        }else{
+
+        }
+        return $idU;
+    }
+
+    public function SubMenuPerfil(Request $request)
+    {
+        $idU = $request->id;
+        ConnectDatabase($request->idempresa);
+        if ($idU == 0){
+            $idU = DB::table('mc_submenupermis')->insertGetId(
+                ['idperfil' => $request->idperfil,'idmenu' => $request->idmenu,
+                'idsubmenu' => $request->idsubmenu, 'tipopermiso' => $request->tipopermiso,
+                 'notificaciones' => $request->notificaciones]);
+        }else{
+
+        }
+        return $idU;
     }
 
     public function EditarPerfilEmpresa(Request $request){
@@ -190,16 +227,6 @@ class GeneralesController extends Controller
         return $idp;
     }
 
-    function updatePermisoPerfil(Request $request){
-        $idempresa = $request->idempresa;
-        $idperfil = $request->idperfil;
-        $idmodulo = $request->idmodulo;
-        ConnectDatabase($idempresa);
-
-        DB::table('permisos')->where("idperfil", $idperfil)->where("idmodulo", $idmodulo)->update(["tipopermiso"=>$request->tipopermiso]);
-        return $idperfil;
-    }
-
     public function PerfilesGen(Request $request)
     {
 
@@ -208,6 +235,38 @@ class GeneralesController extends Controller
             "perfiles" => $modulos,
         );
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function PermisosModPerfil(Request $request)
+    {
+        ConnectDatabase($request->idempresa);
+        $IDPer = $request->idperfil;
+
+        $permisos = DB::select("SELECT * FROM mc_modpermis WHERE idperfil='$IDPer'");    
+        $datos = $permisos;       
+        return $datos;
+    }
+
+    function PermisosMenusPerfil(Request $request){
+        $idempresa = $request->idempresa;
+        $idModulo = $request->idmodulo;
+        ConnectDatabase($idempresa);
+
+        $permisos= DB::select("SELECT u.* FROM mc_menupermis u WHERE u.idmodulo='$idModulo'");
+        
+        $datos = $permisos;       
+        return $datos;
+    }
+
+    function PermisoSubMenusPerfil(Request $request){
+        $idempresa = $request->idempresa;
+        $idMenu = $request->idmenu;
+        ConnectDatabase($idempresa);
+
+        $permisos= DB::select("SELECT u.* FROM mc_submenupermis u WHERE idmenu='$idMenu'");
+        
+        $datos = $permisos;       
+        return $datos;
     }
 
 }

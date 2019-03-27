@@ -63,10 +63,8 @@ Route::get('PermisosUsuario', 'GeneralesController@PermisosUsuario');
 Route::post('VinculaEmpresa', 'GeneralesController@VinculaEmpresa');
 Route::get('PerfileEmpresa/{idempresa}', 'GeneralesController@PerfilesEmpresa');
 Route::post('EliminarPerfilEmpresa', 'GeneralesController@EliminarPerfilEmpresa');
-Route::get('DatosPerfilEmpresa', 'GeneralesController@DatosPerfilEmpresa');
 Route::get('PermisosPerfil', 'GeneralesController@PermisosPerfil');
 Route::post('updatePermisoUsuario', 'GeneralesController@updatePermisoUsuario');
-Route::post('GuardaPerfilEmpresa', 'GeneralesController@GuardaPerfilEmpresa');
 Route::post('EditarPerfilEmpresa', 'GeneralesController@EditarPerfilEmpresa');
 Route::post('updatePermisoPerfil', 'GeneralesController@updatePermisoPerfil');
 
@@ -96,3 +94,13 @@ Route::post('UpdatePermisoSubMenu', 'PermisosController@UpdatePermisoSubMenu');
 
 //PARAMETROS GENERALES
 Route::post('Parametros', 'EmpresasController@Parametros');
+
+//PERFILES DE LA EMPRESA 23/03/2019
+Route::post('GuardaPerfilEmpresa', 'GeneralesController@GuardaPerfilEmpresa');
+Route::post('ModulosPerfil', 'GeneralesController@ModulosPerfil');
+Route::post('MenuPerfil', 'GeneralesController@MenuPerfil');
+Route::post('SubMenuPerfil', 'GeneralesController@SubMenuPerfil');
+Route::get('DatosPerfilEmpresa', 'GeneralesController@DatosPerfilEmpresa');
+Route::get('PermisosModPerfil', 'GeneralesController@PermisosModPerfil');
+Route::get('PermisosMenusPerfil', 'GeneralesController@PermisosMenusPerfil');
+Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil');

@@ -110,9 +110,8 @@ class EmpresasController extends Controller
 
     public function CrearTablasEmpresa(Request $request)
     {  
-        $empresaBD = $request->empresaBD;
-        $usuario = $request->idusuario;
-        ConnectaEmpresaDatabase($empresaBD);
+        $empresaBD = $request->empresaBD;        
+        ConnectaEmpresaDatabase($empresaBD);                
 
         $QueryPerfiles = "create table if not exists mc_profiles (
             id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -200,18 +199,8 @@ class EmpresasController extends Controller
         
         $mc_profiles = "insert ".$empresaBD.".mc_submenupermis SELECT * FROM dublockc_MCGenerales.mc1009;";
         DB::statement($mc_profiles);
-        
-        echo $usuario;
-        $id = DB::table('mc_userprofile')->insertGetId(
-            array('idusuario' => $usuario, 'idperfil' => 1)
-        );
-
-
-        /*DB::table('mc_userprofile')->insert(
-            ['idUsuario' => $idUsuario, 'idPerfil' => 1]
-        );*/
-        return $usuario;
-       //return $id;
+                
+       return 1;
     }
     public function UsuarioEmpresa(Request $request)
         {  
@@ -227,7 +216,25 @@ class EmpresasController extends Controller
             return $respuesta;
         }
     
+    public function UsuarioProfile(Request $request)
+    {
+        $usuario = $request->idusuario;
+        $empresaBD = $request->empresaBD;        
+        ConnectaEmpresaDatabase($empresaBD);
 
+        if ($usuario != 0 && $empresaBD != 0) {
+            $id = DB::table('mc_userprofile')->insertGetId(
+                array('idusuario' => $usuario, 'idperfil' => 1)
+            );
+        }else {
+            $id = 0;
+        }
+        
+
+        return $id;
+        /*$userprofile = "insert into ".$empresaBD.".mc_userprofile (idusuario, idperfil) values (".$usuario.",1);";
+        DB::statement($userprofile);*/
+    }
     public function Parametros()
     {      
         $consulta = DB::connection("General")->select("SELECT * FROM mc0000");  

@@ -75,6 +75,7 @@ Route::get('BDDisponible', 'EmpresasController@BDDisponible');
 Route::post('AsignaBD', 'EmpresasController@AsignaBD');
 Route::post('CrearTablasEmpresa', 'EmpresasController@CrearTablasEmpresa');
 Route::post('UsuarioEmpresa', 'EmpresasController@UsuarioEmpresa');
+Route::post('UsuarioProfile', 'EmpresasController@UsuarioProfile');
 
 //PERMISOS
 Route::get('PermisoModulos', 'PermisosController@PermisoModulos');

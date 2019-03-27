@@ -221,7 +221,7 @@ class EmpresasController extends Controller
         $usuario = $request->idusuario;
         $empresaBD = $request->empresaBD;        
         ConnectaEmpresaDatabase($empresaBD);
-
+        $id = $usuario;
         if ($usuario != 0 && $empresaBD != 0) {
             $id = DB::table('mc_userprofile')->insertGetId(
                 array('idusuario' => $usuario, 'idperfil' => 1)

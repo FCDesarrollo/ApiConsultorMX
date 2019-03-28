@@ -221,19 +221,15 @@ class EmpresasController extends Controller
         $usuario = $request->idusuario;
         $empresaBD = $request->empresaBD;        
         ConnectaEmpresaDatabase($empresaBD);
-        $id = $usuario;
-        if ($usuario != 0 && $empresaBD != 0) {
-            $id = DB::table('mc_userprofile')->insertGetId(
-                array('idusuario' => $usuario, 'idperfil' => 1)
-            );
-        }else {
-            $id = 0;
-        }
-        
 
+        if($usuario != 0 && $empresaBD != ""){
+            $mc_profiles = "insert into ".$empresaBD.".mc_userprofile (idusuario,idperfil) values(".$usuario.", 1);";
+            DB::statement($mc_profiles);  
+            $id=1;            
+        }else{
+            $id=0;
+        }             
         return $id;
-        /*$userprofile = "insert into ".$empresaBD.".mc_userprofile (idusuario, idperfil) values (".$usuario.",1);";
-        DB::statement($userprofile);*/
     }
     public function Parametros()
     {      

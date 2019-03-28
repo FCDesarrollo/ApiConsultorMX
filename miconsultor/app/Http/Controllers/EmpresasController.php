@@ -228,7 +228,7 @@ class EmpresasController extends Controller
             $id=1;            
         }else{
             $id=0;
-        }             
+        }           
         return $id;
     }
     public function Parametros()

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
+
+
 class PermisosController extends Controller
 {
     function PermisoModulos(Request $request){
@@ -141,6 +143,41 @@ class PermisosController extends Controller
 
         DB::table('mc_usersubmenu')->where("idusuario", $idusuario)->where("idsubmenu", $idsubmenu)->update(["tipopermiso"=>$request->tipopermiso]);
         return $idusuario;
+    }
+
+    public function ProfileVinculacion(Request $request)    
+    {
+        $rfc = $request->rfc;
+        $usuario = $request->idusuario;
+        $idPerfil = $request->idperfil;
+        if ($rfc != "" && $usuario != "") {
+            $empresa = DB::connection("General")->select("SELECT empresaBD FROM mc1000 WHERE rfc='$rfc'");                            
+            $array = json_decode(json_encode($empresa[0]), True);    
+            $empresa = $array["empresaBD"];                      
+            if ($empresa != "") {
+                ConnectaEmpresaDatabase($empresa);        
+                
+                $mc_usermenu = "insert into mc_usermenu (idusuario,idperfil,idmodulo,idmenu,tipopermiso) 
+                SELECT ". $usuario .",idperfil,idmodulo,idmenu, tipopermiso FROM mc_menupermis WHERE idperfil = ".$idPerfil.";";                
+                DB::statement($mc_usermenu);
+
+                $mc_usermod = "insert into mc_usermod (idusuario,idperfil,idmodulo,tipopermiso)
+                SELECT ".$usuario.",idperfil,idmodulo,tipopermiso FROM mc_modpermis WHERE idperfil =  ".$idPerfil.";";
+                DB::statement($mc_usermod);
+
+                $mc_usersubmenu = "insert into mc_usersubmenu (idusuario,idperfil,idmenu,idsubmenu,tipopermiso,notificaciones)
+                SELECT ".$usuario.",".$idPerfil.",idmenu,idsubmenu,tipopermiso,notificaciones FROM mc_submenupermis WHERE idperfil = ".$idPerfil.";";
+                DB::statement($mc_usersubmenu);
+                
+                $return = 1;
+            }  
+            else{
+                $return = 0;
+            }            
+        }else{
+            $return = 0;
+        }
+       return $return;
     }
 
 }

@@ -74,6 +74,7 @@ Route::post('AsignaBD', 'EmpresasController@AsignaBD');
 Route::post('CrearTablasEmpresa', 'EmpresasController@CrearTablasEmpresa');
 Route::post('UsuarioEmpresa', 'EmpresasController@UsuarioEmpresa');
 Route::post('UsuarioProfile', 'EmpresasController@UsuarioProfile');
+Route::post('ProfileVinculacion', 'PermisosController@ProfileVinculacion');
 
 //PERMISOS
 Route::get('PermisoModulos', 'PermisosController@PermisoModulos');

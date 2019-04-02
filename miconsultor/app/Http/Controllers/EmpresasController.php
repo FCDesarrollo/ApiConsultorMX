@@ -86,7 +86,7 @@ class EmpresasController extends Controller
                 unset($data["idempresa"]); 
                 $data['password'] = md5($password);              
                 $id = DB::connection("General")->table('mc1000')->insertGetId($data);
-            }
+            }            
             return $id;
         }
     
@@ -108,112 +108,129 @@ class EmpresasController extends Controller
         return $id;        
     }
 
+    public function EliminaAsignaBD(Request $request)
+    {      
+        $nombre = $request->empresaBD;
+        if ($nombre != "") {
+            DB::connection("General")->table('mc1010')->where('nombre', $nombre)->update(['rfc' => '','estatus' => 0]);
+            $id = 1;
+        }else {
+            $id=0;
+        }    
+        return $id;    
+        
+    }
+
     public function CrearTablasEmpresa(Request $request)
     {  
         $empresaBD = $request->empresaBD;        
         ConnectaEmpresaDatabase($empresaBD);                
+        if ($empresaBD != "") {                    
+            $QueryPerfiles = "create table if not exists mc_profiles (
+                id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                idperfil INT(11) NOT NULL,
+                nombre VARCHAR(120) COLLATE latin1_spanish_ci DEFAULT NULL,
+                descripcion VARCHAR(254) COLLATE latin1_spanish_ci DEFAULT NULL,
+                fecha DATE DEFAULT NULL,
+                STATUS INT(11) DEFAULT '1'
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($QueryPerfiles);   
 
-        $QueryPerfiles = "create table if not exists mc_profiles (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            idperfil INT(11) NOT NULL,
-            nombre VARCHAR(120) COLLATE latin1_spanish_ci DEFAULT NULL,
-            descripcion VARCHAR(254) COLLATE latin1_spanish_ci DEFAULT NULL,
-            fecha DATE DEFAULT NULL,
-            STATUS INT(11) DEFAULT '1'
-        ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-        DB::statement($QueryPerfiles);   
+            $modpermis = "create table if not exists mc_modpermis (
+                id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                idperfil INT(11) DEFAULT NULL,
+                idmodulo INT(11) DEFAULT NULL,
+                tipopermiso INT(11) DEFAULT NULL
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($modpermis); 
 
-        $modpermis = "create table if not exists mc_modpermis (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            idperfil INT(11) DEFAULT NULL,
-            idmodulo INT(11) DEFAULT NULL,
-            tipopermiso INT(11) DEFAULT NULL
-          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-        DB::statement($modpermis); 
+            $menupermis = "create table if not exists mc_menupermis (
+                id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                idperfil INT(11) DEFAULT NULL,
+                idmodulo INT(11) DEFAULT NULL,
+                idmenu INT(11) DEFAULT NULL,
+                tipopermiso INT(11) DEFAULT NULL
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($menupermis); 
 
-        $menupermis = "create table if not exists mc_menupermis (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            idperfil INT(11) DEFAULT NULL,
-            idmodulo INT(11) DEFAULT NULL,
-            idmenu INT(11) DEFAULT NULL,
-            tipopermiso INT(11) DEFAULT NULL
-          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-        DB::statement($menupermis); 
+            $userprofile = "create table if not exists mc_userprofile (
+                id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                idusuario int(11) DEFAULT NULL,
+                idperfil int(11) DEFAULT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($userprofile); 
 
-        $userprofile = "create table if not exists mc_userprofile (
-            id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            idusuario int(11) DEFAULT NULL,
-            idperfil int(11) DEFAULT NULL
-          ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-          DB::statement($userprofile); 
+            $usermod = "create table if not exists mc_usermod (
+                id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                idusuario INT(11) DEFAULT NULL,
+                idperfil INT(11) DEFAULT NULL,
+                idmodulo INT(11) DEFAULT NULL,
+                tipopermiso INT(11) DEFAULT NULL
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
+            ";
+            DB::statement($usermod); 
 
-          $usermod = "create table if not exists mc_usermod (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            idusuario INT(11) DEFAULT NULL,
-            idperfil INT(11) DEFAULT NULL,
-            idmodulo INT(11) DEFAULT NULL,
-            tipopermiso INT(11) DEFAULT NULL
-          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;
-          ";
-          DB::statement($usermod); 
+            $usermenu = "create table if not exists mc_usermenu (
+                id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                idusuario INT(11) NOT NULL,
+                idperfil INT(11) NOT NULL,
+                idmodulo INT(11) NOT NULL,
+                idmenu INT(11) NOT NULL,
+                tipopermiso INT(11) NOT NULL
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($usermenu); 
 
-          $usermenu = "create table if not exists mc_usermenu (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            idusuario INT(11) NOT NULL,
-            idperfil INT(11) NOT NULL,
-            idmodulo INT(11) NOT NULL,
-            idmenu INT(11) NOT NULL,
-            tipopermiso INT(11) NOT NULL
-          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-          DB::statement($usermenu); 
+            $usersubmenu = "create table if not exists mc_usersubmenu (
+                id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                idusuario INT(11) NOT NULL,
+                idperfil INT(11) NOT NULL,
+                idmenu INT(11) NOT NULL,
+                idsubmenu INT(11) NOT NULL,
+                tipopermiso INT(11) NOT NULL,
+                notificaciones INT(11) DEFAULT '0'
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($usersubmenu); 
 
-          $usersubmenu = "create table if not exists mc_usersubmenu (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            idusuario INT(11) NOT NULL,
-            idperfil INT(11) NOT NULL,
-            idmenu INT(11) NOT NULL,
-            idsubmenu INT(11) NOT NULL,
-            tipopermiso INT(11) NOT NULL,
-            notificaciones INT(11) DEFAULT '0'
-          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-          DB::statement($usersubmenu); 
+            $submenupermis = "create table if not exists mc_submenupermis (
+                id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                idperfil INT(11) DEFAULT NULL,
+                idmenu INT(11) DEFAULT NULL,    
+                idsubmenu INT(11) DEFAULT NULL,
+                tipopermiso INT(11) DEFAULT NULL,
+                notificaciones INT(11) DEFAULT '0'
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($submenupermis);
+            
+            $mc_profiles = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
+            DB::statement($mc_profiles);
 
-        $submenupermis = "create table if not exists mc_submenupermis (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            idperfil INT(11) DEFAULT NULL,
-            idmenu INT(11) DEFAULT NULL,    
-            idsubmenu INT(11) DEFAULT NULL,
-            tipopermiso INT(11) DEFAULT NULL,
-            notificaciones INT(11) DEFAULT '0'
-          ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-        DB::statement($submenupermis);
-        
-        $mc_profiles = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
-        DB::statement($mc_profiles);
-
-        $mc_profiles = "insert ".$empresaBD.".mc_modpermis SELECT * FROM dublockc_MCGenerales.mc1007;";
-        DB::statement($mc_profiles);
-        
-        $mc_profiles = "insert ".$empresaBD.".mc_menupermis SELECT * FROM dublockc_MCGenerales.mc1008;";
-        DB::statement($mc_profiles);
-        
-        $mc_profiles = "insert ".$empresaBD.".mc_submenupermis SELECT * FROM dublockc_MCGenerales.mc1009;";
-        DB::statement($mc_profiles);
-                
-       return 1;
+            $mc_profiles = "insert ".$empresaBD.".mc_modpermis SELECT * FROM dublockc_MCGenerales.mc1007;";
+            DB::statement($mc_profiles);
+            
+            $mc_profiles = "insert ".$empresaBD.".mc_menupermis SELECT * FROM dublockc_MCGenerales.mc1008;";
+            DB::statement($mc_profiles);
+            
+            $mc_profiles = "insert ".$empresaBD.".mc_submenupermis SELECT * FROM dublockc_MCGenerales.mc1009;";
+            DB::statement($mc_profiles);
+            
+            $id = 1;
+        }else {
+            $id = 0;            
+        }
+        return $id;
     }
     public function UsuarioEmpresa(Request $request)
         {  
             $usuario = $request->idusuario;
             $empresa = $request->idempresa;  
             if($usuario==0 && $empresa==0){   
-                $respuesta = 0; 
+                $id = 0; 
                 
             }else{
                 DB::connection("General")->table("mc1002")->insert(["idusuario" => $usuario, "idempresa" => $empresa]);            
-                $respuesta = 1;
+                $id = 1;
             }
-            return $respuesta;
+            return $id;
         }
     
     public function UsuarioProfile(Request $request)
@@ -228,7 +245,7 @@ class EmpresasController extends Controller
             $id=1;            
         }else{
             $id=0;
-        }           
+        }      
         return $id;
     }
     public function Parametros()
@@ -241,5 +258,61 @@ class EmpresasController extends Controller
 
         return json_encode($datos, JSON_UNESCAPED_UNICODE);     
     }
-
+    
+    public function EliminarRegistro(Request $request)
+    {   
+        $rfc = $request->rfc;        
+        if ($rfc != "") {
+            DB::connection("General")->table('mc1000')->where('rfc', $rfc)->delete();
+            $id = 1;
+        }
+        else{
+            $id = 0;
+        }
+        return $id;     
+    } 
+    
+    public function EliminarTablas(Request $request)
+    {   
+        $empresaBD = $request->empresaBD;        
+        ConnectaEmpresaDatabase($empresaBD);                
+        if ($empresaBD != "") {                    
+            $QueryPerfiles = "DROP TABLE mc_menupermis;";
+            DB::statement($QueryPerfiles);  
+            $QueryPerfiles = "DROP TABLE mc_modpermis;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_profiles;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_submenupermis;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_usermenu;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_usermod;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_userprofile;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_usersubmenu;";
+            DB::statement($QueryPerfiles);
+            $id= 1;
+        }else {
+            $id= 0;
+        }  
+        return $id;   
+    }
+    
+    public function EliminarUsuarioEmpresa(Request $request)
+    {  
+        $idusuario = $request->usuarioId;        
+        if ($idusuario != "") {
+            DB::connection("General")->table('mc1002')->where('idusuario', $idusuario)->delete();
+            $id = 1;
+        }
+        else{
+            $id = 0;
+        }
+        return $id;   
+    }
+    
+      
+    
 }

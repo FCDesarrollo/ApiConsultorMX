@@ -74,6 +74,10 @@ Route::post('AsignaBD', 'EmpresasController@AsignaBD');
 Route::post('CrearTablasEmpresa', 'EmpresasController@CrearTablasEmpresa');
 Route::post('UsuarioEmpresa', 'EmpresasController@UsuarioEmpresa');
 Route::post('UsuarioProfile', 'EmpresasController@UsuarioProfile');
+Route::post('EliminaAsignaBD', 'EmpresasController@EliminaAsignaBD');
+Route::post('EliminarRegistro', 'EmpresasController@EliminarRegistro');
+Route::post('EliminarTablas', 'EmpresasController@EliminarTablas');
+Route::post('EliminarUsuarioEmpresa', 'EmpresasController@EliminarUsuarioEmpresa');
 Route::post('ProfileVinculacion', 'PermisosController@ProfileVinculacion');
 
 //PERMISOS

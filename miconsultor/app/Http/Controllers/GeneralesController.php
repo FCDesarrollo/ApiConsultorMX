@@ -269,4 +269,38 @@ class GeneralesController extends Controller
         return $datos;
     }
 
+    //RECEPCION POR LOTES
+    function RegistrarLote(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        ConnectDatabase($idempresa);
+        $tipodocto = $request->tipodocto;
+        $tipodoctodet = $request->tipodoctodet;
+        $fechadocto = $request->fecha;
+        $foliodocto = $request->folio;
+        $seriedocto = $request->serie;
+
+        $now = getdate();
+        $fecha_act = $now['mday']."/".$now['mon']."/".$now['year'];
+
+    
+        $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE folio = '$foliodocto' And tipodocto = '$tipodocto'");
+        echo $lote[0]->iddocto;
+        if($lote[0]->iddocto <> 0){
+            $lote = DB::table('mc_lotesdocto')->insertGetId(
+                ['idusuario' => $idusuario,'tipodocto' => $tipodocto,'tipodoctodet' => $tipodoctodet, 'fecha' => $fechadocto,'folio' => $foliodocto, 'serie' => $seriedocto]);
+        }else{
+            $lote = DB::table('perfiles')->where("iddocto", $lote[0]->iddocto)->update(['ultimacarga' => $fecha_act]);
+        }
+
+        return $lote;
+    }
+
+    function RegistrarMovtos(Request $request){
+        $idempresa = $request->idempresa;
+        ConnectDatabase($idempresa);
+
+    }    
+    //-----------------//
+
 }

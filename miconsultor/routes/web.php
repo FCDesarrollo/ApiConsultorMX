@@ -110,3 +110,10 @@ Route::get('DatosPerfilEmpresa', 'GeneralesController@DatosPerfilEmpresa');
 Route::get('PermisosModPerfil', 'GeneralesController@PermisosModPerfil');
 Route::get('PermisosMenusPerfil', 'GeneralesController@PermisosMenusPerfil');
 Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil');
+
+
+
+//VALIDACIONES RECEPCION POR LOTES
+Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
+Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
+

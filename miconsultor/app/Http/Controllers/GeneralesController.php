@@ -172,7 +172,8 @@ class GeneralesController extends Controller
 
             $idP = $uidperfil;    
         }else{
-
+            DB::table('mc_profiles')->where("idperfil", $idP)->
+                    update(["nombre"=>$request->nombre, 'descripcion' => $request->desc]);    
         }
         return $idP;
     }
@@ -185,7 +186,8 @@ class GeneralesController extends Controller
             $idU = DB::table('mc_modpermis')->insertGetId(
                 ['idperfil' => $request->idperfil,'idmodulo' => $request->idmodulo,'tipopermiso' => $request->tipopermiso]); 
         }else{
-
+            DB::table('mc_modpermis')->where("idperfil", $request->idperfil)->
+            where("idmodulo", $request->idmodulo)->update(['tipopermiso' => $request->tipopermiso]); 
         }
         return $idU;
     }
@@ -199,7 +201,8 @@ class GeneralesController extends Controller
                 ['idperfil' => $request->idperfil,'idmodulo' => $request->idmodulo,
                 'idmenu' => $request->idmenu,'tipopermiso' => $request->tipopermiso]);
         }else{
-
+            DB::table('mc_menupermis')->where("idperfil", $request->idperfil)->
+            where("idmodulo", $request->idmodulo)->where("idmenu", $request->idmenu)->update(['tipopermiso' => $request->tipopermiso]); 
         }
         return $idU;
     }
@@ -214,7 +217,9 @@ class GeneralesController extends Controller
                 'idsubmenu' => $request->idsubmenu, 'tipopermiso' => $request->tipopermiso,
                  'notificaciones' => $request->notificaciones]);
         }else{
-
+            DB::table('mc_submenupermis')->where("idperfil", $request->idperfil)->
+            where("idmenu", $request->idmenu)->where("idsubmenu", $request->idsubmenu)->
+            update(['tipopermiso' => $request->tipopermiso, 'notificaciones' => $request->notificaciones]); 
         }
         return $idU;
     }
@@ -250,9 +255,10 @@ class GeneralesController extends Controller
     function PermisosMenusPerfil(Request $request){
         $idempresa = $request->idempresa;
         $idModulo = $request->idmodulo;
+        $IDPer = $request->idperfil;
         ConnectDatabase($idempresa);
 
-        $permisos= DB::select("SELECT u.* FROM mc_menupermis u WHERE u.idmodulo='$idModulo'");
+        $permisos= DB::select("SELECT u.* FROM mc_menupermis u WHERE u.idmodulo='$idModulo' and u.idperfil='$IDPer' ORDER BY u.idmodulo DESC");
         
         $datos = $permisos;       
         return $datos;
@@ -261,9 +267,10 @@ class GeneralesController extends Controller
     function PermisoSubMenusPerfil(Request $request){
         $idempresa = $request->idempresa;
         $idMenu = $request->idmenu;
+        $IDPer = $request->idperfil;
         ConnectDatabase($idempresa);
 
-        $permisos= DB::select("SELECT u.* FROM mc_submenupermis u WHERE idmenu='$idMenu'");
+        $permisos= DB::select("SELECT u.* FROM mc_submenupermis u WHERE u.idmenu='$idMenu' and u.idperfil='$IDPer' ORDER BY u.idmenu DESC");
         
         $datos = $permisos;       
         return $datos;

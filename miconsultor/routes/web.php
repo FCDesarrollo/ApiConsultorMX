@@ -122,3 +122,9 @@ Route::post('enviarModulos', 'FcPremiumController@enviarModulos');
 Route::post('versionesModulos', 'FcPremiumController@versionesModulos');
 Route::post('datosVersion', 'FcPremiumController@datosVersion');
 Route::post('linkArchivo', 'FcPremiumController@linkArchivo');
+
+//VALIDACIONES RECEPCION POR LOTES
+Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
+Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
+Route::post('VerificarLote', 'GeneralesController@VerificarLote');
+Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');

@@ -110,3 +110,15 @@ Route::get('DatosPerfilEmpresa', 'GeneralesController@DatosPerfilEmpresa');
 Route::get('PermisosModPerfil', 'GeneralesController@PermisosModPerfil');
 Route::get('PermisosMenusPerfil', 'GeneralesController@PermisosMenusPerfil');
 Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil');
+
+
+//PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
+Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');
+Route::post('numEstadistica', 'AdministradorController@numEstadistica');
+Route::get('allempresas', 'AdministradorController@allempresas');
+
+//API FC_PREMIUM
+Route::post('enviarModulos', 'FcPremiumController@enviarModulos');
+Route::post('versionesModulos', 'FcPremiumController@versionesModulos');
+Route::post('datosVersion', 'FcPremiumController@datosVersion');
+Route::post('linkArchivo', 'FcPremiumController@linkArchivo');

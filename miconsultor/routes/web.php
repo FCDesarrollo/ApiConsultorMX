@@ -116,4 +116,5 @@ Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil')
 //VALIDACIONES RECEPCION POR LOTES
 Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
 Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
-
+Route::post('VerificarLote', 'GeneralesController@VerificarLote');
+Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');

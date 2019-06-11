@@ -277,37 +277,191 @@ class GeneralesController extends Controller
     }
 
     //RECEPCION POR LOTES
-    function RegistrarLote(Request $request){
+    function VerificarLote(Request $request){
         $idempresa = $request->idempresa;
         $idusuario = $request->idusuario;
-        ConnectDatabase($idempresa);
         $tipodocto = $request->tipodocto;
-        $tipodoctodet = $request->tipodoctodet;
-        $fechadocto = $request->fecha;
-        $foliodocto = $request->folio;
-        $seriedocto = $request->serie;
+        ConnectDatabase($idempresa);
 
-        $now = getdate();
-        $fecha_act = $now['mday']."/".$now['mon']."/".$now['year'];
+        $lote = $request->movtos;
 
-    
-        $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE folio = '$foliodocto' And tipodocto = '$tipodocto'");
-        echo $lote[0]->iddocto;
-        if($lote[0]->iddocto <> 0){
-            $lote = DB::table('mc_lotesdocto')->insertGetId(
-                ['idusuario' => $idusuario,'tipodocto' => $tipodocto,'tipodoctodet' => $tipodoctodet, 'fecha' => $fechadocto,'folio' => $foliodocto, 'serie' => $seriedocto]);
-        }else{
-            $lote = DB::table('perfiles')->where("iddocto", $lote[0]->iddocto)->update(['ultimacarga' => $fecha_act]);
+        $num_movtos = count($request->movtos);
+
+
+        for ($i=0; $i < $num_movtos; $i++) { 
+            $fecha = $request->movtos[$i]['fecha'];
+            $fecha = str_replace("-", "", $fecha);
+
+
+            if($request->movtos[$i]['idconce'] == 3){
+                $folio = $request->movtos[$i]['folio'];                
+                $estatus = $request->movtos[$i];
+                $codigo = $fecha.$tipodocto.$folio;                
+            }else if($request->movtos[$i]['idconce'] == 2){
+                $unidad = $request->movtos[$i]['unidad'];            
+                $estatus = $request->movtos[$i];
+                $litros = $request->movtos[$i]['litros'];
+                $codigo = $fecha.$tipodocto.$litros.$unidad;
+            }
+
+
+            $result = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");
+            
+
+            if(empty($result)){
+                $lote[$i]['estatus'] = "False";                
+            }else{                
+                $lote[$i]['estatus'] = "True";                
+            }
+
+            $lote[$i]['codigo'] = $codigo;
+
         }
+        return $lote;
+
+    }
+
+
+    function RegistrarLote(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;        
+        ConnectDatabase($idempresa);
+
+        $tipodocto = $request->tipodocto;
+        $fechac = now();
+
+        $idlote = DB::select("SELECT id FROM mc_lotes WHERE ISNULL(tipo) LIMIT 1");
+
+        if(empty($idlote)){
+           $lote = DB::table('mc_lotes')->insertGetId(['fechadecarga' => $fechac, 'usuario' => $idusuario]);
+           $idlote = DB::select("SELECT id FROM mc_lotes WHERE id = '$lote'");
+        }
+        return $idlote; 
+    }
+
+    function RegistrarDoctos(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        $idlote = $request->IDlotes;
+        $tipodocto = $request->tipodocto;
+        $codigo = $request->codigo;
+        $doctumentos = $request->doctos;
+        
+        ConnectDatabase($idempresa);
+
+        $num_movtos = count($request->doctos);
+        
+        for ($i=0; $i < $num_movtos; $i++) { 
+            $fecha = $doctumentos[$i]["fecha"];
+            $concepto = $doctumentos[$i]["concepto"];
+            $proveedor = $doctumentos[$i]["proveedor"];
+            $producto = $doctumentos[$i]["producto"];           
+
+            if($tipodocto == 3){                
+                $val4 = $doctumentos[$i]["folio"];
+                $val5 = $doctumentos[$i]["serie"];
+                $val6 = floatval($doctumentos[$i]["subtotal"]);
+                $val7 = floatval($doctumentos[$i]["descuento"]);
+                $val8 = floatval($doctumentos[$i]["iva"]);
+                $val9 = floatval($doctumentos[$i]["total"]);  
+                $codigolote = str_replace("-", "", $fecha).$tipodocto.$val4;            
+            }else{
+                $val4 = $doctumentos[$i]["almacen"];
+                $val5 = $doctumentos[$i]["litros"];
+                $val6 = floatval($doctumentos[$i]["importe"]);
+                $val7 = $doctumentos[$i]["unidad"];
+                $codigolote = str_replace("-", "", $fecha).$tipodocto.$val5.$val7;
+            }           
+            
+            
+            //echo $codigolote;
+            if($codigo == $codigolote){
+             
+                $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");
+                
+                if(empty($lote)){
+                    if($tipodocto == 3){
+                        DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'codigo' => $codigo, 'concepto' => $concepto, 'proveedor' => $proveedor, 'fecha' => $fecha, 'folio' => $val4, 'serie' => $val5, 'subtotal' => $val6, 'descuento' => $val7, 'iva' => $val8, 'total' => $val9]); 
+
+                    }elseif($tipodocto == 2){
+                        DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'codigo' => $codigo, 'concepto' => $concepto, 'proveedor' => $proveedor, 'fecha' => $fecha, 'campoextra1' => $val5, 'campoextra2' => $val4, 'total' => $val6]);
+                    }
+
+                    DB::table('mc_lotes')->where("id", $idlote)->update(['fechadecarga' => now(),'usuario' => $idusuario, 'tipo' => $tipodocto]);                    
+
+
+                    $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");
+                }else{
+                    //DB::table('mc_lotesdocto')->where("iddocto", $lote[0]->iddocto)->update(['ultimacarga' => $now]);
+                }            
+            }
+
+        }   
+
 
         return $lote;
     }
 
     function RegistrarMovtos(Request $request){
         $idempresa = $request->idempresa;
-        ConnectDatabase($idempresa);
+        $idusuario = $request->idusuario;
+        $idlote = $request->IDlote;
+        $iddocto = $request->IDdocto;
+        $tipodocto = $request->tipodocto;
+        $num_movtos = count($request->movtos);
+        $codigo = $request->codigo;
+        $movtos = $request->movtos;
+        ConnectDatabase($idempresa);        
+        
+        $cont = 0;
+        
+        for ($i=0; $i < $num_movtos; $i++) {
 
-    }    
+            if($tipodocto == 3){
+                $folio = $movtos[$i]['folio'];
+                $fecha = $movtos[$i]['fecha'];
+                $producto = $movtos[$i]['producto'];
+                $cantidad = $movtos[$i]['cantidad'];
+                $subtotal = floatval($movtos[$i]['subtotal']);
+                $descuento = floatval($movtos[$i]['descuento']);
+                $iva = floatval($movtos[$i]['iva']);
+                $total = floatval($movtos[$i]['total']);
+
+                $codigotemp = str_replace("-", "", $fecha).$tipodocto.$folio;
+
+                if($codigo == $codigotemp){
+                    $iddocumento = DB::table('mc_lotesmovtos')->insertGetId(['idlote' => $idlote, 'iddocto' => $iddocto, 'fechamov' => $fecha, 'producto' => $producto, 'cantidad' => $cantidad, 'subtotal' => $subtotal, 'descuento' => $descuento, 'iva' => $iva, 'total' => $total]);
+                }
+            }elseif($tipodocto == 2){
+                $fecha = $movtos[$i]['fecha'];
+                $producto = $movtos[$i]['producto'];
+                $litros = $movtos[$i]['litros'];
+                $almacen = $movtos[$i]['almacen'];
+                $kilometro = $movtos[$i]['kilometro'];
+                $horometro = $movtos[$i]['horometro'];
+                $unidad = $movtos[$i]['unidad'];
+                $importe = floatval($movtos[$i]['importe']);
+
+                $codigotemp = str_replace("-", "", $fecha).$tipodocto.$litros.$unidad;
+
+                
+                //$iddocumento = DB::select("SELECT id FROM mc_lotesmovtos WHERE iddocto  = '$iddocto'");
+                //$iddocumento = DB::select("SELECT mc_lotesmovtos.id FROM mc_lotesdocto, mc_lotesmovtos WHERE mc_lotesdocto.codigo = '$codigo'");
+                
+                if($codigo == $codigotemp){
+
+                    $iddocumento = DB::table('mc_lotesmovtos')->insertGetId(['idlote' => $idlote, 'iddocto' => $iddocto, 'fechamov' => $fecha, 'producto' => $producto, 'cantidad' => $litros, 'almacen' => $almacen, 'kilometros' => $kilometro, 'horometro' => $horometro, 'unidad' => $unidad, 'total' => $importe]);
+                }
+
+            }
+
+
+        }
+        
+        
+        return $iddocumento; 
+    }   
+
     //-----------------//
 
 }

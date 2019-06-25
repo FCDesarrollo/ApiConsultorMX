@@ -122,6 +122,10 @@ Route::post('enviarModulos', 'FcPremiumController@enviarModulos');
 Route::post('versionesModulos', 'FcPremiumController@versionesModulos');
 Route::post('datosVersion', 'FcPremiumController@datosVersion');
 Route::post('linkArchivo', 'FcPremiumController@linkArchivo');
+Route::post('actualizaVersion', 'FcPremiumController@actualizaVersion');
+Route::post('altaCliente', 'FcPremiumController@altaCliente');
+Route::post('verificarLicencia', 'FcPremiumController@verificarLicencia');
+Route::post('validarClave', 'FcPremiumController@validarClave');
 
 //VALIDACIONES RECEPCION POR LOTES
 Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');

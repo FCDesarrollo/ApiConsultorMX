@@ -58,7 +58,7 @@ class FcPremiumController extends Controller
         $idversion = $request->idversion;
         $version = DB::connection("General")->select("SELECT m.nombre_archivo AS nomfin,m.nombre_carpeta,
                                                     v.nombre_version,v.nombre_archivo AS nomdes,
-                                                    v.nombre_ficha,v.script_gen,v.script_empresa
+                                                    v.nombre_ficha,v.script_gen,v.spreedsheets
                                                     FROM fcmodulos m INNER JOIN fcmodversion v 
                                                     ON m.idmodulo=v.idmodulo WHERE v.idversion='$idversion'");    
         $datos = array(
@@ -99,9 +99,105 @@ class FcPremiumController extends Controller
             
             $url = ((string)$Respuesta[0]->data->url);
             curl_close($ch);
-            $prueba="Hola";
             return $url;
     }
 
-    
+    function actualizaVersion(Request $request){
+        $rfcempresa = $request->rfc;
+        $idmodulo = $request->idmodulo;
+        $fecha = $request->fecha;
+        $version = $request->version;
+        $permiso = $request->permiso;
+
+        $empresa = DB::connection("General")->select("SELECT idcliente FROM fcclientes WHERE rfc='$rfcempresa'");    
+        $idcliente = $empresa[0]->idcliente;
+
+        $empresa = DB::connection("General")->select("SELECT idversion FROM fcmodversion 
+                                        WHERE idmodulo='$idmodulo' AND nombre_version='$version'");    
+        if (!empty($empresa)){
+        $idversion = $empresa[0]->idversion;
+
+        DB::connection("General")->table('fcmodclientes')->where("idcliente", $idcliente)->
+            where("idmodulo", $idmodulo)->
+            update(['fecha_actualiza' => $fecha, 'idversion' => $idversion, 'permiso' => $permiso]);
+        }    
+        return "1";
+    }
+
+    function altaCliente(Request $request){
+        $rfcempresa = $request->rfc;
+        $nomcliente = $request->razon;
+        $idcliente= 0;
+        $now = date('Y-m-d');
+        $empresa = DB::connection("General")->select("SELECT idcliente FROM fcclientes WHERE rfc='$rfcempresa'");    
+        if (empty($empresa)){
+            if($rfcempresa != "" && $nomcliente != ""){
+                $idcliente = DB::connection("General")->table('fcclientes')->insertGetId(
+                    ['nombre_cliente' => $nomcliente,'rfc' => $rfcempresa,
+                    'fecha' => $now,'status' =>"1" ]); 
+            }
+        }else{
+            $idcliente = $empresa[0]->idcliente;
+        }
+        return $idcliente;
+    }
+
+    function verificarLicencia(Request $request){
+        $rfcempresa = $request->rfc;
+        $nomcliente = $request->razon;
+        $equipo= $request->equipo;
+        $clave =$request->clave;
+        $idcliente= 0;
+        $datoex= "FcPremium2019";
+        $now = date('Y-m-d');
+        $Serial="";
+        $retur = "Licencia No Valida, , ";
+
+        $empresa = DB::connection("General")->select("SELECT idcliente FROM fcclientes WHERE rfc='$rfcempresa'");    
+        if (empty($empresa)){
+            if($rfcempresa != "" && $nomcliente != ""){
+                $idcliente = DB::connection("General")->table('fcclientes')->insertGetId(
+                    ['nombre_cliente' => $nomcliente,'rfc' => $rfcempresa,
+                    'fecha' => $now,'status' =>"1" ]); 
+            }
+        }else{
+            $idcliente = $empresa[0]->idcliente;
+        }
+
+        if ($idcliente != 0){
+            $licencia = DB::connection("General")->select("SELECT idlicencia,clave_activacion,fechafin FROM fclicencias 
+                                                            WHERE numero_serie='$clave' AND idcliente=0 AND status=0");
+            $Serial= bcrypt($clave.$equipo.$rfcempresa.$datoex);
+            if (!empty($licencia)){
+                DB::connection("General")->table('fclicencias')->where("idlicencia", $licencia[0]->idlicencia)->
+                    update(['idcliente' => $idcliente, 'clave_activacion' => $Serial, 'equipo' => $equipo, 'status' => "1"]);
+
+                $retur = "Licencia Valida,".$Serial.",".$licencia[0]->fechafin;
+            }
+        }
+
+        return $retur;
+    }
+
+    function validarClave(Request $request){
+        $rfcempresa = $request->rfc;
+        $equipo= $request->equipo;
+        $clave = $request->clave;
+        $res = 0;
+
+        $empresa = DB::connection("General")->select("SELECT idcliente FROM fcclientes WHERE rfc='$rfcempresa' AND status=1");    
+        if (!empty($empresa)){
+            $idcliente = $empresa[0]->idcliente;
+            $licencia = DB::connection("General")->select("SELECT clave_activacion FROM fclicencias WHERE
+                                             idcliente='$idcliente' AND equipo='$equipo' AND status=1"); 
+            if (!empty($licencia)){
+                if ($licencia[0]->clave_activacion == $clave ){
+                    $res = 1;    
+                }
+            }
+        }
+
+        return $res;
+    }
+
 }

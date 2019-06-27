@@ -515,7 +515,6 @@ class GeneralesController extends Controller
                                 //echo is_float($val4);                                
                                 if($val6 != "" && is_float($val6) && (is_float($val7) || $val6 == "") && (is_float($val8) || $val8 == "") && is_float($val9)){
                                     $validaciones = true;
-
                                 }else{
                                     if($val6 == "" || !is_float($val6)){
                                         $error = "Neto incorrecto o vacio.";

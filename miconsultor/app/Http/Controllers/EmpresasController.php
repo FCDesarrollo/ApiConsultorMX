@@ -132,7 +132,7 @@ class EmpresasController extends Controller
                 nombre VARCHAR(120) COLLATE latin1_spanish_ci DEFAULT NULL,
                 descripcion VARCHAR(254) COLLATE latin1_spanish_ci DEFAULT NULL,
                 fecha DATE DEFAULT NULL,
-                STATUS INT(11) DEFAULT '1'
+                status INT(11) DEFAULT '1'
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($QueryPerfiles);   
 

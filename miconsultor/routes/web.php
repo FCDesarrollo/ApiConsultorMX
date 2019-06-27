@@ -112,6 +112,20 @@ Route::get('PermisosMenusPerfil', 'GeneralesController@PermisosMenusPerfil');
 Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil');
 
 
+//PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
+Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');
+Route::post('numEstadistica', 'AdministradorController@numEstadistica');
+Route::get('allempresas', 'AdministradorController@allempresas');
+
+//API FC_PREMIUM
+Route::post('enviarModulos', 'FcPremiumController@enviarModulos');
+Route::post('versionesModulos', 'FcPremiumController@versionesModulos');
+Route::post('datosVersion', 'FcPremiumController@datosVersion');
+Route::post('linkArchivo', 'FcPremiumController@linkArchivo');
+Route::post('actualizaVersion', 'FcPremiumController@actualizaVersion');
+Route::post('altaCliente', 'FcPremiumController@altaCliente');
+Route::post('verificarLicencia', 'FcPremiumController@verificarLicencia');
+Route::post('validarClave', 'FcPremiumController@validarClave');
 
 //VALIDACIONES RECEPCION POR LOTES
 Route::get('ConsultarLotes', 'GeneralesController@ConsultarLotes');

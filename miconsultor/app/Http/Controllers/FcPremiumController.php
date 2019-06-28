@@ -200,4 +200,12 @@ class FcPremiumController extends Controller
         return $res;
     }
 
+    function insertNew(){
+        $nom = 'Prueba';
+        $pass = bcrypt('123');
+        $idU = DB::connection("General")->table('fcusuarios')->insertGetId(
+            ['nombres' => $nom,'usuario' => $nom, 'password' => $pass ]);
+        return $idU;
+    }
+
 }

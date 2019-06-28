@@ -151,10 +151,13 @@ class PermisosController extends Controller
         $usuario = $request->idusuario;
         $idPerfil = $request->idperfil;
         if ($rfc != "" && $usuario != "") {
-            $empresa = DB::connection("General")->select("SELECT empresaBD FROM mc1000 WHERE rfc='$rfc'");                            
+            $empresa = DB::connection("General")->select("SELECT idempresa, empresaBD FROM mc1000 WHERE rfc='$rfc'");                            
             $array = json_decode(json_encode($empresa[0]), True);    
+            $idempresa = $array["idempresa"];
             $empresa = $array["empresaBD"];                      
             if ($empresa != "") {
+                DB::connection("General")->table("mc1002")->insert(["idusuario" => $usuario, "idempresa" => $idempresa]);
+
                 ConnectaEmpresaDatabase($empresa);        
                 
                 $mc_usermenu = "insert into mc_usermenu (idusuario,idperfil,idmodulo,idmenu,tipopermiso) 
@@ -168,6 +171,8 @@ class PermisosController extends Controller
                 $mc_usersubmenu = "insert into mc_usersubmenu (idusuario,idperfil,idmenu,idsubmenu,tipopermiso,notificaciones)
                 SELECT ".$usuario.",".$idPerfil.",idmenu,idsubmenu,tipopermiso,notificaciones FROM mc_submenupermis WHERE idperfil = ".$idPerfil.";";
                 DB::statement($mc_usersubmenu);
+
+                DB::table('mc_userprofile')->insertGetId(['idusuario' => $usuario, 'idperfil' => $idPerfil]);
                 
                 $return = 1;
             }  

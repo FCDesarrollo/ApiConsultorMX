@@ -277,6 +277,24 @@ class GeneralesController extends Controller
     }
 
 //---------------RECEPCION POR LOTES
+    function ObtenerDatos(Request $request){
+        $idempresa = $request->idempresa;
+        ConnectDatabase($idempresa);
+        $lotes = DB::select("SELECT l.fechadecarga, l.usuario, l.tipo, d.concepto, d.proveedor, d.fecha, d.campoextra1, m.producto, m.almacen, m.kilometros, m.horometro, m.unidad, m.cantidad, m.total FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote And d.id = m.iddocto");
+
+        for($i=0; $i < count($lotes); $i++){
+            
+            $idusuario = $lotes[$i]->usuario;            
+
+            $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+
+            $lotes[$i]->usuario = $datosuser[0]->nombre;
+        }        
+
+        return $lotes;
+
+    }
+
     function ConsultarLotes(Request $request){
         $idempresa = $request->idempresa;
 
@@ -529,23 +547,23 @@ class GeneralesController extends Controller
                             }
                         }elseif ($tipodocto == 2) {
                             if($val10 != "" && is_float($val10)){                                    
-                                if($val11 != "" && is_float($val11)){
+                                //if($val11 != "" && is_float($val11)){
                                     if($val12 != ""){
-                                        if($val13 != "" && is_float($val13)){
-                                            if($val14 != "" && is_float($val14)){
+                                        //if($val13 != "" && is_float($val13)){
+                                            //if($val14 != "" && is_float($val14)){
                                                 $validaciones = true;
-                                            }else{
-                                                $error = "Error Kilometros.";
-                                            }
-                                        }else{
-                                            $error = "Error Horometro.";
-                                        }                                        
+                                            //}else{
+                                            //    $error = "Error Kilometros.";
+                                            //}
+                                        //}else{
+                                        //    $error = "Error Horometro.";
+                                        //}                                        
                                     }else{
                                         $error = "Campo vacio(Unidad).";
                                     }
-                                }else{
-                                    $error = "Error en Litros.";
-                                }
+                                //}else{
+                                //    $error = "Error en Litros.";
+                                //}
                             }else{
                                 $error = "Error con el Almacen.";
                             }                            

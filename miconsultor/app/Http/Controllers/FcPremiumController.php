@@ -58,7 +58,7 @@ class FcPremiumController extends Controller
         $idversion = $request->idversion;
         $version = DB::connection("General")->select("SELECT m.nombre_archivo AS nomfin,m.nombre_carpeta,
                                                     v.nombre_version,v.nombre_archivo AS nomdes,
-                                                    v.nombre_ficha,v.script_gen,v.spreedsheets
+                                                    v.nombre_ficha,v.script_gen,v.spreedsheets,v.arch_version
                                                     FROM fcmodulos m INNER JOIN fcmodversion v 
                                                     ON m.idmodulo=v.idmodulo WHERE v.idversion='$idversion'");    
         $datos = array(

@@ -301,7 +301,7 @@ class GeneralesController extends Controller
         $iddocto = $request->iddocto;
         ConnectDatabase($idempresa);
 
-        $result = DB::table('mc_lotesdocto')->where("id", $iddocto)->update(['idadw' => $idadw, 'estatus' => 1);
+        $result = DB::table('mc_lotesdocto')->where("id", $iddocto)->update(['idadw' => $idadw, 'estatus' => "1"]);
 
         return $result;
 

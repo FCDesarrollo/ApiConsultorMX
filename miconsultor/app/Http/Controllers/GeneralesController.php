@@ -280,7 +280,7 @@ class GeneralesController extends Controller
     function ObtenerDatos(Request $request){
         $idempresa = $request->idempresa;
         ConnectDatabase($idempresa);
-        $lotes = DB::select("SELECT l.fechadecarga, l.usuario, l.tipo, d.concepto, d.proveedor, d.fecha, d.campoextra1, m.producto, m.almacen, m.kilometros, m.horometro, m.unidad, m.cantidad, m.total FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote And d.id = m.iddocto");
+        $lotes = DB::select("SELECT l.fechadecarga, l.usuario, l.tipo, d.id, d.concepto, d.proveedor, d.fecha, d.campoextra1, m.producto, m.almacen, m.kilometros, m.horometro, m.unidad, m.cantidad, m.total FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote And d.id = m.iddocto");
 
         for($i=0; $i < count($lotes); $i++){
             
@@ -292,6 +292,18 @@ class GeneralesController extends Controller
         }        
 
         return $lotes;
+
+    }
+
+    function ProcesarLote(Request $request){
+        $idempresa = $request->idempresa;
+        $idadw = $request->idadw;
+        $iddocto = $request->iddocto;
+        ConnectDatabase($idempresa);
+
+        $result = DB::table('mc_lotesdocto')->where("id", $iddocto)->update(['idadw' => $idadw, 'estatus' => 1);
+
+        return $result;
 
     }
 

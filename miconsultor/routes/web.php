@@ -139,4 +139,5 @@ Route::get('ObtenerDatos', 'GeneralesController@ObtenerDatos');
 Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');
+Route::post('ProcesarLote', 'GeneralesController@ProcesarLote');
 

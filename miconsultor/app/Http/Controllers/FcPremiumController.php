@@ -183,7 +183,7 @@ class FcPremiumController extends Controller
         $rfcempresa = $request->rfc;
         $equipo= $request->equipo;
         $clave = $request->clave;
-        $res = 0;
+       
 
         $empresa = DB::connection("General")->select("SELECT idcliente FROM fcclientes WHERE rfc='$rfcempresa' AND status=1");    
         if (!empty($empresa)){
@@ -198,6 +198,21 @@ class FcPremiumController extends Controller
         }
 
         return $res;
+    }
+
+    function activa(Request $request){
+        $rfcempresa = $request->rfc;
+        $equipo= $request->equipo;
+        $retur = "Licencia No Valida, , ";
+
+        $empresa = DB::connection("General")->select("SELECT idcliente FROM fcclientes WHERE rfc='$rfcempresa' AND status=1");    
+        if (!empty($empresa)){
+            $idcliente = $empresa[0]->idcliente;
+            $licencia = DB::connection("General")->select("SELECT clave_activacion,fechafin FROM fclicencias WHERE
+                                             idcliente='$idcliente' AND equipo='$equipo' AND status=1"); 
+            $retur = "Licencia Valida,".$licencia[0]->clave_activacion.",".$licencia[0]->fechafin;
+        }
+        return $retur;
     }
 
 }

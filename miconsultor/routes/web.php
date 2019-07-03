@@ -126,7 +126,7 @@ Route::post('actualizaVersion', 'FcPremiumController@actualizaVersion');
 Route::post('altaCliente', 'FcPremiumController@altaCliente');
 Route::post('verificarLicencia', 'FcPremiumController@verificarLicencia');
 Route::post('validarClave', 'FcPremiumController@validarClave');
-
+Route::post('activa', 'FcPremiumController@activa');
 
 //VALIDACIONES RECEPCION POR LOTES
 Route::get('ConsultarLotes', 'GeneralesController@ConsultarLotes');

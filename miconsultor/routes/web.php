@@ -135,9 +135,11 @@ Route::get('ConsultarMovtos', 'GeneralesController@ConsultarMovtos');
 Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
 Route::post('EliminarLote', 'GeneralesController@EliminarLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
-Route::get('ObtenerDatos', 'GeneralesController@ObtenerDatos');
-Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
+//Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');
-Route::post('ProcesarLote', 'GeneralesController@ProcesarLote');
 
+//PARA CONSUMO DEL MODULO DE INVENTARIOS
+Route::post('ProcesarLote', 'ConsumoController@ProcesarLote');
+Route::get('ObtenerDatos', 'ConsumoController@ObtenerDatos');
+Route::get('Paginador', 'GeneralesController@Paginador');

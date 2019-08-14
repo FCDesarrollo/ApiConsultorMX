@@ -138,6 +138,8 @@ Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
 //Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');
+Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
+Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
 
 //PARA CONSUMO DEL MODULO DE INVENTARIOS
 Route::post('ProcesarLote', 'ConsumoController@ProcesarLote');

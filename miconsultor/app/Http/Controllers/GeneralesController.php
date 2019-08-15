@@ -557,7 +557,7 @@ class GeneralesController extends Controller
                         if($val10 != ""){                                    
                             if($val11 != "" && is_float($val11)){
                                 if($val12 != ""){
-                                    if($val13 != "" && is_float($val13)){
+                                    if($val13 == 0 && is_float($val13)){
                                         if(($val14 != "" || $val14 == 0) && is_float($val14)){
                                             
                                         }else{
@@ -721,7 +721,7 @@ class GeneralesController extends Controller
 
                     $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");
 
-                    $doctumentos[0][$i]["estatus"] = (empty($movtos) ? 2 : 3); //Actualizado
+                    $doctumentos[0][$i]["estatus"] =  2; //Actualizado
 
                     $idlote = $lote[0]->idlote;
 

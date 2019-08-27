@@ -112,6 +112,10 @@ Route::get('PermisosMenusPerfil', 'GeneralesController@PermisosMenusPerfil');
 Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil');
 
 
+//ARCHIVOS EMPRESA
+Route::get('RubrosGen', 'EmpresasController@RubrosGen');
+Route::post('CargaArchivos', 'EmpresasController@CargaArchivos');
+
 //PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
 Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');
 Route::post('numEstadistica', 'AdministradorController@numEstadistica');

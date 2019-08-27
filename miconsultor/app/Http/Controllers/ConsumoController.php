@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 class ConsumoController extends Controller
 {
     public function ValidarConexion($RFCEmpresa, $Usuario, $Password){
+
+        $conexion[0]['error'] = 0;
         
         $idempresa = DB::connection("General")->select("SELECT idempresa, rutaempresa FROM mc1000 WHERE RFC = '$RFCEmpresa'");
         
@@ -17,9 +19,18 @@ class ConsumoController extends Controller
 
             $conexion[0]['idempresa'] = $idempresa[0]->idempresa;
 
-            $idusuario = DB::connection("General")->select("SELECT idusuario FROM mc1001 WHERE correo = '$Usuario' And password = '$Password'");     
+            $idusuario = DB::connection("General")->select("SELECT idusuario FROM mc1001 WHERE correo = '$Usuario'");
+
 
             if(!empty($idusuario)){                 
+
+                $pass = DB::connection("General")->select("SELECT  FROM mc1001 WHERE idusuario = $idusuario[0]->idusuario And password = '$Password'");    
+
+                if(!empty($idusuario)){
+
+                }else{
+                    $conexion[0]['error'] = 3; //Contraseña Incorrecta
+                }
 
                 ConnectDatabase($idempresa[0]->idempresa);
 
@@ -31,14 +42,14 @@ class ConsumoController extends Controller
 
 
             }else{
-                $conexion[0]['idusuario'] = 0;                
+                $conexion[0]['error'] = 2; //Correo Incorrecto          
             }            
             
 
         }else{
 
-            $conexion[0]['idempresa'] = 0;
-            $conexion[0]['idusuario'] = 0;
+            $conexion[0]['error'] = 1; //
+            //$conexion[0]['idusuario'] = 1;
 
         }
 
@@ -51,16 +62,18 @@ class ConsumoController extends Controller
         $RFCEmpresa = $request->RFCEmpresa;
         $Usuario = $request->Usuario;
         $Pwd = $request->Pwd;
+        $FecI = $request->FechaI;
+        $FecF = $request->FechaF;
+        $TipoDocumento = $request->TipoDocto;
 
-        $idempresa = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd);
-        
+        $idempresa = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd);       
         
         
         if($idempresa[0]['idempresa'] > 0 And $idempresa[0]['idusuario'] > 0){        
         //if($idempresa[0]['idempresa'] > 0 And $idempresa[0]['idusuario'] > 0){        
             //$idempresa = $request->idempresa;
             ConnectDatabase($idempresa[0]['idempresa']);
-            $lotes = DB::select("SELECT l.fechadecarga, l.usuario, l.tipo, d.id, d.concepto, d.proveedor, d.fecha, d.campoextra1, d.estatus, d.idadw, m.producto, m.almacen, m.kilometros, m.horometro, m.unidad, m.cantidad, m.total FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote And d.id = m.iddocto");
+            $lotes = DB::select("SELECT l.fechadecarga, l.usuario, l.tipo, d.id, d.concepto, d.proveedor, d.fecha, d.campoextra1, d.estatus, d.idadw, m.producto, m.almacen, m.kilometros, m.horometro, m.unidad, m.cantidad, m.total FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote And d.id = m.iddocto AND fecha >= 'FecI' AND fecha <= 'FecF'");
 
             for($i=0; $i < count($lotes); $i++){
                 

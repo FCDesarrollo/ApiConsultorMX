@@ -131,7 +131,8 @@ Route::post('activa', 'FcPremiumController@activa');
 //VALIDACIONES RECEPCION POR LOTES
 Route::get('ConsultarLotes', 'GeneralesController@ConsultarLotes');
 Route::get('ConsultarDoctos', 'GeneralesController@ConsultarDoctos');
-Route::get('ConsultarMovtos', 'GeneralesController@ConsultarMovtos');
+Route::get('ConsultarMovtosLote', 'GeneralesController@ConsultarMovtosLote');
+Route::get('ConsultarMovtosDocto', 'GeneralesController@ConsultarMovtosDocto');
 Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
 Route::post('EliminarLote', 'GeneralesController@EliminarLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');

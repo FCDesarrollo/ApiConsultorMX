@@ -344,13 +344,15 @@ class GeneralesController extends Controller
         return $doctos;        
     }
 
-    function ConsultarMovtos(Request $request){
+    function ConsultarMovtosLote(Request $request){
         $idempresa = $request->idempresa;
-        $idlote = $request->idlote;
+        $id = $request->id;
 
         ConnectDatabase($idempresa); 
 
-        $movtos = DB::select("SELECT m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.idlote = $idlote");
+        $movtos = DB::select("SELECT m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.idlote = $id");
+
+
         for ($i=0; $i < count($movtos); $i++) { 
             $codigoprod = $movtos[$i]->producto;
             $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = $codigoprod");
@@ -358,6 +360,22 @@ class GeneralesController extends Controller
         }        
 
         return $movtos;        
+    }
+
+    function ConsultarMovtosDocto(Request $request){
+        $idempresa = $request->idempresa;
+        $id = $request->id;
+        ConnectDatabase($idempresa); 
+
+        $movtos = DB::select("SELECT d.folio, d.serie, d.sucursal, m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.iddocto = $id");
+
+        for ($i=0; $i < count($movtos); $i++) { 
+            $codigoprod = $movtos[$i]->producto;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = $codigoprod");
+            $movtos[$i]->producto = $doctos[0]->nombreprod;
+        }        
+
+        return $movtos;                
     }
 
     function EliminarLote(Request $request){
@@ -397,7 +415,14 @@ class GeneralesController extends Controller
 
             //$cargados = DB::select("SELECT totalregistros FROM mc_lotes WHERE id = '$idlote'");
             
-            DB::table('mc_lotes')->where("id", $idlote)->update(['totalcargados' => $doctos[0]->doctos]);            
+            if($doctos[0]->doctos > 0){
+                DB::table('mc_lotes')->where("id", $idlote)->update(['totalcargados' => $doctos[0]->doctos]);                
+            }else{
+                DB::table('mc_lotes')->where("id", $idlote)->delete();
+                DB::table('mc_lotesdocto')->where("idlote", $idlote)->delete();
+                DB::table('mc_lotesmovtos')->where("idlote", $idlote)->delete();                
+            }
+            
 
             $docto = DB::select("SELECT * FROM mc_lotesdocto WHERE id = $iddocto And estatus <> 2");
 
@@ -759,7 +784,7 @@ class GeneralesController extends Controller
                            
 
                 }                    
-                $this->UpdateLote($idempresa, $tipodocto, $idlote, $num_doctos);
+                $this->UpdateLote($idempresa, $tipodocto, $idlote);
             }
         }
          
@@ -771,13 +796,14 @@ class GeneralesController extends Controller
 
     }
 
-    function UpdateLote($idempresa, $tipodocto, $idlote, $num_doctos){     
+    function UpdateLote($idempresa, $tipodocto, $idlote){     
 
         ConnectDatabase($idempresa);
 
         $n = DB::select("SELECT count(id) AS reg FROM mc_lotesdocto WHERE idlote = '$idlote' And error <> 1");
+        $totalregistros = DB::select("SELECT count(id) AS totalreg FROM mc_lotesdocto WHERE idlote = '$idlote'");
         
-        DB::table('mc_lotes')->where("id", $idlote)->update(['tipo' => $tipodocto, 'totalregistros' => $num_doctos, 'totalcargados' => $n[0]->reg]);
+        DB::table('mc_lotes')->where("id", $idlote)->update(['tipo' => $tipodocto, 'totalregistros' => $totalregistros[0]->totalreg, 'totalcargados' => $n[0]->reg]);
     }
 
     function RegistrarMovtos2($idempresa, $idusuario, $idlote, $iddocto, $tipodocto, $codigo, $movtos, $num_movtos){
@@ -907,9 +933,11 @@ class GeneralesController extends Controller
 
         for($i=0; $i < $count; $i++){
             $codprod = $datos[$i]['codigoproducto'];
+            $codigocliprov = $datos[$i]['codigocliprov'];
             $rfc = $datos[$i]['rfc'];
             $codconcepto = $datos[$i]['codigoconcepto'];
             $razonsocial = $datos[$i]['razonsocial'];
+
 
             $suc = $datos[$i]['sucursal'];
             $tipodocto = $datos[$i]['idconce'];
@@ -941,10 +969,10 @@ class GeneralesController extends Controller
                 }
             }
 
-            if($rfc == $RFCGenerico){
-                $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE razonsocial = '$razonsocial' And tipocli = '$tipocli' OR tipocli = 3");    
+            if($rfc == $RFCGenerico){                
+                $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$codigocliprov' And (tipocli = '$tipocli' OR tipocli = 3)");    
             }else{
-                $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$rfc' And tipocli = '$tipocli' OR tipocli = 3");    
+                $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$rfc' And (tipocli = '$tipocli' OR tipocli = 3)");    
             }            
             if(empty($proveedor)){
                 $dato[1]['status'] = 1;
@@ -999,14 +1027,22 @@ class GeneralesController extends Controller
                     $campo3 = 1; //Cliente
                     break;
             }
-            $elemento = $datos[$i][4]; //Codigo de la plantilla
-            if($elemento == $campo1){ $campo4 = $campo1; }else{ $campo4 = $campo1; $campo1 = $elemento; }
+            $elemento = $datos[$i][4]; //Elemento pendiente
+
+            //if($elemento == $campo1){ 
+            //    $campo4 = $campo1; 
+            //    echo "Elemento igual al campo1";
+            //}else{ 
+            //    $campo4 = $campo1; 
+            //    $campo1 = $elemento; 
+            //    echo "Asignamos Elemento a campo1";
+            //}
             
 
             if($tipo == "productos"){            
                 $ele = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$campo1' OR codigoadw = '$campo1'");
                 if(empty($ele)){
-                    DB::table('mc_catproductos')->insertGetId(['codigoprod' => $campo1, 'nombreprod' => $campo2, 'codigoadw' => $campo4, 'nombreadw' => $campo2, 'fechaalta' => now()]);
+                    DB::table('mc_catproductos')->insertGetId(['codigoprod' => $elemento, 'nombreprod' => $campo2, 'codigoadw' => $campo1, 'nombreadw' => $campo2, 'fechaalta' => now()]);
                     
                     $datos[$i]['registrado'] = 1;
                 }else{
@@ -1014,8 +1050,9 @@ class GeneralesController extends Controller
                     
                 }        
             }else if($tipo == "clientesproveedores"){    
-                if($campo1 == "XAXX010101000"){
+                if($campo1 == "XAXX010101000"){                    
                     $codigoclienteproveedor = strtoupper($datos[$i][5]);
+                    //$codigoclienteproveedor = strtoupper($elemento);
                     $ele = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$codigoclienteproveedor'");
                 }else{
                     $codigoclienteproveedor = ($datos[$i][5] == "" ? $campo1 : strtoupper($datos[$i][5]));
@@ -1030,8 +1067,8 @@ class GeneralesController extends Controller
                     if($ele[0]->tipocli == $campo3){                        
                         $datos[$i]['registrado'] = 0;
                     }else{
-                        if($ele[0]->tipocli != 3){
-                            if($ele[0]->razonsocial == $campo2){
+                        if($ele[0]->tipocli != 3){                            
+                            if($ele[0]->razonsocial == $campo2 || $ele[0]->codigoc == $codigoclienteproveedor){
                                 DB::table('mc_catclienprov')->where("id", $ele[0]->id)->update(['tipocli' => 3, 'razonsocial' => $campo2]);     
                                 $datos[$i]['registrado'] = 1;
                             }else{
@@ -1045,7 +1082,7 @@ class GeneralesController extends Controller
             }else if($tipo == "conceptos"){
                 $ele = DB::select("SELECT * FROM mc_catconceptos WHERE codigoconcepto = '$campo1' OR codigoadw = '$campo1'");
                 if(empty($ele)){
-                    DB::table('mc_catconceptos')->insertGetId(['codigoconcepto' => $campo1, 'nombreconcepto' => $campo2, 'codigoadw' => $campo4, 'nombreadw' => $campo2]);
+                    DB::table('mc_catconceptos')->insertGetId(['codigoconcepto' => $elemento, 'nombreconcepto' => $campo2, 'codigoadw' => $campo1, 'nombreadw' => $campo2]);
                     
                     $datos[$i]['registrado'] = 1;
                 }else{

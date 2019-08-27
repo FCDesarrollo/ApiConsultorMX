@@ -110,3 +110,9 @@ Route::get('DatosPerfilEmpresa', 'GeneralesController@DatosPerfilEmpresa');
 Route::get('PermisosModPerfil', 'GeneralesController@PermisosModPerfil');
 Route::get('PermisosMenusPerfil', 'GeneralesController@PermisosMenusPerfil');
 Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil');
+
+
+//ARCHIVOS EMPRESA
+Route::get('RubrosGen', 'EmpresasController@RubrosGen');
+Route::post('CargaArchivos', 'EmpresasController@CargaArchivos');
+

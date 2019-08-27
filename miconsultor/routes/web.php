@@ -116,3 +116,36 @@ Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil')
 Route::get('RubrosGen', 'EmpresasController@RubrosGen');
 Route::post('CargaArchivos', 'EmpresasController@CargaArchivos');
 
+//PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
+Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');
+Route::post('numEstadistica', 'AdministradorController@numEstadistica');
+Route::get('allempresas', 'AdministradorController@allempresas');
+
+//API FC_PREMIUM
+Route::post('enviarModulos', 'FcPremiumController@enviarModulos');
+Route::post('versionesModulos', 'FcPremiumController@versionesModulos');
+Route::post('datosVersion', 'FcPremiumController@datosVersion');
+Route::post('linkArchivo', 'FcPremiumController@linkArchivo');
+Route::post('actualizaVersion', 'FcPremiumController@actualizaVersion');
+Route::post('altaCliente', 'FcPremiumController@altaCliente');
+Route::post('verificarLicencia', 'FcPremiumController@verificarLicencia');
+Route::post('validarClave', 'FcPremiumController@validarClave');
+Route::post('activa', 'FcPremiumController@activa');
+
+//VALIDACIONES RECEPCION POR LOTES
+Route::get('ConsultarLotes', 'GeneralesController@ConsultarLotes');
+Route::get('ConsultarDoctos', 'GeneralesController@ConsultarDoctos');
+Route::get('ConsultarMovtos', 'GeneralesController@ConsultarMovtos');
+Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
+Route::post('EliminarLote', 'GeneralesController@EliminarLote');
+Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
+//Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
+Route::post('VerificarLote', 'GeneralesController@VerificarLote');
+Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');
+Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
+Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
+
+//PARA CONSUMO DEL MODULO DE INVENTARIOS
+Route::post('ProcesarLote', 'ConsumoController@ProcesarLote');
+Route::get('ObtenerDatos', 'ConsumoController@ObtenerDatos');
+Route::get('Paginador', 'GeneralesController@Paginador');

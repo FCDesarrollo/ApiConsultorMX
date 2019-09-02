@@ -355,8 +355,10 @@ class GeneralesController extends Controller
 
         for ($i=0; $i < count($movtos); $i++) { 
             $codigoprod = $movtos[$i]->producto;
-            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = $codigoprod");
-            $movtos[$i]->producto = $doctos[0]->nombreprod;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = '$codigoprod'");
+            if(!empty($doctos)){
+                $movtos[$i]->producto = $doctos[0]->nombreprod;
+            }
         }        
 
         return $movtos;        
@@ -371,8 +373,11 @@ class GeneralesController extends Controller
 
         for ($i=0; $i < count($movtos); $i++) { 
             $codigoprod = $movtos[$i]->producto;
-            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = $codigoprod");
-            $movtos[$i]->producto = $doctos[0]->nombreprod;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = '$codigoprod'");
+            if(!empty($doctos)){
+                $movtos[$i]->producto = $doctos[0]->nombreprod;
+            }
+            
         }        
 
         return $movtos;                
@@ -435,6 +440,9 @@ class GeneralesController extends Controller
         $idempresa = $request->idempresa;
         $idusuario = $request->idusuario;
         $tipodocto = $request->tipodocto;
+
+        //$a  = isset($request->conexion);
+
         ConnectDatabase($idempresa);
 
         $lote = $request->movtos;

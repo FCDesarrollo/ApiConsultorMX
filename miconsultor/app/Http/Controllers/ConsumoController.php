@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class ConsumoController extends Controller
 {
-    public function ValidarConexion($RFCEmpresa, $Usuario, $Password){
+    public function ValidarConexion($RFCEmpresa, $Usuario, $Password, $TipoDocumento, $Modulo, $Menu, $SubMenu){
 
         $conexion[0]['error'] = 0;
         
@@ -19,101 +19,131 @@ class ConsumoController extends Controller
 
             $conexion[0]['idempresa'] = $idempresa[0]->idempresa;
 
-            $idusuario = DB::connection("General")->select("SELECT idusuario FROM mc1001 WHERE correo = '$Usuario'");
-
+            $idusuario = DB::connection("General")->select("SELECT idusuario, password FROM mc1001 WHERE correo = '$Usuario'");
 
             if(!empty($idusuario)){                 
 
-                $pass = DB::connection("General")->select("SELECT  FROM mc1001 WHERE idusuario = $idusuario[0]->idusuario And password = '$Password'");    
+                $conexion[0]['idusuario'] = $idusuario[0]->idusuario;
 
-                if(!empty($idusuario)){
+                $ID = $idusuario[0]->idusuario;
 
+                if($Pwd == $idusuario[0]->password){
+
+                    ConnectDatabase($idempresa[0]->idempresa);                    
+
+                    $permisos = DB::select("SELECT modulo.tipopermiso AS modulo, menu.tipopermiso AS menu, submenu.tipopermiso AS submenu FROM mc_usermod modulo, mc_usermenu menu, mc_usersubmenu submenu WHERE modulo.idusuario = $ID And menu.idusuario = $ID And submenu.idusuario = $ID And modulo.idmodulo = $Modulo AND menu.idmenu = $Menu AND submenu.idsubmenu = $SubMenu;");
+
+
+                    //$conexion[0]['tipopermiso'] = $permisos[0]->tipopermiso;
+
+                    if($permisos[0]->modulo != 0 And $permisos[0]->menu != 0 And $permisos[0]->submenu != 0){
+
+                        $conexion[0]['permisomodulo'] = $permisos[0]->modulo;
+                        $conexion[0]['permisomenu'] = $permisos[0]->menu;
+                        $conexion[0]['permisosubmenu'] = $permisos[0]->submenu;
+
+                        $tipodocto = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = $TipoDocumento");
+
+                        if(!empty($tipodocto)){                            
+                            $conexion[0]['tipodocumento'] = $tipodocto[0]->tipo;
+                        }else{
+                            $conexion[0]['error'] = 5; //Tipo de documento no valido
+                        }
+                    }else{
+                        $conexion[0]['error'] = 4; //El Usuario no tiene permisos
+                    }
                 }else{
                     $conexion[0]['error'] = 3; //Contraseña Incorrecta
                 }
-
-                ConnectDatabase($idempresa[0]->idempresa);
-
-                $conexion[0]['idusuario'] = $idusuario[0]->idusuario;
-
-                $validacion = DB::select("SELECT tipopermiso FROM mc_usersubmenu WHERE idusuario = $idusuario[0]->idusuario AND idmenu = 6 GROUP BY tipopermiso");                
-                
-                $conexion[0]['tipopermiso'] = $validacion[0]->tipopermiso;                   
-
-
             }else{
                 $conexion[0]['error'] = 2; //Correo Incorrecto          
-            }            
-            
-
+            }   
         }else{
-
-            $conexion[0]['error'] = 1; //
+            $conexion[0]['error'] = 1; //RFC no existe
             //$conexion[0]['idusuario'] = 1;
-
         }
-
-        
         return $conexion;
     }
 
     public function ObtenerDatos(Request $request){ 
         
-        $RFCEmpresa = $request->RFCEmpresa;
-        $Usuario = $request->Usuario;
-        $Pwd = $request->Pwd;
-        $FecI = $request->FechaI;
-        $FecF = $request->FechaF;
-        $TipoDocumento = $request->TipoDocto;
+        $RFCEmpresa = $request->rfcempresa;
+        $Usuario = $request->usuario;
+        $Pwd = $request->pwd;
+        $FecI = $request->fechai;
+        $FecF = $request->fechaf;
+        $TipoDocumento = $request->tipodocto;
 
-        $idempresa = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd);       
+        $autenticacion = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd, $TipoDocumento, 2, 6, 17);  
+
+        $array[0]["error"] = $autenticacion[0]["error"];
         
-        
-        if($idempresa[0]['idempresa'] > 0 And $idempresa[0]['idusuario'] > 0){        
-        //if($idempresa[0]['idempresa'] > 0 And $idempresa[0]['idusuario'] > 0){        
-            //$idempresa = $request->idempresa;
-            ConnectDatabase($idempresa[0]['idempresa']);
-            $lotes = DB::select("SELECT l.fechadecarga, l.usuario, l.tipo, d.id, d.concepto, d.proveedor, d.fecha, d.campoextra1, d.estatus, d.idadw, m.producto, m.almacen, m.kilometros, m.horometro, m.unidad, m.cantidad, m.total FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote And d.id = m.iddocto AND fecha >= 'FecI' AND fecha <= 'FecF'");
+        if($autenticacion[0]['error'] == 0){     
 
-            for($i=0; $i < count($lotes); $i++){
-                
-                $idusuario = $lotes[$i]->usuario;            
+            ConnectDatabase($autenticacion[0]['idempresa']);
+            
+            $doctos = DB::select("SELECT l.fechadecarga, l.usuario, d.* FROM mc_lotes l, mc_lotesdocto d WHERE l.id = d.idlote AND fecha >= '$FecI' AND fecha <= '$FecF' AND l.tipo = $TipoDocumento");
 
-                $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+            if(empty($doctos)){
+                $doctos[0]["id"] = NULL;
+            }else{
+                for($i=0; $i < count($doctos); $i++){
+                    
+                    $idusuario = $doctos[$i]->usuario;            
 
-                $lotes[$i]->usuario = $datosuser[0]->nombre;
-            }        
+                    $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
 
-            return $lotes;            
-        }else{
+                    $doctos[$i]->usuario = $datosuser[0]->nombre;
+                }                
+            }
 
-            return $idempresa; // 0 -> Error de conexion (RFC, Usuario o Contraseña no validos).
+            $movtos = DB::select("SELECT m.* FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote AND d.id = m.iddocto AND d.fecha >= '$FecI' AND d.fecha <= '$FecF' AND l.tipo = $TipoDocumento");
+
+            if(empty($movtos)){
+                $movtos[0]["id"] = NULL;
+            }
+
+            $array[1] = $doctos;
+            $array[2] = $movtos;
+
         }
+        
+        //echo $array[0]['error'];
 
-
+        return $array;
 
     }
 
     function ProcesarLote(Request $request){
 
-        $RFCEmpresa = $request->RFCEmpresa;
-        $Usuario = $request->Usuario;
-        $Pwd = $request->Pwd;
-        $idadw = $request->idadw;
-        $iddocto = $request->iddocto;
+        $RFCEmpresa = $request->rfcempresa;
+        $Usuario = $request->usuario;
+        $Pwd = $request->pwd;        
+        $TipoDocumento = $request->tipodocto;
+        $registros = $request->registros;
 
-        $idempresa = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd);
+        $a  = isset($request->conexion) ? $request->conexion : 0;
 
-         if($idempresa[0]['idempresa'] > 0 And $idempresa[0]['idusuario'] > 0){  
+        $autenticacion = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd, $TipoDocumento, 2, 6, 17);  
 
-            ConnectDatabase($idempresa[0]['idempresa']);
+        $array[0]["error"] = $autenticacion[0]["error"];
 
-            $result = DB::table('mc_lotesdocto')->where("id", $iddocto)->update(['idadw' => $idadw, 'estatus' => "1"]);
+        if($autenticacion[0]['error'] == 0){
+            
+            ConnectDatabase($autenticacion[0]['idempresa']);
+            
+            for ($i=0; $i < count($registros); $i++) {               
+                
+                $id = $registros[$i]['iddocto'];
+                $idadw = $registros[$i]['iddoctoadw'];                
+                
+                DB::table('mc_lotesdocto')->where("id", $id)->update(['idadw' => $idadw, 'idsupervisor' => $autenticacion[0]["idusuario"], 'fechaprocesado' => now(), 'estatus' => "1"]);                
 
-            return $result;
+            }
 
-        }else{
-            return $idempresa;
         }
+
+        return $array;
+        
     }    
 }

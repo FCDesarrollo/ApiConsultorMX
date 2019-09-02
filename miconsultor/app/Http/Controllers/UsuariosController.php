@@ -37,12 +37,20 @@ class UsuariosController extends Controller
                                             INNER JOIN mc1001 u ON r.idusuario=u.idusuario 
                                             WHERE u.cel='$request->cel' AND u.password='$request->contra' 
                                             AND u.status=1");*/
-        $password = md5($request->contra);
-        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$request->correo' AND password='$password' AND status=1");
-       
-        $datos = array(
-            "usuario" => $usuario,
-        );        
+        //$password = md5($request->contra);
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$request->correo' AND status=1");
+
+        $hash_BD = $usuario[0]->password;
+
+        if (password_verify($request->contra, $hash_BD)) {
+            $datos = array(
+                "usuario" => $usuario,
+            );
+        } else {
+            $datos = array(
+                "usuario" => "",
+            );
+        }              
 
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
@@ -98,7 +106,8 @@ class UsuariosController extends Controller
         if($request->idusuario==0){
             $data = $request->input();
             $password = $data["password"];        
-            $data['password'] = md5($password);            
+            //$data['password'] = md5($password);   
+            $data['password'] = password_hash($password, PASSWORD_BCRYPT);
             unset($data["idusuario"]);
             $id = DB::connection("General")->table('mc1001')->insertGetId($data);
         }else{
@@ -106,7 +115,8 @@ class UsuariosController extends Controller
             $id = $data["idusuario"];
             unset($data["idusuario"]);
             $password = $data["password"];        
-            $data['password'] = md5($password);            
+            //$data['password'] = md5($password);        
+            $data['password'] = password_hash($password, PASSWORD_BCRYPT);    
             DB::connection("General")->table('mc1001')->where("idusuario", $id)->update($data);
         }
         return $id;
@@ -255,7 +265,8 @@ class UsuariosController extends Controller
     public function RestablecerContraseña(Request $request)
     {      
         $id = $request->idusuario;    
-        DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->update(["password"=>md5($request->password)]);
+        $password = password_hash($request->password, PASSWORD_BCRYPT);
+        DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->update(["password" => $password]);
         return $id;        
     }    
 

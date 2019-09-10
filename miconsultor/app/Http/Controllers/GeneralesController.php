@@ -858,7 +858,7 @@ class GeneralesController extends Controller
                 $total = floatval($movtos[$i]['total']);
                 $codigotemp = str_replace("-", "", $fecha).$tipodocto.$cantidad.$unidad;
 
-                
+
                 if($codigo == $codigotemp){ // tipo 2
                     $docto = DB::select("SELECT * FROM mc_lotesmovtos WHERE idlote = '$idlote' And iddocto =  '$iddocto' And fechamov = '$fecha' And total = '$total'");
 
@@ -962,7 +962,7 @@ class GeneralesController extends Controller
             $suc = $datos[$i]['sucursal'];
             $tipodocto = $datos[$i]['idconce'];
 
-            $datos[$i]['prodreg'] = 0;
+            $datos[$i]['productoreg'] = 0;
             $datos[$i]['clienprovreg'] = 0;
             $datos[$i]['conceptoreg'] = 0;
             $datos[$i]['sucursalreg'] = 0;
@@ -982,7 +982,7 @@ class GeneralesController extends Controller
             $producto = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$codprod'");
             if(empty($producto)){
                 $dato[1]['status'] = 1;
-                $datos[$i]['prodreg'] = 1;  
+                $datos[$i]['productoreg'] = 1;  
             }else{
                 if(is_null($datos[$i]['nombreproducto'])){
                     $datos[$i]['nombreproducto'] = $producto[0]->nombreprod;

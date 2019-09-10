@@ -137,16 +137,16 @@ Route::get('ConsultarLotes', 'GeneralesController@ConsultarLotes');
 Route::get('ConsultarDoctos', 'GeneralesController@ConsultarDoctos');
 Route::get('ConsultarMovtosLote', 'GeneralesController@ConsultarMovtosLote');
 Route::get('ConsultarMovtosDocto', 'GeneralesController@ConsultarMovtosDocto');
-Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
+//Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
 Route::post('EliminarLote', 'GeneralesController@EliminarLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
-//Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
-Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');
+Route::post('LoteCargado', 'GeneralesController@LoteCargado');
 Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
 Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
+Route::get('Paginador', 'GeneralesController@Paginador');
 
 //PARA CONSUMO DEL MODULO DE INVENTARIOS
-Route::post('ProcesarLote', 'ConsumoController@ProcesarLote');
-Route::get('ObtenerDatos', 'ConsumoController@ObtenerDatos');
-Route::get('Paginador', 'GeneralesController@Paginador');
+Route::post('LoteMarcado', 'ConsumoController@LoteMarcado');
+Route::post('LoteConsumo', 'ConsumoController@LoteConsumo');
+

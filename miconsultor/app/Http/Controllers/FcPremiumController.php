@@ -231,7 +231,7 @@ class FcPremiumController extends Controller
             $datos = array(
                 "documentos" => $archivos,
             ); 
-            return json_encode($datos, JSON_UNESCAPED_UNICODE);
+            return $datos;
         } 
         return "false";
     }

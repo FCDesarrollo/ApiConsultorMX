@@ -217,11 +217,11 @@ class FcPremiumController extends Controller
 
     function archivosBitacora(Request $request){
         $rfcempresa = $request->rfc;
-        $idsubmenu = $request->idsubmene;
+        $idsubmenu = $request->idsubmenu;
         $tipo = $request->tipodocumento;
         $status = $request->status;
 
-        $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1001 WHERE rfc='$rfcempresa' AND status=1");
+        $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc='$rfcempresa' AND status=1");
         if (!empty($empresa)){
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);

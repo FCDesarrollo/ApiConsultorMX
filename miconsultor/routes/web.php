@@ -150,3 +150,5 @@ Route::get('Paginador', 'GeneralesController@Paginador');
 Route::post('LoteMarcado', 'ConsumoController@LoteMarcado');
 Route::post('LoteConsumo', 'ConsumoController@LoteConsumo');
 
+//10/09/2019 PARA LEER LA BITACORA
+Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');

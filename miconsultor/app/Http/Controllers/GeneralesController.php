@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
+use App\Http\Controller\LoteCargadoExt;
+
 class GeneralesController extends Controller
 {
     function PerfilUsuario(Request $request)
@@ -276,36 +278,25 @@ class GeneralesController extends Controller
         return $datos;
     }
 
-//---------------RECEPCION POR LOTES
-    function ObtenerDatos(Request $request){
-        $idempresa = $request->idempresa;
-        ConnectDatabase($idempresa);
-        $lotes = DB::select("SELECT l.fechadecarga, l.usuario, l.tipo, d.concepto, d.proveedor, d.fecha, d.campoextra1, m.producto, m.almacen, m.kilometros, m.horometro, m.unidad, m.cantidad, m.total FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote And d.id = m.iddocto");
 
-        for($i=0; $i < count($lotes); $i++){
-            
-            $idusuario = $lotes[$i]->usuario;            
 
-            $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
 
-            $lotes[$i]->usuario = $datosuser[0]->nombre;
-        }        
-
-        return $lotes;
-
-    }
+//---------------RECEPCION POR LOTES------------------------//
 
     function ConsultarLotes(Request $request){
         $idempresa = $request->idempresa;
-
+    //    $lotespagina = $request->iniciar - 1;
         ConnectDatabase($idempresa); 
 
-        $lotes = DB::select("SELECT * FROM mc_lotes WHERE totalregistros <> 0 And totalcargados <> 0 ORDER BY id DESC LIMIT 100");
+        $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 GROUP BY l.id ORDER BY l.id DESC");
+        //$lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 GROUP BY l.id ORDER BY l.id DESC LIMIT $lotespagina, 1");
+
+
         
         for($i=0; $i < count($lotes); $i++){
 
             $idlote = $lotes[$i]->id;
-            
+                       
             $procesados = DB::select("SELECT id FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
 
             $lotes[$i]->procesados = count($procesados);
@@ -313,10 +304,19 @@ class GeneralesController extends Controller
             $idusuario = $lotes[$i]->usuario;            
 
             $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
-            
-            //echo $datosuser[0]->nombre;
 
             $lotes[$i]->usuario = $datosuser[0]->nombre;
+
+            $clave = $lotes[$i]->tipo;
+
+            $tipo = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = '$clave'");
+
+            $lotes[$i]->tipodet = $tipo[0]->tipo;
+
+            //$suc = DB::select("SELECT sucursal FROM mc_lotesdocto WHERE idlote = $idlote");
+
+            //$lotes[$i]->sucursal = $suc[0]->sucursal;
+            
         }
 
         return $lotes;           
@@ -330,19 +330,62 @@ class GeneralesController extends Controller
         ConnectDatabase($idempresa); 
 
         $doctos = DB::select("SELECT * FROM mc_lotesdocto WHERE idlote = $idlote");
+        for ($i=0; $i < count($doctos); $i++) { 
+            $codigocon = $doctos[$i]->concepto;
+            $nombrec = DB::select("SELECT nombreconcepto FROM mc_catconceptos WHERE codigoconcepto = '$codigocon'");
+            if(!empty($nombrec)){
+                $doctos[$i]->concepto = $nombrec[0]->nombreconcepto;    
+            }
+            
+        }
+        /*for ($i=0; $i < count($datos); $i++) { 
+            $clave = $datos[$i]->codigo;
+            $clave = $clave.substr(8,1);
+            $tipo = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = '$clave'");
+            $datos[$i]->tipo = $tipo[0]->tipo;
+        } */
+
 
         return $doctos;        
     }
 
-    function ConsultarMovtos(Request $request){
+    function ConsultarMovtosLote(Request $request){
         $idempresa = $request->idempresa;
-        $idlote = $request->idlote;
+        $id = $request->id;
 
         ConnectDatabase($idempresa); 
 
-        $movtos = DB::select("SELECT * FROM mc_lotesmovtos WHERE idlote = $idlote");
+        $movtos = DB::select("SELECT m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.idlote = $id");
+
+
+        for ($i=0; $i < count($movtos); $i++) { 
+            $codigoprod = $movtos[$i]->producto;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = '$codigoprod'");
+            if(!empty($doctos)){
+                $movtos[$i]->producto = $doctos[0]->nombreprod;
+            }
+        }        
 
         return $movtos;        
+    }
+
+    function ConsultarMovtosDocto(Request $request){
+        $idempresa = $request->idempresa;
+        $id = $request->id;
+        ConnectDatabase($idempresa); 
+
+        $movtos = DB::select("SELECT d.folio, d.serie, d.sucursal, m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.iddocto = $id");
+
+        for ($i=0; $i < count($movtos); $i++) { 
+            $codigoprod = $movtos[$i]->producto;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = '$codigoprod'");
+            if(!empty($doctos)){
+                $movtos[$i]->producto = $doctos[0]->nombreprod;
+            }
+            
+        }        
+
+        return $movtos;                
     }
 
     function EliminarLote(Request $request){
@@ -357,9 +400,9 @@ class GeneralesController extends Controller
             DB::table('mc_lotes')->where("id", $idlote)->delete();
             DB::table('mc_lotesdocto')->where("idlote", $idlote)->delete();
             DB::table('mc_lotesmovtos')->where("idlote", $idlote)->delete();
-            //$doctos = true;
+            
         }else{
-            //$doctos = false;
+            
         }
 
         return $doctos;        
@@ -374,17 +417,25 @@ class GeneralesController extends Controller
         $docto = DB::select("SELECT * FROM mc_lotesdocto WHERE id = $iddocto");
 
         if($docto[0]->estatus == 0){
-//            DB::table('mc_lotes')->where("id", $idlote)->delete();
+
             $idlote = $docto[0]->idlote;
-            DB::table('mc_lotesdocto')->where("id", $iddocto)->delete();
-            DB::table('mc_lotesmovtos')->where("iddocto", $iddocto)->delete();            
+            DB::table('mc_lotesdocto')->where("id", $iddocto)->update(['estatus' => 2]);
+            
+            $doctos = DB::select("SELECT COUNT(id) AS doctos FROM mc_lotesdocto WHERE idlote = '$idlote' AND estatus <> 2");
 
-            $cargados = DB::select("SELECT totalcargados FROM mc_lotes WHERE id = '$idlote'");
-            $n = $cargados[0]->totalcargados - 1;
-            DB::table('mc_lotes')->where("id", $idlote)->update(['totalcargados' => $n]); 
+            //$cargados = DB::select("SELECT totalregistros FROM mc_lotes WHERE id = '$idlote'");
+            
+            if($doctos[0]->doctos > 0){
+                DB::table('mc_lotes')->where("id", $idlote)->update(['totalcargados' => $doctos[0]->doctos]);                
+            }else{
+                DB::table('mc_lotes')->where("id", $idlote)->delete();
+                DB::table('mc_lotesdocto')->where("idlote", $idlote)->delete();
+                DB::table('mc_lotesmovtos')->where("idlote", $idlote)->delete();                
+            }
+            
 
+            $docto = DB::select("SELECT * FROM mc_lotesdocto WHERE id = $iddocto And estatus <> 2");
 
-            $docto = DB::select("SELECT * FROM mc_lotesdocto WHERE id = $iddocto");
         }
 
         return $docto;
@@ -394,6 +445,9 @@ class GeneralesController extends Controller
         $idempresa = $request->idempresa;
         $idusuario = $request->idusuario;
         $tipodocto = $request->tipodocto;
+
+        //$a  = isset($request->conexion);
+
         ConnectDatabase($idempresa);
 
         $lote = $request->movtos;
@@ -408,23 +462,35 @@ class GeneralesController extends Controller
 
             if($request->movtos[$i]['idconce'] == 3){
                 $folio = $request->movtos[$i]['folio'];                
-                $estatus = $request->movtos[$i];
+                //$estatus = $request->movtos[$i];
                 $codigo = $fecha.$tipodocto.$folio;                
             }else if($request->movtos[$i]['idconce'] == 2){
                 $unidad = $request->movtos[$i]['unidad'];            
-                $estatus = $request->movtos[$i];
-                $litros = $request->movtos[$i]['litros'];
+                //$estatus = $request->movtos[$i];
+                $litros = $request->movtos[$i]['cantidad'];
                 $codigo = $fecha.$tipodocto.$litros.$unidad;
+            }else if($request->movtos[$i]['idconce'] == 4){
+                $cantidad = $request->movtos[$i]['cantidad'];
+                $unidad = $request->movtos[$i]['unidad'];
+                $precio = $request->movtos[$i]['total'];
+                $codigo = $fecha.$tipodocto.$cantidad.$unidad.$precio;
+            }else if($request->movtos[$i]['idconce'] == 5){
+                $cantidad = $request->movtos[$i]['cantidad'];
+                $unidad = $request->movtos[$i]['unidad'];
+                //$estatus = $request->movtos[$i];                
+                $codigo = $fecha.$tipodocto.$cantidad.$unidad;
             }
 
 
-            $result = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");
+            $result = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo' And error <> 1");
             
 
             if(empty($result)){
-                $lote[$i]['estatus'] = "False";                
+                $lote[$i]['estatus'] = "False";
             }else{                
                 $lote[$i]['estatus'] = "True";                
+                $lote[$i]['iddocto'] = $result[0]->id;
+                $lote[$i]['procesado'] = $result[0]->estatus;
             }
 
             $lote[$i]['codigo'] = $codigo;
@@ -435,249 +501,631 @@ class GeneralesController extends Controller
     }
 
 
-    function RegistrarLote(Request $request){
-        $idempresa = $request->idempresa;
-        $idusuario = $request->idusuario;        
-        ConnectDatabase($idempresa);
 
-        $tipodocto = $request->tipodocto;
-        $fechac = now();
-
-        $idlote = DB::select("SELECT id FROM mc_lotes WHERE ISNULL(tipo) LIMIT 1");
-
-        if(empty($idlote)){
-           $lote = DB::table('mc_lotes')->insertGetId(['fechadecarga' => $fechac, 'usuario' => $idusuario]);
-           $idlote = DB::select("SELECT id FROM mc_lotes WHERE id = '$lote'");
-        }
-        return $idlote; 
-    }
 
     function ConvertirValor($variable){
         $flag = true;
-
         $var = $variable;
-
-        $permitidos = "0123456789"; 
-       
+        $permitidos = "0123456789.,$";       
         for ($i=0; $i<strlen($variable); $i++){ 
             if (strpos($permitidos, substr($variable,$i,1))===false){ 
                 $flag = false;                
                 break;
             } 
         }
-
         if($flag == true){
             $var = floatval($var);            
         }
-
         return $var;
     }
 
-    function RegistrarDoctos(Request $request){
-        $idempresa = $request->idempresa;
-        $idusuario = $request->idusuario;
-        $idlote = $request->IDlotes;
-        $tipodocto = $request->tipodocto;
-        $codigo = $request->codigo;
-        $doctumentos = $request->doctos;
-        $span = $request->span;
+    function ValidarDatos($documentos, $tipodocto, $num_movtos){
         
-
-        ConnectDatabase($idempresa);
-
-        $num_movtos = count($request->doctos);
-    
-        $flag = 0;
         $val4 = "";$val5 = "";$val6 = "";$val7 = "";$val8 = "";$val9 = "";$val10 = "";$val11 = "";$val12 = "";$val13 = "";
-        
         $codigolote = "";
-
         for ($i=0; $i < $num_movtos; $i++) { 
-            $fecha = $doctumentos[$i]["fecha"];
-            $concepto = $doctumentos[$i]["concepto"];
-            $proveedor = $this->ConvertirValor($doctumentos[$i]["proveedor"]);
-            $producto = $doctumentos[$i]["producto"]; 
+            $error = "";
+            $fecha = $documentos[$i]["fecha"];
+            $concepto = $documentos[$i]["codigoconcepto"];
+            $rfc = $this->ConvertirValor($documentos[$i]["rfc"]);
+            $producto = $documentos[$i]["codigoproducto"]; 
+            $suc = $documentos[$i]["sucursal"]; 
 
             if($tipodocto == 3){                
-                $val4 = $this->ConvertirValor($doctumentos[$i]["folio"]);
-                $val5 = $this->ConvertirValor($doctumentos[$i]["serie"]);
-                $val6 = $this->ConvertirValor($doctumentos[$i]["subtotal"]);
-                $val7 = $this->ConvertirValor($doctumentos[$i]["descuento"]);
-                $val8 = $this->ConvertirValor($doctumentos[$i]["iva"]);
-                $val9 = $this->ConvertirValor($doctumentos[$i]["total"]);
-                
-                $codigolote = str_replace("-", "", $fecha).$tipodocto.$val4; 
-                          
+                $val4 = $this->ConvertirValor($documentos[$i]["folio"]);
+                $val5 = $this->ConvertirValor($documentos[$i]["serie"]);
+                $val6 = $this->ConvertirValor($documentos[$i]["subtotal"]);
+                $val7 = $this->ConvertirValor($documentos[$i]["descuento"]);
+                $val8 = $this->ConvertirValor($documentos[$i]["iva"]);
+                $val9 = $this->ConvertirValor($documentos[$i]["total"]);
+                $codigolote = str_replace("-", "", $fecha).$tipodocto.$val4;
             }else if($tipodocto == 2){
-                $val9 = $this->ConvertirValor($doctumentos[$i]["importe"]);
-                $val10 = $this->ConvertirValor($doctumentos[$i]["almacen"]);
-                $val11 = $this->ConvertirValor($doctumentos[$i]["litros"]);                
-                $val12 = $this->ConvertirValor($doctumentos[$i]["unidad"]);                
-                $val13 = $this->ConvertirValor($doctumentos[$i]["horometro"]);
-                $val14 = $this->ConvertirValor($doctumentos[$i]["kilometro"]);
-                //$val6 = floatval($doctumentos[$i]["importe"]);
-                //$val7 = $doctumentos[$i]["unidad"];
+                $val9 = $this->ConvertirValor($documentos[$i]["total"]);
+                $val10 = $this->ConvertirValor($documentos[$i]["almacen"]);
+                $val11 = $this->ConvertirValor($documentos[$i]["cantidad"]);                
+                $val12 = $this->ConvertirValor($documentos[$i]["unidad"]);                
+                $val13 = $this->ConvertirValor($documentos[$i]["horometro"]);
+                $val14 = $this->ConvertirValor($documentos[$i]["kilometro"]);
                 $codigolote = str_replace("-", "", $fecha).$tipodocto.$val11.$val12;
-            }           
+            }else if($tipodocto == 4){
+                $val9 = $this->ConvertirValor($documentos[$i]["total"]);
+                $val10 = $this->ConvertirValor($documentos[$i]["almacen"]);
+                $val11 = $this->ConvertirValor($documentos[$i]["cantidad"]);                
+                $val12 = $this->ConvertirValor($documentos[$i]["unidad"]);                
+                $codigolote = str_replace("-", "", $fecha).$tipodocto.$val11.$val12.$val9;
+            }else if($tipodocto == 5){
+                $val10 = $this->ConvertirValor($documentos[$i]["almacen"]);
+                $val11 = $this->ConvertirValor($documentos[$i]["cantidad"]);                
+                $val12 = $this->ConvertirValor($documentos[$i]["unidad"]);                
+                $codigolote = str_replace("-", "", $fecha).$tipodocto.$val11.$val12;
+            } 
 
-
-            //------------VALIDACIONES----------------
-            $validaciones = false;
             $valores = explode('-', $fecha);
             if(count($valores) == 3 && checkdate($valores[1], $valores[2], $valores[0])){
-                if(is_string($proveedor)){
-                    if ($val9 != "" || is_float($val9)) {
+                if(is_string($rfc)){                    
                         
-                        if($tipodocto == 3){
-                            if($val4 != "" && is_float($val4)){
-                                //echo is_float($val4);                                
-                                if($val6 != "" && is_float($val6) && (is_float($val7) || $val6 == "") && (is_float($val8) || $val8 == "") && is_float($val9)){
-                                    $validaciones = true;
+                    if($tipodocto == 3){
+                        if($val4 != "" && is_float($val4)){                            
+                            if($val6 != "" && is_float($val6) && (is_float($val7) || $val6 == "") && (is_float($val8) || $val8 == "") && ($val9 != "" || is_float($val9))){
+
+                            }else{
+                                if($val6 == "" || !is_float($val6)){
+                                    $error = "Neto incorrecto o vacio.";
+                                }else if(!is_float($val7)) {
+                                    $error = "Desc. Incorrecto.";
+                                }else if(!is_float($val8)) {
+                                    $error = "IVA incorrecto.";
+                                }else if($val9 == "" || !is_float($val9)){
+                                    $error = "Total incorrecto o vacio.";                                        
+                                }                                
+                            }
+                        }else{
+                            $error = "Folio Incorrecto";                                                             
+                        }
+                    }else if($tipodocto == 2) {
+                        if($val10 != ""){                                    
+                            if($val11 != "" || is_float($val11)){
+                                if($val12 != ""){
+                                    if($val13 == 0 || is_float($val13)){
+                                        if(($val14 != "" || $val14 == 0) && is_float($val14)){
+                                            
+                                        }else{
+                                            $error = "Error Kilometros.";
+                                        }
+                                    }else{
+                                        $error = "Error Horometro.";
+                                    }                                        
                                 }else{
-                                    if($val6 == "" || !is_float($val6)){
-                                        $error = "Neto incorrecto o vacio.";
-                                    }elseif (!is_float($val7)) {
-                                        $error = "Desc. Incorrecto.";
-                                    }elseif (!is_float($val8)) {
-                                        $error = "IVA incorrecto.";
-                                    }                                
+                                    $error = "Campo vacio(Unidad).";
                                 }
                             }else{
-                                $error = "Folio Incorrecto";                                                             
+                                $error = "Error en Litros.";
                             }
-                        }elseif ($tipodocto == 2) {
-                            if($val10 != "" && is_float($val10)){                                    
-                                //if($val11 != "" && is_float($val11)){
-                                    if($val12 != ""){
-                                        //if($val13 != "" && is_float($val13)){
-                                            //if($val14 != "" && is_float($val14)){
-                                                $validaciones = true;
-                                            //}else{
-                                            //    $error = "Error Kilometros.";
-                                            //}
-                                        //}else{
-                                        //    $error = "Error Horometro.";
-                                        //}                                        
-                                    }else{
-                                        $error = "Campo vacio(Unidad).";
+                        }else{
+                            $error = "Error con el Almacen.";
+                        }                            
+                    }else if($tipodocto == 4 || $tipodocto == 5){
+                        if($val10 != "" && is_float($val10)){
+                            if($val11 =! "" && is_float($val11)){
+                                if($val12 != ""){
+                                    if($tipodocto == 4){
+                                        if($val9 =! "" && is_float($val9)){
+
+                                        }else{
+                                            $error = "Error con el precio.";           
+                                        }                                        
                                     }
-                                //}else{
-                                //    $error = "Error en Litros.";
-                                //}
+                                }else{
+                                    $error = "Campo vacio(Unidad).";
+                                }
                             }else{
-                                $error = "Error con el Almacen.";
-                            }                            
+                                $error = "Error con la cantidad.";       
+                            }
+                        }else{
+                            $error = "Error con el Almacen.";
                         }
-                    }else{
-                        $error = "Total incorrecto o vacio.";
-                    }
+                    }/*else if($tipodocto == 5){
+                        if($val10 != "" && is_float($val10)){
+                            if($val11 =! "" && is_float($val11)){
+                                if($val12 != ""){
+
+                                }else{
+                                    $error = "Campo vacio(Unidad).";
+                                }
+                            }else{
+                                $error = "Error con la cantidad.";       
+                            }
+                        }else{
+                            $error = "Error con el Almacen.";
+                        }
+                    }*/
+
+                    
                 }else{
-                    $error = "Error con el proveedor";
+                    $error = "Error con el RFC";
                 }
             }else{
                 $error = "Fecha Incorrecta";
             }
-            
-            
-            if($codigo == $codigolote){       
-                //echo $codigo."-".$codigolote.">";
-                $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");
-                
-                if(empty($lote)){
 
-                    if($validaciones == true){
-                        DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'codigo' => $codigo, 'concepto' => $concepto, 'proveedor' => $proveedor, 'fecha' => $fecha, 'folio' => $val4, 'serie' => $val5, 'subtotal' => $val6, 'descuento' => $val7, 'iva' => $val8, 'total' => $val9, 'campoextra1' => $val11, 'campoextra2' => $val10]);
+            if($error != ""){                
+                $documentos[$i]['error'] = 1;                
+            }else{
+                $documentos[$i]['error'] = 0;                
+            }   
+            $documentos[$i]['error_det'] = $error;        
+
+        } //FIN FOR
+        return $documentos;
+    }
+
+/*    //function RegistrarLote(Request $request){
+    function RegistrarLote($idempresa, $idusuario, $tipodocto, $sucursal){
+        
+        //$idempresa = $request->idempresa;
+        //$idusuario = $request->idusuario;        
+        ConnectDatabase($idempresa);
+
+        //$tipodocto = $request->tipodocto;
+        //$sucursal = $request->sucursal;
+        //$fechac = now();
+        $fechac = date("Ymd"); 
+        $codigolote = $fechac.$idusuario.$tipodocto.$sucursal;
+
+        //$idlote = DB::select("SELECT id FROM mc_lotes WHERE tipo = 0 LIMIT 1");
+        $idlote = DB::select("SELECT id FROM mc_lotes WHERE codigolote = '$codigolote'");
+
+        if(empty($idlote)){
+            $lote = DB::table('mc_lotes')->insertGetId(['fechadecarga' => $fechac, 'codigolote' => $codigolote, 'usuario' => $idusuario, 'tipo' => 0]);
+            $idlote = DB::select("SELECT id FROM mc_lotes WHERE codigolote = '$codigolote'");
+        }
+        return $idlote[0]->id; 
+    }    */
+
+    function LoteCargado(Request $request){
+        
+        $tipoconexion = isset($request->conexion) ? $request->conexion : 0; // 1=Web 0=Otros(Externos).
+        $tipodocto = $request->tipodocto;      
+        
+        $movimientos = $request->movimientos;
+        
+        if($tipoconexion == 1){
+
+            
+            $idempresa = $request->idempresa;
+            $idusuario = $request->idusuario;            
+            $span = $request->span;
+            $documentos = $request->documentos;
+            //$codigo = $request->codigo;
+
+            ConnectDatabase($idempresa);
+
+            $num_doctos = count($documentos);
+            $num_movtos = count($movimientos);
+        
+            $flag = 0;
+            $val4 = "";$val5 = "";$val6 = "";$val7 = "";$val8 = "";$val9 = "";$val10 = "";$val11 = "";$val12 = "";$val13 = "";$val14 = "";
+            
+            $codigolote = "";
+            $k = 0;
+
+            $documentos = $this->ValidarDatos($documentos, $tipodocto, $num_doctos);
+
+            for ($i=0; $i < $num_doctos; $i++) { 
+
+                $fecha = $documentos[$i]["fecha"];
+                $codigoconcepto = $documentos[$i]["codigoconcepto"];
+                $concepto = $documentos[$i]["nombreconcepto"];
+                $rfc = $documentos[$i]["rfc"];
+                $razonsocial = $documentos[$i]["razonsocial"];
+                $codigoproducto = $documentos[$i]["codigoproducto"]; 
+                $producto = $documentos[$i]["nombreproducto"];
+                $suc = $documentos[$i]["sucursal"];
+
+                //$idlote = $this->RegistrarLote($idempresa, $idusuario, $tipodocto, $suc);
+                $idlote = (new ConsumoController)->RegistrarLote($idempresa, $idusuario, $tipodocto, $suc);
+
+                if($tipodocto == 3){                
+                    $val4 = $documentos[$i]["folio"];
+                    $val5 = $documentos[$i]["serie"];
+                    $val6 = $documentos[$i]["subtotal"];
+                    $val7 = $documentos[$i]["descuento"];
+                    $val8 = $documentos[$i]["iva"];
+                    $val9 = $documentos[$i]["total"];
+                    $codigolote = str_replace("-", "", $fecha).$tipodocto.$val4;                           
+                }else if($tipodocto == 2){
+                    $val9 = $documentos[$i]["total"];
+                    $val10 = $documentos[$i]["almacen"];
+                    $val11 = $documentos[$i]["cantidad"];                
+                    $val12 = $documentos[$i]["unidad"];                
+                    $val13 = $documentos[$i]["horometro"];
+                    $val14 = $documentos[$i]["kilometro"];
+                    $codigolote = str_replace("-", "", $fecha).$tipodocto.$val11.$val12;
+                }else if($tipodocto == 4 || $tipodocto == 5){
+                    $val10 = $documentos[$i]["almacen"];
+                    $val11 = $documentos[$i]["cantidad"];                
+                    $val12 = $documentos[$i]["unidad"];
+                    if($tipodocto == 4){
+                        $val9 = $documentos[$i]["total"];
+                        $codigolote = str_replace("-", "", $fecha).$tipodocto.$val11.$val12.$val9;
+                    }else{
+                        $codigolote = str_replace("-", "", $fecha).$tipodocto.$val11.$val12;
+                    }                
+                }
+
+                $error = $documentos[$i]["error"];
+                $error_det = $documentos[$i]["error_det"];
+               
+                $documentos[$i]["estatus"] = 0;
+
+                if($documentos[$i]["codigo"] != ""){
+                    
+                    $codigo = $documentos[$i]["codigo"];
+                    $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");                
+                                    
+                    if(empty($lote)){
+                        
+                        DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'codigo' => $codigo, 'sucursal' => $suc, 'concepto' => $codigoconcepto, 'proveedor' => $rfc, 'fecha' => $fecha, 'folio' => $val4, 'serie' => $val5, 'subtotal' => $val6, 'descuento' => $val7, 'iva' => $val8, 'total' => $val9,'campoextra1' => $val11, 'campoextra2' => $val10, 'error' => $error,  'detalle_error' => $error_det]);
+        
+                        $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");
+        
+                        $documentos[$i]["estatus"] = 1; //Nuevo Registro
+
+                        $this->RegistrarMovtos2($idempresa, $idusuario, $idlote, $lote[0]->id, $tipodocto, $codigo, $movimientos, $num_movtos);                       
+                    }else{
+                        $id = $lote[0]->id;
+                        $movtos = DB::select("SELECT * FROM mc_lotesmovtos WHERE iddocto = $id");
+                        
+                        DB::table('mc_lotesdocto')->where("id", $lote[0]->id)->update(['idlote' => $lote[0]->idlote, 'codigo' => $codigo, 'sucursal' => $suc, 'concepto' => $codigoconcepto, 'proveedor' => $rfc, 'fecha' => $fecha, 'folio' => $val4, 'serie' => $val5, 'subtotal' => $val6, 'descuento' => $val7, 'iva' => $val8, 'total' => $val9, 'campoextra1' => $val11, 'campoextra2' => $val10, 'error' => $error,  'detalle_error' => $error_det]);
+
+                        if($error == 0){
+                            DB::table('mc_lotesdocto')->where("id", $lote[0]->id)->update(['error' => $error, 'detalle_error' => $error_det]);
+                        }
+
                         $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo'");
 
-                        $lote[0]->span = $span;
+                        $documentos[$i]["estatus"] =  2; //Actualizado
 
-                        $this->UpdateLote($idempresa, $tipodocto, $idlote, $num_movtos);                        
-                            
-                        break;
-                    }else{                        
-                        $lote[0]['error'] = $error;                        
-                        $lote[0]['span'] = $span;
-                    }
+                        $idlote = $lote[0]->idlote;
+
+                        $this->RegistrarMovtos2($idempresa, $idusuario, $idlote, $lote[0]->id, $tipodocto, $codigo, $movimientos, $num_movtos);
+                               
+
+                    }                    
+                    //$this->UpdateLote($idempresa, $tipodocto, $idlote);
+                    (new ConsumoController)->UpdateLote($idempresa, $tipodocto, $idlote);
                 }
             }
+            return $documentos;
+        }else{
+            $RFCEmpresa = $request->rfcempresa;
+            $Usuario = $request->usuario;
+            $Pwd = $request->pwd;
+            //$documentos[0] = LoteCargadoExt($RFCEmpresa, $Usuario, $Pwd, $tipodocto, $documentos);
+
+            $result = (new ConsumoController)->LoteCargadoExt($RFCEmpresa, $Usuario, $Pwd, $tipodocto, $movimientos);
+            return $result;    
         } 
+         
 
-
-        return $lote;          
+        //return $lote;          
+        
 
 
     }
 
-    function UpdateLote($idempresa, $tipodocto, $idlote, $num_doctos){
-        //$idempresa = $request->idempresa;
-        //$idusuario = $request->idusuario;
-        //$tipodocto = $request->tipodocto;
-        //$num_doctos = count($request->numero_doc);
-        //$idlote = $request->idlote;        
+    function UpdateLote($idempresa, $tipodocto, $idlote){     
 
         ConnectDatabase($idempresa);
 
-        $n = DB::select("SELECT count(id) AS reg FROM mc_lotesdocto WHERE idlote = '$idlote'");
+        $n = DB::select("SELECT count(id) AS reg FROM mc_lotesdocto WHERE idlote = '$idlote' And error <> 1");
+        $totalregistros = DB::select("SELECT count(id) AS totalreg FROM mc_lotesdocto WHERE idlote = '$idlote'");
         
-        DB::table('mc_lotes')->where("id", $idlote)->update(['tipo' => $tipodocto, 'totalregistros' => $num_doctos, 'totalcargados' => $n[0]->reg]);
+        DB::table('mc_lotes')->where("id", $idlote)->update(['tipo' => $tipodocto, 'totalregistros' => $totalregistros[0]->totalreg, 'totalcargados' => $n[0]->reg]);
+
     }
 
-    function RegistrarMovtos(Request $request){
-        $idempresa = $request->idempresa;
-        $idusuario = $request->idusuario;
-        $idlote = $request->IDlote;
-        $iddocto = $request->IDdocto;
-        $tipodocto = $request->tipodocto;
-        $num_movtos = count($request->movtos);
-        $codigo = $request->codigo;
-        $movtos = $request->movtos;
-        ConnectDatabase($idempresa);        
+    function RegistrarMovtos2($idempresa, $idusuario, $idlote, $iddocto, $tipodocto, $codigo, $movtos, $num_movtos){
+
+        ConnectDatabase($idempresa);   
         
         $cont = 0;
         
         for ($i=0; $i < $num_movtos; $i++) {
 
+            $fecha = $movtos[$i]["fecha"];            
+            $codigoproducto = $movtos[$i]["codigoproducto"]; 
+
             if($tipodocto == 3){
-                $folio = $movtos[$i]['folio'];
-                $fecha = $movtos[$i]['fecha'];
-                $producto = $movtos[$i]['producto'];
-                $cantidad = $movtos[$i]['cantidad'];
-                $subtotal = floatval($movtos[$i]['subtotal']);
-                $descuento = floatval($movtos[$i]['descuento']);
-                $iva = floatval($movtos[$i]['iva']);
-                $total = floatval($movtos[$i]['total']);
+                $folio = $movtos[$i]["folio"];
+                $cantidad = $movtos[$i]["cantidad"];
+                $subtotal = floatval($movtos[$i]["subtotal"]);
+                $descuento = floatval($movtos[$i]["descuento"]);
+                $iva = floatval($movtos[$i]["iva"]);
+                $total = floatval($movtos[$i]["total"]);
+                $codigotemp = str_replace("-", "", $fecha).$tipodocto.$folio;    
 
-                $codigotemp = str_replace("-", "", $fecha).$tipodocto.$folio;
 
-                if($codigo == $codigotemp){
-                    $iddocumento = DB::table('mc_lotesmovtos')->insertGetId(['idlote' => $idlote, 'iddocto' => $iddocto, 'fechamov' => $fecha, 'producto' => $producto, 'cantidad' => $cantidad, 'subtotal' => $subtotal, 'descuento' => $descuento, 'iva' => $iva, 'total' => $total]);
-                }
+                if($codigo == $codigotemp){ // tipo 3
+                    $iddocumento = DB::table('mc_lotesmovtos')->insertGetId(['idlote' => $idlote, 'iddocto' => $iddocto, 'fechamov' => $fecha, 'producto' => $codigoproducto, 'cantidad' => $cantidad, 'subtotal' => $subtotal, 'descuento' => $descuento, 'iva' => $iva, 'total' => $total]);
+                }                        
             }elseif($tipodocto == 2){
-                $fecha = $movtos[$i]['fecha'];
-                $producto = $movtos[$i]['producto'];
-                $litros = $movtos[$i]['litros'];
+                $cantidad = $movtos[$i]['cantidad'];
                 $almacen = $movtos[$i]['almacen'];
-                $kilometro = $movtos[$i]['kilometro'];
-                $horometro = $movtos[$i]['horometro'];
+                $kilometros = $movtos[$i]['kilometro'];
+                $horometros = $movtos[$i]['horometro'];
                 $unidad = $movtos[$i]['unidad'];
-                $importe = floatval($movtos[$i]['importe']);
-
-                $codigotemp = str_replace("-", "", $fecha).$tipodocto.$litros.$unidad;
+                $total = floatval($movtos[$i]['total']);
+                $codigotemp = str_replace("-", "", $fecha).$tipodocto.$cantidad.$unidad;
 
                 
-                if($codigo == $codigotemp){
+                if($codigo == $codigotemp){ // tipo 2
+                    $docto = DB::select("SELECT * FROM mc_lotesmovtos WHERE idlote = '$idlote' And iddocto =  '$iddocto' And fechamov = '$fecha' And total = '$total'");
 
-                    $iddocumento = DB::table('mc_lotesmovtos')->insertGetId(['idlote' => $idlote, 'iddocto' => $iddocto, 'fechamov' => $fecha, 'producto' => $producto, 'cantidad' => $litros, 'almacen' => $almacen, 'kilometros' => $kilometro, 'horometro' => $horometro, 'unidad' => $unidad, 'total' => $importe]);
+                    if(empty($docto)){
+                        $iddocumento = DB::table('mc_lotesmovtos')->insertGetId(['idlote' => $idlote, 'iddocto' => $iddocto, 'fechamov' => $fecha, 'producto' => $codigoproducto, 'cantidad' => $cantidad, 'almacen' => $almacen, 'kilometros' => $kilometros, 'horometro' => $horometros, 'unidad' => $unidad, 'total' => $total]);
+                    }else{
+                        $iddocumento = DB::table('mc_lotesmovtos')->where("id", $docto[0]->id)->update(['producto' => $codigoproducto, 'almacen' => $almacen, 'kilometros' => $kilometros, 'horometro' => $horometros, 'total' => $total]);
+                    }
+                }                
+            }elseif($tipodocto == 4 || $tipodocto == 5){
+                $cantidad = $movtos[$i]["cantidad"];
+                $almacen = $movtos[$i]['almacen'];
+                $unidad = $movtos[$i]['unidad'];
 
+                if($tipodocto == 4){
+                    $precio = $movtos[$i]['total'];
+                    $codigotemp = str_replace("-", "", $fecha).$tipodocto.$cantidad.$unidad.$precio;
+                    if($codigo == $codigotemp){
+                        $movto = DB::select("SELECT * FROM mc_lotesmovtos WHERE idlote = '$idlote' And iddocto = '$iddocto' And fechamov = '$fecha' And total = '$precio'");
+                        if(empty($movto)){
+                            DB::table('mc_lotesmovtos')->insertGetId(['idlote' => $idlote, 'iddocto' => $iddocto, 'fechamov' => $fecha, 'producto' => $codigoproducto, 'almacen' => $almacen, 'cantidad' => $cantidad, 'unidad' => $unidad, 'total' => $precio]);                            
+                        }
+
+                    }                    
+                }else{                    
+                    $codigotemp = str_replace("-", "", $fecha).$tipodocto.$cantidad.$unidad; 
+
+                    if($codigo == $codigotemp){ 
+                        $movto = DB::select("SELECT * FROM mc_lotesmovtos WHERE idlote = '$idlote' And iddocto = '$iddocto' And fechamov = '$fecha'");
+                        if(empty($movto)){
+                            DB::table('mc_lotesmovtos')->insertGetId(['idlote' => $idlote, 'iddocto' => $iddocto, 'fechamov' => $fecha, 'producto' => $codigoproducto, 'almacen' => $almacen, 'cantidad' => $cantidad, 'unidad' => $unidad]);                    
+                        }                        
+                    }                    
                 }
+                
 
             }
 
-
         }        
         
-        return $iddocumento; 
-    }   
+        //return $iddocumento; 
+    }    
+ 
+
+    function Paginador(Request $request){
+        ConnectDatabase($request->idempresa);
+        $inicio = $request->iniciar;
+        $lotespagina = $request->lotespag;
+
+    
+        $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 GROUP BY l.id ORDER BY l.id DESC LIMIT $inicio, $lotespagina");
+
+        
+        for($i=0; $i < count($lotes); $i++){
+
+            $idlote = $lotes[$i]->id;
+
+                       
+            $procesados = DB::select("SELECT id FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
+
+            $lotes[$i]->procesados = count($procesados);
+
+            $idusuario = $lotes[$i]->usuario;            
+
+            $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+
+            $lotes[$i]->usuario = $datosuser[0]->nombre;
+
+            $clave = $lotes[$i]->tipo;
+
+            $tipo = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = '$clave'");
+
+            $lotes[$i]->tipodet = $tipo[0]->tipo;            
+        
+        }
+
+        return $lotes;       
+
+
+    }
+
+    function ChecarCatalogos(Request $request){
+        $datos = $request->array;
+        ConnectDatabase($request->idempresa);
+
+        $count = count($datos);
+        
+        $dato[1]['status'] = 0;
+
+        $RFCGenerico = "XAXX010101000";
+
+
+        for($i=0; $i < $count; $i++){
+            $codprod = $datos[$i]['codigoproducto'];
+            $codigocliprov = $datos[$i]['codigocliprov'];
+            $rfc = $datos[$i]['rfc'];
+            $codconcepto = $datos[$i]['codigoconcepto'];
+            $razonsocial = $datos[$i]['razonsocial'];
+
+
+            $suc = $datos[$i]['sucursal'];
+            $tipodocto = $datos[$i]['idconce'];
+
+            $datos[$i]['prodreg'] = 0;
+            $datos[$i]['clienprovreg'] = 0;
+            $datos[$i]['conceptoreg'] = 0;
+            $datos[$i]['sucursalreg'] = 0;
+
+            switch ($tipodocto) { //Tipo de Cliente/Proveedor
+                case 2: //DIESEL
+                case 4: 
+                case 5:
+                    $tipocli = 2; //Proveedor
+                    break;            
+                case 3: //REMISION
+                    $tipocli = 1; //Cliente
+                    break;
+            }
+
+
+            $producto = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$codprod'");
+            if(empty($producto)){
+                $dato[1]['status'] = 1;
+                $datos[$i]['prodreg'] = 1;  
+            }else{
+                if(is_null($datos[$i]['nombreproducto'])){
+                    $datos[$i]['nombreproducto'] = $producto[0]->nombreprod;
+                }
+            }
+
+            if($rfc == $RFCGenerico){                
+                $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$codigocliprov' And (tipocli = '$tipocli' OR tipocli = 3)");    
+            }else{
+                $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$rfc' And (tipocli = '$tipocli' OR tipocli = 3)");    
+            }            
+            if(empty($proveedor)){
+                $dato[1]['status'] = 1;
+                $datos[$i]['clienprovreg'] = 1;
+            }else{
+
+            }
+            
+            $concepto = DB::select("SELECT * FROM mc_catconceptos WHERE codigoconcepto = '$codconcepto'");
+            if(empty($concepto)){
+                $dato[1]['status'] = 1;
+                $datos[$i]['conceptoreg'] = 1;
+            }else{
+                if(is_null($datos[$i]['nombreconcepto'])){
+                    $datos[$i]['nombreconcepto'] = $concepto[0]->nombreconcepto;
+                }
+            }
+            
+            $sucursal = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$suc'");
+            if(empty($sucursal)){
+                $dato[1]['status'] = 1;
+                $datos[$i]['sucursalreg'] = 1;
+            }else{
+
+            }    
+
+        }
+
+        $dato[0] = $datos;
+
+        return $dato;
+
+    }
+
+    function RegistrarElemento(Request $request){
+        $datos = $request->datos;
+        $tipo = $request->tipo;
+        ConnectDatabase($request->idempresa);
+        $num_registros = count($datos);
+
+        for ($i=0; $i < $num_registros; $i++) { 
+
+            $campo1 = strtoupper($datos[$i][0]);  
+            $campo2 = strtoupper($datos[$i][1]); 
+            switch ($datos[$i][2]) { //Tipo de Cliente/Proveedor
+                case 2: //DIESEL
+                case 4:
+                case 5:
+                    $campo3 = 2; //Proveedor
+                    break;            
+                case 3: //REMISION
+                    $campo3 = 1; //Cliente
+                    break;
+            }
+            $elemento = $datos[$i][4]; //Elemento pendiente
+
+            //if($elemento == $campo1){ 
+            //    $campo4 = $campo1; 
+            //    echo "Elemento igual al campo1";
+            //}else{ 
+            //    $campo4 = $campo1; 
+            //    $campo1 = $elemento; 
+            //    echo "Asignamos Elemento a campo1";
+            //}
+            
+
+            if($tipo == "productos"){            
+                $ele = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$campo1' OR codigoadw = '$campo1'");
+                if(empty($ele)){
+                    DB::table('mc_catproductos')->insertGetId(['codigoprod' => $elemento, 'nombreprod' => $campo2, 'codigoadw' => $campo1, 'nombreadw' => $campo2, 'fechaalta' => now()]);
+                    
+                    $datos[$i]['registrado'] = 1;
+                }else{
+                    $datos[$i]['registrado'] = 0;
+                    
+                }        
+            }else if($tipo == "clientesproveedores"){    
+                if($campo1 == "XAXX010101000"){                    
+                    $codigoclienteproveedor = strtoupper($datos[$i][5]);
+                    //$codigoclienteproveedor = strtoupper($elemento);
+                    $ele = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$codigoclienteproveedor'");
+                }else{
+                    $codigoclienteproveedor = ($datos[$i][5] == "" ? $campo1 : strtoupper($datos[$i][5]));
+                    $ele = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$campo1'");
+                }
+                
+                if(empty($ele)){
+                    DB::table('mc_catclienprov')->insertGetId(['codigoc' => $codigoclienteproveedor, 'rfc' => $campo1, 'razonsocial' => $campo2, 'tipocli' => $campo3]);
+                    
+                    $datos[$i]['registrado'] = 1;
+                }else{
+                    if($ele[0]->tipocli == $campo3){                        
+                        $datos[$i]['registrado'] = 0;
+                    }else{
+                        if($ele[0]->tipocli != 3){                            
+                            if($ele[0]->razonsocial == $campo2 || $ele[0]->codigoc == $codigoclienteproveedor){
+                                DB::table('mc_catclienprov')->where("id", $ele[0]->id)->update(['tipocli' => 3, 'razonsocial' => $campo2]);     
+                                $datos[$i]['registrado'] = 1;
+                            }else{
+                                $datos[$i]['registrado'] = 0;
+                            }                            
+                        }else{                            
+                            $datos[$i]['registrado'] = 0;
+                        }           
+                    }                
+                }            
+            }else if($tipo == "conceptos"){
+                $ele = DB::select("SELECT * FROM mc_catconceptos WHERE codigoconcepto = '$campo1' OR codigoadw = '$campo1'");
+                if(empty($ele)){
+                    DB::table('mc_catconceptos')->insertGetId(['codigoconcepto' => $elemento, 'nombreconcepto' => $campo2, 'codigoadw' => $campo1, 'nombreadw' => $campo2]);
+                    
+                    $datos[$i]['registrado'] = 1;
+                }else{
+                    
+                    $datos[$i]['registrado'] = 0;
+                }
+            }else if($tipo == "sucursales"){
+                $ele = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$campo1'");
+                if(empty($ele)){
+                    DB::table('mc_catsucursales')->insertGetId(['sucursal' => $campo1]);
+                    
+                    $datos[$i]['registrado'] = 1;
+                }else{
+                    
+                    $datos[$i]['registrado'] = 0;
+                }            
+            }
+        }
+        
+        return $datos;
+        //return $respuesta;
+
+    }
 
     //-----------------//
 

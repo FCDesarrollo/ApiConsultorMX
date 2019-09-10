@@ -112,6 +112,10 @@ Route::get('PermisosMenusPerfil', 'GeneralesController@PermisosMenusPerfil');
 Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil');
 
 
+//ARCHIVOS EMPRESA
+Route::get('RubrosGen', 'EmpresasController@RubrosGen');
+Route::post('CargaArchivos', 'EmpresasController@CargaArchivos');
+
 //PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
 Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');
 Route::post('numEstadistica', 'AdministradorController@numEstadistica');
@@ -131,14 +135,20 @@ Route::post('activa', 'FcPremiumController@activa');
 //VALIDACIONES RECEPCION POR LOTES
 Route::get('ConsultarLotes', 'GeneralesController@ConsultarLotes');
 Route::get('ConsultarDoctos', 'GeneralesController@ConsultarDoctos');
-Route::get('ConsultarMovtos', 'GeneralesController@ConsultarMovtos');
-Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
+Route::get('ConsultarMovtosLote', 'GeneralesController@ConsultarMovtosLote');
+Route::get('ConsultarMovtosDocto', 'GeneralesController@ConsultarMovtosDocto');
+//Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
 Route::post('EliminarLote', 'GeneralesController@EliminarLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
-Route::get('ObtenerDatos', 'GeneralesController@ObtenerDatos');
-Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
-Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');
+Route::post('LoteCargado', 'GeneralesController@LoteCargado');
+Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
+Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
+Route::get('Paginador', 'GeneralesController@Paginador');
+
+//PARA CONSUMO DEL MODULO DE INVENTARIOS
+Route::post('LoteMarcado', 'ConsumoController@LoteMarcado');
+Route::post('LoteConsumo', 'ConsumoController@LoteConsumo');
 
 //10/09/2019 PARA LEER LA BITACORA
 Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');

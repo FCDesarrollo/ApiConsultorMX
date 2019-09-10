@@ -215,4 +215,25 @@ class FcPremiumController extends Controller
         return $retur;
     }
 
+    function archivosBitacora(Request $request){
+        $rfcempresa = $request->rfc;
+        $idsubmenu = $request->idsubmene;
+        $tipo = $request->tipodocumento;
+        $status = $request->status;
+
+        $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1001 WHERE rfc='$rfcempresa' AND status=1");
+        if (!empty($empresa)){
+            $idempresa = $empresa[0]->idempresa;
+            ConnectDatabase($idempresa);
+
+            $archivos = DB::select("SELECT fecha,archivo,nombrearchivo,idusuarioentrega,periodo,ejercicio FROM mc_bitcontabilidad WHERE
+                                 idsubmenu = $idsubmenu And status = $status and tipodocumento=$tipo order by fecha desc");
+            $datos = array(
+                "documentos" => $archivos,
+            ); 
+            return json_encode($datos, JSON_UNESCAPED_UNICODE);
+        } 
+        return "false";
+    }
+
 }

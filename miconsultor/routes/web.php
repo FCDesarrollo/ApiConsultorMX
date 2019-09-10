@@ -140,3 +140,5 @@ Route::post('RegistrarMovtos', 'GeneralesController@RegistrarMovtos');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('RegistrarDoctos', 'GeneralesController@RegistrarDoctos');
 
+//10/09/2019 PARA LEER LA BITACORA
+Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');

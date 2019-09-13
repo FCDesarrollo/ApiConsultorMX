@@ -248,23 +248,25 @@ class FcPremiumController extends Controller
             ConnectDatabase($idempresa);
             for ($i=0; $i < $num_registros; $i++) {
                 $periodo= $registros[$i]['Periodo'];
-                $ejercicio = $registros[$i]['Ejercicio'];    
-                $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->idsubmenu
+                $ejercicio = $registros[$i]['Ejercicio']; 
+                $archivo = $registros[$i]['Archivo'];
+                $nomarchi = $registros[$i]['Nombrearchivo'];    
+                $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->Idsubmenu
                                                     AND tipodocumento= '$request->Tipodocumento'
                                                     AND periodo= $periodo
                                                     AND ejercicio=$ejercicio");
                 if(empty($result)){
                     $idU = DB::table('mc_bitcontabilidad')->insertGetId(
                         ['idsubmenu' => $request->Idsubmenu,'tipodocumento' => $request->Tipodocumento,
-                        'periodo' => $registros[$i]['Periodo'], 'ejercicio' => $registros[$i]['Ejercicio'],
+                        'periodo' => $periodo, 'ejercicio' => $ejercicio,
                         'fecha' => $now, 'fechamodificacion' => $fechamod,
-                        'archivo' => $registros[$i]['Archivo'], 'nombrearchivo' => $registros[$i]['Nombrearchivo'],
+                        'archivo' => $archivo, 'nombrearchivo' => $nomarchi,
                         'idusuarioSubida', $request->IdusuarioSubida,
                         'status' => $request->Status,'idusuarioentrega' => $request->Idusuarioentrega]);
                 }else{
                     DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
                         where("tipodocumento", $request->Tipodocumento)->
-                        where("periodo", $registros[$i]['Periodo'])->where('ejercicio', $registros[$i]['Ejercicio'])->
+                        where("periodo", $periodo)->where('ejercicio', $ejercicio)->
                         update(['fechamodificacion' => $fechamod,
                             'status' =>  $request->Status, 'idusuarioentrega' => $request->Idusuarioentrega]);
                 } 

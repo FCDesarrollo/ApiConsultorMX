@@ -235,7 +235,7 @@ class FcPremiumController extends Controller
     }
 
     function registraBitacora(Request $request){
-        $rfcempresa = $request->rfc;
+        $rfcempresa = $request->Rfc;
         $registros = $request->Regbitacora;
         $num_registros = count($request->Regbitacora);
 
@@ -248,23 +248,23 @@ class FcPremiumController extends Controller
             ConnectDatabase($idempresa);
             for ($i=0; $i < $num_registros; $i++) {
                 $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->idsubmenu
-                                                    AND tipodocumento= '$request->tipodocumento'
+                                                    AND tipodocumento= '$request->Tipodocumento'
                                                     AND periodo=$registros[i]['Periodo']
                                                     AND ejercicio=$registros[i]['Ejercicio']");
                 if(empty($result)){
                     $idU = DB::table('mc_bitcontabilidad')->insertGetId(
-                        ['idsubmenu' => $request->idsubmenu,'tipodocumento' => $request->tipodocumento,
+                        ['idsubmenu' => $request->Idsubmenu,'tipodocumento' => $request->Tipodocumento,
                         'periodo' => $registros[i]['Periodo'], 'ejercicio' => $registros[i]['Ejercicio'],
                         'fecha' => $now, 'fechamodificacion' => $fechamod,
                         'archivo' => $registros[i]['Archivo'], 'nombrearchivo' => $registros[i]['Nombrearchivo'],
-                        'idusuarioSubida', $request->idusuarioSubida,
-                        'status' => $request->status,'idusuarioentrega' => $request->idusuarioentrega]);
+                        'idusuarioSubida', $request->IdusuarioSubida,
+                        'status' => $request->Status,'idusuarioentrega' => $request->Idusuarioentrega]);
                 }else{
-                    DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->idsubmenu)->
-                        where("tipodocumento", $request->tipodocumento)->
-                        where("periodo", $registros[i]['Periodo'])->where('ejercicio', $request->ejercicio)->
+                    DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
+                        where("tipodocumento", $request->Tipodocumento)->
+                        where("periodo", $registros[i]['Periodo'])->where('ejercicio', $registros[i]['Ejercicio'])->
                         update(['fechamodificacion' => $fechamod,
-                            'status' =>  $request->status, 'idusuarioentrega' => $request->idusuarioentrega]);
+                            'status' =>  $request->Status, 'idusuarioentrega' => $request->Idusuarioentrega]);
                 } 
             }
             $reg = "true";

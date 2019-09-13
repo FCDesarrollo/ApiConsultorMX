@@ -234,4 +234,42 @@ class FcPremiumController extends Controller
         return "false";
     }
 
+    function registraBitacora(Request $request){
+        $rfcempresa = $request->rfc;
+        $registros = $request->Regbitacora;
+        $num_registros = count($request->Regbitacora);
+
+        $now = date('Y-m-d');
+        $fechamod = date('Y-m-d');
+        $reg = "false";
+        $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc='$rfcempresa' AND status=1");
+        if (!empty($empresa)){
+            $idempresa = $empresa[0]->idempresa;
+            ConnectDatabase($idempresa);
+            for ($i=0; $i < $num_registros; $i++) {
+                $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->idsubmenu
+                                                    AND tipodocumento= '$request->tipodocumento'
+                                                    AND periodo=$registros[i]['Periodo']
+                                                    AND ejercicio=$registros[i]['Ejercicio']");
+                if(empty($result)){
+                    $idU = DB::table('mc_bitcontabilidad')->insertGetId(
+                        ['idsubmenu' => $request->idsubmenu,'tipodocumento' => $request->tipodocumento,
+                        'periodo' => $registros[i]['Periodo'], 'ejercicio' => $registros[i]['Ejercicio'],
+                        'fecha' => $now, 'fechamodificacion' => $fechamod,
+                        'archivo' => $registros[i]['Archivo'], 'nombrearchivo' => $registros[i]['Nombrearchivo'],
+                        'idusuarioSubida', $request->idusuarioSubida,
+                        'status' => $request->status,'idusuarioentrega' => $request->idusuarioentrega]);
+                }else{
+                    DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->idsubmenu)->
+                        where("tipodocumento", $request->tipodocumento)->
+                        where("periodo", $registros[i]['Periodo'])->where('ejercicio', $request->ejercicio)->
+                        update(['fechamodificacion' => $fechamod,
+                            'status' =>  $request->status, 'idusuarioentrega' => $request->idusuarioentrega]);
+                } 
+            }
+            $reg = "true";
+        } 
+        return $reg;
+    }
+
 }

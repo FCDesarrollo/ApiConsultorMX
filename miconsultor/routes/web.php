@@ -152,3 +152,4 @@ Route::post('LoteConsumo', 'ConsumoController@LoteConsumo');
 
 //10/09/2019 PARA LEER LA BITACORA
 Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');
+Route::post('registraBitacora', 'FcPremiumController@registraBitacora');

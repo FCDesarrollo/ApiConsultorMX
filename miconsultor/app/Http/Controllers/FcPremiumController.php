@@ -249,20 +249,20 @@ class FcPremiumController extends Controller
             for ($i=0; $i < $num_registros; $i++) {
                 $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->idsubmenu
                                                     AND tipodocumento= '$request->Tipodocumento'
-                                                    AND periodo=$registros[i]['Periodo']
-                                                    AND ejercicio=$registros[i]['Ejercicio']");
+                                                    AND periodo=$registros[$i]['Periodo']
+                                                    AND ejercicio=$registros[$i]['Ejercicio']");
                 if(empty($result)){
                     $idU = DB::table('mc_bitcontabilidad')->insertGetId(
                         ['idsubmenu' => $request->Idsubmenu,'tipodocumento' => $request->Tipodocumento,
-                        'periodo' => $registros[i]['Periodo'], 'ejercicio' => $registros[i]['Ejercicio'],
+                        'periodo' => $registros[$i]['Periodo'], 'ejercicio' => $registros[$i]['Ejercicio'],
                         'fecha' => $now, 'fechamodificacion' => $fechamod,
-                        'archivo' => $registros[i]['Archivo'], 'nombrearchivo' => $registros[i]['Nombrearchivo'],
+                        'archivo' => $registros[$i]['Archivo'], 'nombrearchivo' => $registros[$i]['Nombrearchivo'],
                         'idusuarioSubida', $request->IdusuarioSubida,
                         'status' => $request->Status,'idusuarioentrega' => $request->Idusuarioentrega]);
                 }else{
                     DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
                         where("tipodocumento", $request->Tipodocumento)->
-                        where("periodo", $registros[i]['Periodo'])->where('ejercicio', $registros[i]['Ejercicio'])->
+                        where("periodo", $registros[$i]['Periodo'])->where('ejercicio', $registros[$i]['Ejercicio'])->
                         update(['fechamodificacion' => $fechamod,
                             'status' =>  $request->Status, 'idusuarioentrega' => $request->Idusuarioentrega]);
                 } 

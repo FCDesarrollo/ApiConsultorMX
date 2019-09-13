@@ -261,7 +261,7 @@ class FcPremiumController extends Controller
                         'periodo' => $periodo, 'ejercicio' => $ejercicio,
                         'fecha' => $now, 'fechamodificacion' => $fechamod,
                         'archivo' => $archivo, 'nombrearchivo' => $nomarchi,
-                        'idusuarioSubida', $request->IdusuarioSubida,
+                        'idusuarioSubida', $request->Idusuariosubida,
                         'status' => $request->Status,'idusuarioentrega' => $request->Idusuarioentrega]);
                 }else{
                     DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->

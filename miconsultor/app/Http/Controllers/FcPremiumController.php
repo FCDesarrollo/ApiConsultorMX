@@ -250,7 +250,10 @@ class FcPremiumController extends Controller
                 $periodo= $registros[$i]['Periodo'];
                 $ejercicio = $registros[$i]['Ejercicio']; 
                 $archivo = $registros[$i]['Archivo'];
-                $nomarchi = $registros[$i]['Nombrearchivo'];    
+                $nomarchi = $registros[$i]['Nombrearchivo'];
+                $idusersub = $request->Idusuariosubida;   
+                $status=  $request->Status;
+                $iduserentrega = $request->Idusuarioentrega;
                 $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->Idsubmenu
                                                     AND tipodocumento= '$request->Tipodocumento'
                                                     AND periodo= $periodo
@@ -261,14 +264,14 @@ class FcPremiumController extends Controller
                         'periodo' => $periodo, 'ejercicio' => $ejercicio,
                         'fecha' => $now, 'fechamodificacion' => $fechamod,
                         'archivo' => $archivo, 'nombrearchivo' => $nomarchi,
-                        'idusuariosubida', $request->Idusuariosubida,
-                        'status' => $request->Status,'idusuarioentrega' => $request->Idusuarioentrega]);
+                        'idusuariosubida', $idusersub,
+                        'status' => $status,'idusuarioentrega' => $iduserentrega]);
                 }else{
                     DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
                         where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $periodo)->where('ejercicio', $ejercicio)->
                         update(['fechamodificacion' => $fechamod,
-                            'status' =>  $request->Status, 'idusuarioentrega' => $request->Idusuarioentrega]);
+                            'status' =>  $status, 'idusuarioentrega' => $iduserentrega]);
                 } 
             }
             $reg = "true";

@@ -240,7 +240,7 @@ class FcPremiumController extends Controller
         $num_registros = count($request->Regbitacora);
 
         $now = date('Y-m-d');
-        $fechamod = date('Y-m-d');
+        $fechamod = date('Y-m-d H:i:s');
         $reg = "false";
         $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc='$rfcempresa' AND status=1");
         if (!empty($empresa)){
@@ -264,7 +264,8 @@ class FcPremiumController extends Controller
                         'periodo' => $periodo, 'ejercicio' => $ejercicio,
                         'fecha' => $now, 'fechamodificacion' => $fechamod,
                         'archivo' => $archivo, 'nombrearchivo' => $nomarchi,
-                        'status' => $status,'idusuarioentrega' => $iduserentrega]);
+                        'status' => $status,'idusuarioentrega' => $iduserentrega,
+                        'idusuariosubida' => $idusersub]);
                 }else{
                     DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
                         where("tipodocumento", $request->Tipodocumento)->

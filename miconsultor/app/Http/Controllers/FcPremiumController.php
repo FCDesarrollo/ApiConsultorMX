@@ -247,10 +247,12 @@ class FcPremiumController extends Controller
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);
             for ($i=0; $i < $num_registros; $i++) {
+                $periodo= $registros[$i]['Periodo'];
+                $ejercicio = $registros[$i]['Ejercicio'];    
                 $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->idsubmenu
                                                     AND tipodocumento= '$request->Tipodocumento'
-                                                    AND periodo=$registros[$i]['Periodo']
-                                                    AND ejercicio=$registros[$i]['Ejercicio']");
+                                                    AND periodo= $periodo
+                                                    AND ejercicio=$ejercicio");
                 if(empty($result)){
                     $idU = DB::table('mc_bitcontabilidad')->insertGetId(
                         ['idsubmenu' => $request->Idsubmenu,'tipodocumento' => $request->Tipodocumento,

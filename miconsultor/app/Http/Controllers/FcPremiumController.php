@@ -263,20 +263,21 @@ class FcPremiumController extends Controller
                         ['idsubmenu' => $request->Idsubmenu,'tipodocumento' => $request->Tipodocumento,
                         'periodo' => $periodo, 'ejercicio' => $ejercicio,
                         'fecha' => $now, 'fechamodificacion' => $fechamod,
-                        'archivo' => $archivo, 'nombrearchivo' => $nomarchi,
-                        'status' => $status,'idusuarioentrega' => $iduserentrega,
-                        'idusuariosubida' => $idusersub]);
+                        'archivo' => $archivo, 'nombrearchivoG' => $nomarchi,
+                        'status' => $status,'idusuarioE' => $iduserentrega,
+                        'idusuarioG' => $idusersub]);
                 }else{
                     DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
                         where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $periodo)->where('ejercicio', $ejercicio)->
-                        update(['fechamodificacion' => $fechamod,
-                            'status' =>  $status, 'idusuarioentrega' => $iduserentrega]);
+                        update(['fechamodificacion' => $fechamod]);
                 } 
             }
             $reg = "true";
         } 
         return $reg;
     }
+
+    
 
 }

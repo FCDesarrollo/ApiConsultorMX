@@ -153,3 +153,11 @@ Route::post('LoteConsumo', 'ConsumoController@LoteConsumo');
 //10/09/2019 PARA LEER LA BITACORA
 Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');
 Route::post('registraBitacora', 'FcPremiumController@registraBitacora');
+
+//19/09/2019 PARA LA ADMINISTRACION DE EMPRESAS DE LOS AGENTES DESKTOP
+Route::post('datosadmin', 'AdministradorController@datosadmin');
+Route::post('empresasadmin', 'AdministradorController@empresasadmin');
+Route::post('serviciosfc', 'AdministradorController@serviciosfc');
+Route::post('servicioscontratados', 'AdministradorController@servicioscontratados');
+Route::post('bitacoraservicios', 'AdministradorController@bitacoraservicios');
+Route::post('updateBitacora', 'AdministradorController@updateBitacora');

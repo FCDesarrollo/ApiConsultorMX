@@ -226,7 +226,7 @@ class FcPremiumController extends Controller
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);
 
-            $archivos = DB::select("SELECT fecha,archivo,nombrearchivoE,idusuarioentrega,periodo,ejercicio,tipodocumento,fechamodificacion FROM mc_bitcontabilidad WHERE
+            $archivos = DB::select("SELECT fecha,archivo,nombrearchivoE,idusuarioE,periodo,ejercicio,tipodocumento,fechamodificacion FROM mc_bitcontabilidad WHERE
                                  idsubmenu = $idsubmenu And status = $status order by fecha desc");
             $datos = $archivos;
             return $datos;

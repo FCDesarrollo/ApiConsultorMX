@@ -161,3 +161,4 @@ Route::post('serviciosfc', 'AdministradorController@serviciosfc');
 Route::post('servicioscontratados', 'AdministradorController@servicioscontratados');
 Route::post('bitacoraservicios', 'AdministradorController@bitacoraservicios');
 Route::post('updateBitacora', 'AdministradorController@updateBitacora');
+Route::post('listaejercicios', 'AdministradorController@listaejercicios');

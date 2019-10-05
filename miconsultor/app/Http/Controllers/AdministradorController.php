@@ -125,19 +125,36 @@ class AdministradorController extends Controller
     {
         $valida = $this->usuarioadmin($request->correo, $request->contra);
         $now = date('Y-m-d');
+        $datos="false"; 
         if ($valida != "2" and $valida != "3"){
             ConnectDatabaseRFC($request->rfc);
-               
+              
             $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE tipodocumento= '$request->Tipodocumento'
                                                 AND periodo= $request->Periodo
                                                 AND ejercicio=$request->Ejercicio");
             if(!empty($result)){
                 DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
-                        update(['status' => 1, 'idusuarioE' => $request->IdusuarioE,
+                        update(['status' => $request->Status, 'idusuarioE' => $request->IdusuarioE,
                             'nombrearchivoE' => $request->nombreE, 'fechacorte' => $request->Fechacorte,
                             'fechaentregado' => $now]);
+                $datos="true"; 
             }
+        }else{
+            $datos = $valida;
+        }
+        return $datos;
+    }
+
+    public function listaejercicios(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->correo, $request->contra);
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->idempresa);
+            $ejercicio = DB::select("SELECT DISTINCT ejercicio FROM mc_bitcontabilidad");
+                $datos = array(
+                   "ejercicios" => $ejercicio,
+                );
         }else{
             $datos = $valida;
         }

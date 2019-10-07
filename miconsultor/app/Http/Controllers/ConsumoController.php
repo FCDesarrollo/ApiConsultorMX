@@ -10,6 +10,7 @@ class ConsumoController extends Controller
 
     public function ValidarConexion($RFCEmpresa, $Usuario, $Password, $TipoDocumento, $Modulo, $Menu, $SubMenu){
 
+
         $conexion[0]['error'] = 0;
         
         $idempresa = DB::connection("General")->select("SELECT idempresa, rutaempresa FROM mc1000 WHERE RFC = '$RFCEmpresa'");
@@ -36,25 +37,31 @@ class ConsumoController extends Controller
 
                     $permisos = DB::select("SELECT modulo.tipopermiso AS modulo, menu.tipopermiso AS menu, submenu.tipopermiso AS submenu FROM mc_usermod modulo, mc_usermenu menu, mc_usersubmenu submenu WHERE modulo.idusuario = $ID And menu.idusuario = $ID And submenu.idusuario = $ID And modulo.idmodulo = $Modulo AND menu.idmenu = $Menu AND submenu.idsubmenu = $SubMenu;");
 
+                        if(!empty($permisos)){
+                            //if($permisos[0]->modulo != 0 And $permisos[0]->menu != 0 And $permisos[0]->submenu != 0){
 
-                    //$conexion[0]['tipopermiso'] = $permisos[0]->tipopermiso;
+                                $conexion[0]['permisomodulo'] = $permisos[0]->modulo;
+                                $conexion[0]['permisomenu'] = $permisos[0]->menu;
+                                $conexion[0]['permisosubmenu'] = $permisos[0]->submenu;
 
-                    if($permisos[0]->modulo != 0 And $permisos[0]->menu != 0 And $permisos[0]->submenu != 0){
+                                if($TipoDocumento != 0){
+                                    $tipodocto = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = $TipoDocumento");
 
-                        $conexion[0]['permisomodulo'] = $permisos[0]->modulo;
-                        $conexion[0]['permisomenu'] = $permisos[0]->menu;
-                        $conexion[0]['permisosubmenu'] = $permisos[0]->submenu;
+                                    if(!empty($tipodocto)){                            
+                                        $conexion[0]['tipodocumento'] = $tipodocto[0]->tipo;
+                                    }else{
+                                        $conexion[0]['error'] = 5; //Tipo de documento no valido
+                                    }
+                                }                    
 
-                        $tipodocto = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = $TipoDocumento");
+                            //}else{
+                            //    $conexion[0]['error'] = 4; //El Usuario no tiene permisos
+                            //}                        
 
-                        if(!empty($tipodocto)){                            
-                            $conexion[0]['tipodocumento'] = $tipodocto[0]->tipo;
                         }else{
-                            $conexion[0]['error'] = 5; //Tipo de documento no valido
+                            $conexion[0]['error'] = 4; //El Usuario no tiene permisos
                         }
-                    }else{
-                        $conexion[0]['error'] = 4; //El Usuario no tiene permisos
-                    }
+
                 }else{
                     $conexion[0]['error'] = 3; //Contraseña Incorrecta
                 }
@@ -139,7 +146,8 @@ class ConsumoController extends Controller
             ConnectDatabase($autenticacion[0]['idempresa']);
             
             for ($i=0; $i < count($registros); $i++) {               
-                
+                echo count($registros);
+                echo $registros[$i]['iddocto'];
                 $id = $registros[$i]['iddocto'];
                 $idadw = $registros[$i]['iddoctoadw'];                
                 
@@ -173,7 +181,7 @@ class ConsumoController extends Controller
                     $registros = $this->CargaJSON($movimientos, $TipoDocto, $autenticacion[0]['idempresa'], $autenticacion[0]['idusuario']);
                     
                     $array["error"] = $autenticacion[0]["error"];
-                    $array["documentos"] = $registros; //Documentos
+                    $array["movimientos"] = $registros; //Documentos
                     //$array[2]  = $documentos[1];    //Movimientos
 
                 }else{
@@ -282,9 +290,7 @@ class ConsumoController extends Controller
                 }else{
                     $codigolote = str_replace("-", "", $fecha).$tipodocto.$val11.$val12;
                 }                
-            }
-           
-            $documentos[$i]["estatus"] = "";
+            } 
                 
             $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigolote'");                
                             
@@ -294,11 +300,13 @@ class ConsumoController extends Controller
 
                 $lote = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigolote'");
 
-                $documentos[$i]["estatus"] = "Registrado cargado correctamente."; //Nuevo Registro
+                $documentos[$i]["registro"] = 0;
+                $documentos[$i]["registro_detalle"] = "Registro cargado correctamente."; //Nuevo Registro
 
                 $this->RegistrarMovtos($idempresa, $idusuario, $idlote, $lote[0]->id, $tipodocto, $codigolote, $movimientos, $num_movtos);                       
             }else{
-                $documentos[$i]["estatus"] = "El registro que intenta registrar ya existe.";
+                $documentos[$i]["registro"] = 1;
+                $documentos[$i]["registro_detalle"] = "El registro que intento cargar ya existe.";
             }
 
             $this->UpdateLote($idempresa, $tipodocto, $idlote);
@@ -386,6 +394,20 @@ class ConsumoController extends Controller
 
         $RFCGenerico = "XAXX010101000";
 
+        //$arreglo['productos'] = "";
+        //$arreglo['clientesproveedores'] = "";
+        //$arreglo['conceptos'] = "";
+        //$arreglo['sucursales'] = "";
+        
+        $catalogos['productos'][0] = "";
+        $catalogos['clientesproveedores'][0] = "";
+        $catalogos['conceptos'][0] = "";
+        $catalogos['sucursales'][0] = "";
+
+        $p = 0;
+        $c = 0;
+        $cp = 0;
+        $s = 0;
 
         for($i=0; $i < $count; $i++){
             $codprod = $movtos[$i]['codigoproducto'];
@@ -393,14 +415,10 @@ class ConsumoController extends Controller
             $rfc = $movtos[$i]['rfc'];
             $codconcepto = $movtos[$i]['codigoconcepto'];
             $razonsocial = $movtos[$i]['razonsocial'];
-
-
             $suc = $movtos[$i]['sucursal'];
             //$tipodocto = $movtos[$i]['idconce'];
 
-            $movtos[$i]['productoreg'] = 0;
-            $movtos[$i]['clienprovreg'] = 0;
-            $movtos[$i]['conceptoreg'] = 0;
+            
 
             switch ($tipodocto) { //Tipo de Cliente/Proveedor
                 case 2: //DIESEL
@@ -414,49 +432,88 @@ class ConsumoController extends Controller
             }
 
 
+
+
             $producto = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$codprod'");
             if(empty($producto)){
                 $dato[1]['errorCATALOGOS'] = 1;
-                $movtos[$i]['productoreg'] = 1;  
-            }else{
-                if(is_null($movtos[$i]['nombreproducto'])){
-                    $movtos[$i]['nombreproducto'] = $producto[0]->nombreprod;
+                //$movtos[$i]['productoreg'] = 1;     
+                if($p == 0){
+                    $catalogos['productos'][$p] = $codprod;
+                    //$arreglo['productos'][$p] = $codprod;
+                    $p = $p + 1;                    
+                }else{
+                    if(!in_array($codprod, $catalogos['productos'])){
+                        $catalogos['productos'][$p] = $codprod;
+                        //$arreglo['productos'][$p]['codigoproducto'] = $codprod;
+                        $p = $p + 1;                    
+                    }                    
                 }
+                
             }
 
             if($rfc == $RFCGenerico){                
                 $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$codigocliprov' And (tipocli = '$tipocli' OR tipocli = 3)");    
+                $ClienteProveedor = $codigocliprov;
             }else{
-                $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$rfc' And (tipocli = '$tipocli' OR tipocli = 3)");    
+                $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$rfc' And (tipocli = '$tipocli' OR tipocli = 3)");
+                $ClienteProveedor = $rfc;    
             }            
             if(empty($proveedor)){
                 $dato[1]['errorCATALOGOS'] = 1;
-                $movtos[$i]['clienprovreg'] = 1;
-            }else{
+                //$movtos[$i]['clienprovreg'] = 1;     
+                if($cp == 0){
+                    $catalogos['clientesproveedores'][$cp] = $ClienteProveedor;
+                    //$arreglo['clientesproveedores'][$cp] = $ClienteProveedor;
+                    $cp = $cp + 1;
+                }else{
+                    if(!in_array($ClienteProveedor, $catalogos['clientesproveedores'])){           
+                        $catalogos['clientesproveedores'][$cp] = $ClienteProveedor;
+                        //$arreglo['clientesproveedores'][$cp]['clienteproveedor'] = $ClienteProveedor;
+                        $cp = $cp + 1;
+                    }                    
+                }
 
             }
             
             $concepto = DB::select("SELECT * FROM mc_catconceptos WHERE codigoconcepto = '$codconcepto'");
             if(empty($concepto)){
                 $dato[1]['errorCATALOGOS'] = 1;
-                $movtos[$i]['conceptoreg'] = 1;
-            }else{
-                if(is_null($movtos[$i]['nombreconcepto'])){
-                    $movtos[$i]['nombreconcepto'] = $concepto[0]->nombreconcepto;
-                }
+                //$movtos[$i]['conceptoreg'] = 1;    
+                if($c == 0){
+                    $catalogos['conceptos'][$c] = $codconcepto;
+                    //$arreglo['conceptos'][$c]['codigoconcepto'] = $codconcepto;
+                    $c = $c + 1;
+                }else{
+                    if(!in_array($codconcepto, $catalogos['conceptos'])){               
+                        $catalogos['conceptos'][$c] = $codconcepto;
+                        //$arreglo['conceptos'][$c]['codigoconcepto'] = $codconcepto;
+                        $c = $c + 1;
+                    }
+                }                
             }
             
             $sucursal = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$suc'");
             if(empty($sucursal)){
                 $dato[1]['errorCATALOGOS'] = 1;
-                $movtos[$i]['sucursalreg'] = 1;
-            }else{
+                //$movtos[$i]['sucursalreg'] = 1;
+                if($s == 0){
+                    $catalogos['sucursales'][$s] = $suc;
+                    //$arreglo['sucursales'][$s]['sucursal'] = $suc;
+                    $s = $s + 1;
+                }else{
+                    if(!in_array($suc, $catalogos['sucursales'])){  
+                        $catalogos['sucursales'][$s] = $suc;
+                        //$arreglo['sucursales'][$s]['sucursal'] = $suc;
+                        $s = $s + 1;
+                    }                    
+                }
 
-            }    
+            }  
 
         }
 
-        $dato[0] = $movtos;
+        $dato[0] = $catalogos;
 
         return $dato;
 
@@ -471,7 +528,7 @@ class ConsumoController extends Controller
         $n = DB::select("SELECT count(id) AS reg FROM mc_lotesdocto WHERE idlote = '$idlote' And error <> 1");
         $totalregistros = DB::select("SELECT count(id) AS totalreg FROM mc_lotesdocto WHERE idlote = '$idlote'");
         
-        DB::table('mc_lotes')->where("id", $idlote)->update(['tipo' => $tipodocto, 'totalregistros' => $totalregistros[0]->totalreg, 'totalcargados' => $n[0]->reg]);
+            
         
     }    
 
@@ -507,9 +564,9 @@ class ConsumoController extends Controller
         $val1 = "";$val2 = "";$val3 = "";$val4 = "";$val5 = "";
         $val6 = "";$val7 = "";$val8 = "";$val9 = "";$val10 = "";
         $val11 = "";$val12 = "";$val13 = "";$val14 = "";
-
+        $movtos2 = "";
         $validaciones[1]['errorJSON'] = 0; //Si permacene en 0, es por que no hay errores
-
+        $n = 0;
         for ($i=0; $i < $num_movtos; $i++) {             
             $fecha = $movtos[$i]["fecha"];
             $codigoconcepto = $movtos[$i]["codigoconcepto"];
@@ -550,22 +607,37 @@ class ConsumoController extends Controller
             $valores = explode('-', $fecha);
             if(count($valores) != 3 || checkdate($valores[1], $valores[2], $valores[0]) == false){ 
                 $movtos[$i]['e_fecha'] = "Fecha Incorrecta."; 
+                $movtos2[$n]['fecha'] = $fecha;
+                $movtos2[$n]['fecha_detalle'] = "Fecha Incorrecta.";
+                $n = $n + 1;                      
                 $validaciones[1]['errorJSON'] = 1;
             }   
             if($rfc == "" || (strlen($rfc) < 12 || strlen($rfc) > 13)){ 
                 $movtos[$i]['e_rfc'] = "RFC vacio o estructura incorrecta.";
+                $movtos2[$n]['rfc'] = $rfc;
+                $movtos2[$n]['rfc_detalle'] = "RFC vacio o estructura incorrecta.";
+                $n = $n + 1;                      
                 $validaciones[1]['errorJSON'] = 1;
             }
             if($razonsocial == ""){
                 $movtos[$i]['e_razonsocial'] = "La razon social no puede estar vacia.";
+                $movtos2[$n]['razonsocial'] = $razonsocial;
+                $movtos2[$n]['razonsocial_detalle'] = "La razon social no puede estar vacia.";
+                $n = $n + 1;                                      
                 $validaciones[1]['errorJSON'] = 1;
             }
             if($codigoproducto == ""){
                 $movtos[$i]['e_codigoprod'] = "El codigo del producto no puede estar vacio.";
+                $movtos2[$n]['codigoproducto'] = $codigoproducto;
+                $movtos2[$n]['codigoproducto_detalle'] = "El codigo del producto no puede estar vacio.";
+                $n = $n + 1;                                      
                 $validaciones[1]['errorJSON'] = 1;
             }  
             if($codigoconcepto == ""){ 
                 $movtos[$i]['e_codigocon'] = "El codigo del concepto no puede estar vacio.";
+                $movtos2[$n]['codigoconcepto'] = $codigoconcepto;
+                $movtos2[$n]['codigoconcepto_detalle'] = "El codigo del concepto no puede estar vacio.";
+                $n = $n + 1;                                      
                 $validaciones[1]['errorJSON'] = 1;
             }  
             if($suc == ""){ 
@@ -576,10 +648,16 @@ class ConsumoController extends Controller
             if($tipodocto == 2){ //CONSUMO DIESEL
                 if(!is_numeric($val7)){
                     $movtos[$i]['e_importe'] = "Error en el importe.";
+                    $movtos2[$n]['importe'] = $val7;
+                    $movtos2[$n]['importe_detalle'] = "Error en el importe.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if($val8 == "" || !is_numeric($val8)){
                     $movtos[$i]['e_almacen'] = "Error con el almacen.";
+                    $movtos2[$n]['almacen'] = $val8;
+                    $movtos2[$n]['almacen_detalle'] = "Error con el almacen, vacio o no es numerico.";
+                    $n = $n + 1;                    
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 /*if($val9 == "" || !is_numeric($val9)){
@@ -588,71 +666,557 @@ class ConsumoController extends Controller
                 }*/
                 if($val10 == ""){
                     $movtos[$i]['e_unidad'] = "Error, unidad vacia.";
+                    $movtos2[$n]['unidad'] = $val10;
+                    $movtos2[$n]['unidad_detalle'] = "Error, unidad vacia.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if(!is_numeric($val11)){
                     $movtos[$i]['e_kilometro'] = "Error con los kilometros.";
+                    $movtos2[$n]['kilometros'] = $val11;
+                    $movtos2[$n]['kilometros_detalle'] = "Error con los kilometros.";
+                    $n = $n + 1;                    
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if(!is_numeric($val12)){
                     $movtos[$i]['e_horometro'] = "Error con los horometros.";
+                    $movtos2[$n]['horometro'] = $val12;
+                    $movtos2[$n]['horometro_detalle'] = "Error con los horometros.";
+                    $n = $n + 1;                    
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if($val13 == "" || !is_numeric($val13)){
                     $movtos[$i]['e_cantidad'] = "Error con la cantidad.";
+                    $movtos2[$n]['cantidad'] = $val13;
+                    $movtos2[$n]['cantidad_detalle'] = "Error con la cantidad, vacio o no es numerico.";
+                    $n = $n + 1;
                     $validaciones[1]['errorJSON'] = 1;
                 }                
             }else if($tipodocto == 3){ //REMISIONES                
                 if($val1 == "" || !is_numeric($val1)){
                     $movtos[$i]['e_folio'] = "Error con el folio.";
+                    $movtos2[$n]['folio'] = $val1;
+                    $movtos2[$n]['folio_detalle'] = "Error con el folio.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if($val13 == "" || !is_numeric($val13)){
                     $movtos[$i]['e_cantidad'] = "Error con la cantidad.";
+                    $movtos2[$n]['cantidad'] = $val13;
+                    $movtos2[$n]['cantidad_detalle'] = "Error con la cantidad, vacio o no es numerico.";
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if($val3 == "" || !is_numeric($val3)){
                     $movtos[$i]['e_subtotal'] = "Error en el subtotal.";
+                    $movtos2[$n]['subtotal'] = $val3;
+                    $movtos2[$n]['subtotal_detalle'] = "Error en el subtotal, vacio o no es numerico.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if(!is_numeric($val4)){
                     $movtos[$i]['e_descuento'] = "Error con el descuento.";
+                    $movtos2[$n]['descuento'] = $val4;
+                    $movtos2[$n]['descuento_detalle'] = "Error con el descuento.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if(!is_numeric($val5)){
                     $movtos[$i]['e_iva'] = "Error con el iva.";
+                    $movtos2[$n]['iva'] = $val5;
+                    $movtos2[$n]['iva_detalle'] = "Error con el iva.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if($val6 == "" || !is_numeric($val6)){
                     $movtos[$i]['e_total'] = "Error con el total.";
+                    $movtos2[$n]['total'] = $val6;
+                    $movtos2[$n]['total_detalle'] = "Error con el total.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
             }else if($tipodocto == 4 || $tipodocto == 5){ //ENTRADAS Y SALIDAS DE MATERIA PRIMA
                 if(!is_numeric($val8)){
                     $movtos[$i]['e_almacen'] = "Error con el almacen.";
+                    $movtos2[$n]['almacen'] = $val8;
+                    $movtos2[$n]['almacen_detalle'] = "Error con el almacen.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if($val10 == ""){
                     $movtos[$i]['e_unidad'] = "Error, unidad vacia.";
+                    $movtos2[$n]['unidad'] = $val10;
+                    $movtos2[$n]['unidad_detalle'] = "Error, unidad vacia.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if($val13 == "" || !is_numeric($val13)){
                     $movtos[$i]['e_cantidad'] = "Error en la cantidad.";
+                    $movtos2[$n]['cantidad'] = $val13;
+                    $movtos2[$n]['cantidad_detalle'] = "Error con la cantidad, vacio o no es numerico.";
+                    $n = $n + 1;                                        
                     $validaciones[1]['errorJSON'] = 1;
                 }
                 if($tipodocto == 5){
                     if($val14 == "" || is_numeric($val14)){
                         $movtos[$i]['e_precio'] = "Error con el precio.";
+                        $movtos2[$n]['precio'] = $val14;
+                        $movtos2[$n]['precio_detalle'] = "Error con el precio.";
+                        $n = $n + 1;                                            
                         $validaciones[1]['errorJSON'] = 1;
                     }
                 }                
             }
         } //FIN FOR
 
-        $validaciones[0] = $movtos;
+        $validaciones[0] = $movtos2;
 
         return $validaciones;
-    }    
+    }
+
+    function LoteCatalogos(Request $request){
+        $RFCEmpresa = $request->rfcempresa;
+        $Usuario = $request->usuario;
+        $Pwd = $request->pwd;
+
+        $n_catalogos = 0;
+
+        $catalogos = DB::connection("General")->select("SELECT clave FROM mc1012");
+
+        $autenticacion = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd, 0, 2, 6, 17);
+
+        $array["error"] = $autenticacion[0]["error"];     
+
+
+        if($autenticacion[0]['error'] == 0){  
+
+            ConnectDatabase($autenticacion[0]['idempresa']);        
+            
+            
+            for ($cat=0; $cat < count($catalogos); $cat++) { 
+                $val = $catalogos[$cat]->clave;                
+                if(isset($request->$val)){
+
+                    $datos = $request->$val;
+
+                    //return $datos;
+                    //$array[$val] = $datos;
+                    //return $datos;
+                    //echo count($datos);
+
+                    for ($i=0; $i < count($datos); $i++) { 
+                                                
+
+                        if($catalogos[$cat]->clave == "productos"){            
+                            $campo1 = strtoupper($datos[$i]['codigoproducto']);
+                            $campo2 = strtoupper($datos[$i]['nombreproducto']);                            
+                            $ele = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$campo1' OR codigoadw = '$campo1'");
+                            if(empty($ele)){
+                                DB::table('mc_catproductos')->insertGetId(['codigoprod' => $campo1, 'nombreprod' => $campo2, 'codigoadw' => $campo1, 'nombreadw' => $campo2, 'fechaalta' => now()]);
+                                
+                                $array[$val][$i]['registrado'] = 0;
+                                $datos[$i]['registrado'] = 0;
+                            }else{
+                                $array[$val][$i]['registrado'] = 1;
+                                $datos[$i]['registrado'] = 1;
+                            }        
+
+                        }else if($catalogos[$cat]->clave == "conceptos"){
+                            $campo1 = strtoupper($datos[$i]['codigoconcepto']);
+                            $campo2 = strtoupper($datos[$i]['nombreconcepto']);                            
+                            $ele = DB::select("SELECT * FROM mc_catconceptos WHERE codigoconcepto = '$campo1' OR codigoadw = '$campo1'");
+                            if(empty($ele)){
+                                DB::table('mc_catconceptos')->insertGetId(['codigoconcepto' => $campo1, 'nombreconcepto' => $campo2, 'codigoadw' => $campo1, 'nombreadw' => $campo2]);
+                                
+                                $array[$val][$i]['registrado'] = 0;
+                                $datos[$i]['registrado'] = 0;
+                            }else{
+                                $datos[$i]['registrado'] = 1;
+                                $array[$val][$i]['registrado'] = 1;
+                            }
+
+                        }else if($catalogos[$cat]->clave == "clientesproveedores"){   
+                            $campo1 = strtoupper($datos[$i]['codigo']);
+                            $campo2 = strtoupper($datos[$i]['rfc']);
+                            $campo3 = strtoupper($datos[$i]['razonsocial']); //Razon Social
+                            $campo4 = $datos[$i]['tipo']; //Tipo 
+                            if($campo2 == "XAXX010101000"){                    
+                                $codigoclienteproveedor = strtoupper($datos[$i][5]);
+                                //$codigoclienteproveedor = strtoupper($campo1);
+                                $ele = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$campo1'");
+                            }else{
+                                $codigoclienteproveedor = ($datos[$i][5] == "" ? $campo1 : strtoupper($datos[$i][5]));
+                                $ele = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$campo3'");
+                            }
+                            
+                            if(empty($ele)){
+                                DB::table('mc_catclienprov')->insertGetId(['codigoc' => $campo1, 'rfc' => $campo2, 'razonsocial' => $campo3, 'tipocli' => $campo4]);
+                                
+                                $array[$val][$i]['registrado'] = 0;
+                                $datos[$i]['registrado'] = 0;
+                            }else{
+                                if($ele[0]->tipocli == $campo3){                        
+                                    $array[$val][$i]['registrado'] = 1;
+                                    $datos[$i]['registrado'] = 1;
+                                }else{
+                                    if($ele[0]->tipocli != 3){                            
+                                        if($ele[0]->razonsocial == $campo2 || $ele[0]->codigoc == $codigoclienteproveedor){
+                                            DB::table('mc_catclienprov')->where("id", $ele[0]->id)->update(['tipocli' => 3, 'razonsocial' => $campo2]);     
+                                            $array[$val][$i]['registrado'] = 0;
+                                            $datos[$i]['registrado'] = 0;
+                                        }else{
+                                            $array[$val][$i]['registrado'] = 1;
+                                            $datos[$i]['registrado'] = 1;
+                                        }                            
+                                    }else{                            
+                                        $array[$val][$i]['registrado'] = 1;
+                                        $datos[$i]['registrado'] = 1;
+                                    }           
+                                }                
+                            }            
+                        }else if($catalogos[$cat]->clave == "sucursales"){
+                            $campo1 = $datos[$i]["sucursal"];          
+                                                        
+                            //$campo1 = $datos[$i][0];          
+                            //$datos[$val][$i]['registrado'] = 0;
+                            $ele = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$campo1'");
+                            if(empty($ele)){
+                                DB::table('mc_catsucursales')->insertGetId(['sucursal' => $campo1]);
+                                
+                                $datos[$i]['registrado'] = 0;
+                                //$datos[$i]['registrado'] = 0;
+                                //$datos[$val][$i]['registrado'] = 0;
+                            }else{
+                                $datos[$i]['registrado'] = 1;
+                                //$datos[$i]['registrado'] = 1;
+                                //$array[$val][$i]['registrado'] = 1;
+                                //$datos[$val][$i]['registrado'] = 0;
+                            }            
+                        }
+
+
+                    }
+
+                    $array[$val] = $datos; 
+
+                }
+
+
+            }
+
+        }
+
+        return $array;       
+
+    }        
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////---------------------->ALMACEN DIGITAL<-------------------------///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public function RubrosGen(Request $request)
+    {
+        $rfc = $request->rfcempresa;
+        $empresaBD = DB::connection("General")->select("SELECT empresaBD FROM mc1000 WHERE rfc ='$rfc'");            
+        $array = json_decode(json_encode($empresaBD[0]), True);    
+        $empresa = $array["empresaBD"];
+        if ($empresa != "") {            
+            ConnectaEmpresaDatabase($empresa);       
+            $rubros = DB::select("SELECT * FROM mc_rubros");
+            $datos = array(
+                "rubros" => $rubros,
+            );
+        }else{
+            $datos = array(
+                "rubros" => "",
+            );            
+        }
+
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function CatSucursales(Request $request){
+        $rfc = $request->rfcempresa;
+        $empresaBD = DB::connection("General")->select("SELECT empresaBD FROM mc1000 WHERE rfc ='$rfc'");            
+        $array = json_decode(json_encode($empresaBD[0]), True);    
+        $empresa = $array["empresaBD"];
+        if ($empresa != "") {            
+            ConnectaEmpresaDatabase($empresa);       
+
+            $sucursales = DB::select("SELECT idsucursal, sucursal FROM mc_catsucursales");
+            $datos = array(
+                "sucursales" => $sucursales,
+            );
+        }
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);   
+    }
+
+    function DatosAlmacen(Request $request){
+        $rfc = $request->rfcempresa;
+        $idempresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc ='$rfc'");        
+
+        if(!empty($idempresa)){
+            ConnectDatabase($idempresa[0]->idempresa);
+            $reg = DB::select("SELECT * FROM mc_almdigital ORDER BY id DESC");
+
+            for ($i=0; $i < count($reg); $i++) { 
+
+                $idalm = $reg[$i]->id;
+                           
+                $procesados = DB::select("SELECT id FROM mc_almdigital_det WHERE idalmdigital = $idalm And estatus = 1");
+
+                $reg[$i]->procesados = count($procesados);
+
+                $idusuario = $reg[$i]->idusuario;            
+
+                $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+
+                $reg[$i]->usuario = $datosuser[0]->nombre;
+
+                $claverubro = $reg[$i]->rubro;
+
+                $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
+
+                $reg[$i]->rubro = $rubro[0]->nombre;
+
+                $idsucursal = $reg[$i]->idsucursal;
+
+                $suc = DB::select("SELECT sucursal FROM mc_catsucursales WHERE idsucursal = $idsucursal");
+
+                $reg[$i]->sucursal = $suc[0]->sucursal;
+
+            }
+        }else{
+            $reg = array(
+                "datos" => "",
+            );        
+        }
+
+        return json_encode($reg, JSON_UNESCAPED_UNICODE);
+    }
+
+    function ArchivosAlmacen(Request $request){
+        $idempresa = $request->idempresa;
+        $idalmacen = $request->idalmacen;
+        ConnectDatabase($idempresa);
+        $archivos = DB::select("SELECT * FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
+//        $archivos->server_storage = DB::connection("General")->select("SELECT nombre FROM mc1000 WHERE idusuario = $idusuario");
+//        $archivos->user_storage = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+//        $archivos->psswd_storage = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+
+        return json_encode($archivos, JSON_UNESCAPED_UNICODE);
+    }
+
+    function DatosStorage(Request $request){
+        $rfc = $request->rfcempresa;
+        $server = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+        $storage = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$rfc'");
+        $storage[0]->server = $server[0]->servidor_storage;
+        return json_encode($storage, JSON_UNESCAPED_UNICODE);
+    }
+
+   public function AlmCargaArchivos(Request $request){   
+
+        //$idlote = (new ConsumoController)->RegistrarLote($idempresa, $idusuario, $tipodocto, $suc);
+        $datos = $request->datos;
+        //$archivos = $request->archivos;        
+
+        $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, 2, 5, 16);
+        
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){  
+            
+            $archivos = $datos["archivos"];
+            $numarchivos = count($archivos);        
+            $rfc = $datos["rfcempresa"];
+            $now = date('Y-m-d h:i:s A');
+            //$now->add(new DateInterval('P6H')); 
+            $idUsuario = $autenticacion[0]["idusuario"]; 
+            $Rubro = $datos["rubro"];
+            $sucursal = $datos["sucursal"];
+            $observaciones = $datos["observaciones"]; 
+            $fechadocto = date("Y-m-d", strtotime($datos["fechadocto"]));
+            $ejercicio = date("y", strtotime($fechadocto));
+            $periodo = date("m", strtotime($fechadocto)); //me da el dia en vez del mes
+            $dia = date("d", strtotime($fechadocto)); //Deberia darme el mes y me da el dia
+            $fechadocto = $ejercicio."-".$dia."-".$periodo;
+            $codfec = $ejercicio.$dia.$periodo; 
+
+            $codigogral = date("Ymd").$idUsuario.$Rubro.$sucursal;
+            $codarchivo = $datos["rfcempresa"]."_".$codfec."_".$Rubro."_";
+
+
+            $ArchivosVerificados = $this->VerificaArchivos($autenticacion[0]["idempresa"], $codarchivo, $archivos);
+
+            //if($ArchivosVerificados["error"] == 0){
+                $contador = 0;           
+
+                $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
+                if(!empty($suc)){
+
+                    ConnectDatabase($autenticacion[0]["idempresa"]);
+                    //ConnectaEmpresaDatabase($empresa);     
+                    
+                    $codigoalm = date("Ymd").$idUsuario.$Rubro.$sucursal;
+
+                    $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
+
+                    if(empty($reg)){
+                        $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'rubro' => $Rubro, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]); 
+
+                        while (isset($ArchivosVerificados["archivos"][$contador])) {
+
+                            $nomDoc = $ArchivosVerificados["archivos"][$contador]["archivo"];
+                            //$codigodocumento = $datos["rfcempresa"]."_".$codfec."_".$Rubro."_".$consecutivo;
+                            $codigodocumento = $ArchivosVerificados["archivos"][$contador]["codigo"];
+                            
+                            if($ArchivosVerificados["archivos"][$contador]["status"] == 0){
+                            
+                                DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento]);
+                                
+                                //$filename = $ArchivosVerificados["archivos"][$contador]["filename"];
+                                //$source = $ArchivosVerificados["archivos"][$contador]["source"];
+                                //$target_path = $ArchivosVerificados["archivos"][$contador]["target_path"];
+                                
+                                //$this->SaveStorage($filename, $source, $target_path);
+
+                            }
+                            $contador++;            
+                        } 
+                        DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $contador]);
+
+                    }/*else{
+                        while (isset($ArchivosVerificados["archivos"][$contador])) {
+                            $nomDoc = $ArchivosVerificados["archivos"][$contador]["archivo"]; 
+                            $codigodocumento = $codigogral.$nomDoc;                               
+                            if($ArchivosVerificados["archivos"][$contador]["status"] == 0){
+                                DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento]);
+                                
+                            }
+                            $contador++;
+                        } 
+                        $idalm = $reg[0]->id;
+                        $totalcargados = DB::select("SELECT COUNT(id) FROM mc_almdigital_det WHERE idalmdigital = $idalm");
+                        $totalregistros = $reg[0]->totalregistros + $contador;
+                        DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados]);                    
+                    }*/
+                                                              
+
+                    $array["error"] = $autenticacion[0]["error"]; //SIN ERROR
+                    $array["archivos"] = $ArchivosVerificados["archivos"];
+                }else{
+                    $array["error"] = 21; //ERROR EN LA SUCURSAL, NO REGISTRADA
+                }
+
+            //}else{
+                //$array["error"] = 
+            //}
+
+        }else{
+            $array["error"] = $autenticacion[0]["error"]; //ERROR DE AUTENTICACION
+        }    
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+        
+        
+    }
+
+    function SaveStorage($filename, $source, $target_path){
+        /*echo $source;
+        echo $filename;
+        echo $target_path;
+        $ch = curl_init();   
+
+        $gestor = fopen($source, "r");
+        $contenido = fread($gestor, filesize($source));
+        fclose($gestor);
+
+        curl_setopt_array($ch,
+            array(
+                CURLOPT_URL => 'https://cloud.dublock.com/remote.php/dav/files/admindublock/CRM/'. $target_path,
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => 'admindublock:4u1B6nyy3W',
+                CURLOPT_POSTFIELDS => $contenido,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'PUT',
+            )
+        );
+        curl_exec($ch);  */
+
+    }
+
+
+    function VerificaArchivos($idempresa, $codigo, $archivos){                   
+
+        ConnectDatabase($idempresa);
+        $regexp = "/^[a-zA-Z0-9\-_]*$/";
+        $array["error"] = 1;      
+
+        $countreg = DB::select("SELECT COUNT(id) as n FROM mc_almdigital_det");
+        if(empty($countreg)){
+            $tamNumero = 1;    
+            $countreg = 0;
+        }else{
+            $tamNumero = strlen($countreg[0]->n);    
+            $countreg = $countreg[0]->n;
+        }         
+
+        for ($i=0; $i < count($archivos); $i++) { 
+            $archivo = $archivos[$i];
+
+            $resultado = preg_match($regexp, $archivo);
+
+            $countreg = $countreg + 1;
+            if(strlen($countreg) == 1){
+                $consecutivo = "000".$countreg;
+            }elseif (strlen($countreg) == 2){
+                $consecutivo = "00".$countreg;
+            }elseif (strlen($countreg) == 3){
+                $consecutivo = "0".$countreg;
+            }else{
+                $consecutivo = $countreg;
+            }            
+
+            $codigodocumento = $codigo.$consecutivo;
+
+            if($resultado){
+//                $archivos[$i]["status"] = 2;    
+                $array["archivos"][$i]["archivo"] = $archivo;
+                $array["archivos"][$i]["codigo"] = $codigodocumento;
+                $array["archivos"][$i]["status"] = 2; //Nombre Invalido
+                
+            }else{
+                $ele = DB::select("SELECT * FROM mc_almdigital_det WHERE documento = '$archivo'");
+                //$ele = DB::select("SELECT * FROM mc_almdigital_det WHERE codigodocumento = '$codigodocumento'");       
+                if(empty($ele)){
+                    //$archivos[$i]["status"] = 0;
+                    $array["error"] = 0;
+                    $array["archivos"][$i]["archivo"] = $archivo;
+                    $array["archivos"][$i]["codigo"] = $codigodocumento;
+                    $array["archivos"][$i]["consecutivo"] = $consecutivo;
+                    /*$array["archivos"][$i]["filename"] =  $archivos[$i]["nombre"];
+                    $array["archivos"][$i]["source"] =  $archivos[$i]["fuente"];
+                    $array["archivos"][$i]["target_path"] = $archivos[$i]["ruta"];*/
+                    $array["archivos"][$i]["status"] = 0; //Nuevo  
+                }else{
+                    //$archivos[$i]["status"] = 1;    
+                    $array["archivos"][$i]["archivo"] = $archivo;
+                    $array["archivos"][$i]["codigo"] = $codigodocumento;
+                    $array["archivos"][$i]["status"] = 1; //Duplicado            
+                    
+                }
+                
+            }
+
+        }
+
+        //$array["archivos"] = $archivos;
+
+        return $array;
+
+    }
 
 
 }

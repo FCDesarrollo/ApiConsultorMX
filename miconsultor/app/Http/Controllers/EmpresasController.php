@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
+
+
 class EmpresasController extends Controller
 {
     function ListaSucursales($idempresa)
@@ -313,46 +315,7 @@ class EmpresasController extends Controller
         return $id;   
     }
 
-    public function RubrosGen()
-    {
-        $rubros = DB::connection("General")->select("SELECT * FROM mc1012");    
-        $datos = array(
-            "rubros" => $rubros,
-        );
-        return json_encode($datos, JSON_UNESCAPED_UNICODE);
-    }
 
-
-
-   public function CargaArchivos(Request $request)
-    {   
-        $contador = 0;
-        $archivos = $request->nomArchivos;        
-        $arrayArchivos = array("archivo.pdf", "archivo1.pdf",);      
-        $rfc = $request->rfc; 
-        $now = date('Y-m-d'); 
-        $idUsuario = $request->idUsuario; 
-        $idRubro = $request->idRubro; 
-        $observaciones = $request->observaciones; 
-        $empresaBD = DB::connection("General")->select("SELECT empresaBD FROM mc1000 WHERE rfc ='$rfc'");            
-        $array = json_decode(json_encode($empresaBD[0]), True);    
-        $empresa = $array["empresaBD"];
-        if ($empresa != "") {            
-            ConnectaEmpresaDatabase($empresa);        
-            $id = DB::table('mc_cargas')->insertGetId(
-                ['fecha' => $now,'idUsuario' => $idUsuario,
-                'idRubro' => $idRubro,'observaciones' => $observaciones]);  
-            if ($id > 0){
-                while (isset($archivos[$contador]['name'])) {
-                    $nomDoc = $archivos[$contador]['name'];
-                    DB::table('mc_cargasdocumentos')->insertGetId(
-                        ['idCarga' => $id,'documento' => $nomDoc]);                     
-                    $contador++;            
-                }     
-            }                      
-        }
-        return $contador;
-    }
      
     
 }

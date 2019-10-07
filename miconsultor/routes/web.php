@@ -112,9 +112,10 @@ Route::get('PermisosMenusPerfil', 'GeneralesController@PermisosMenusPerfil');
 Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil');
 
 
-//ARCHIVOS EMPRESA
-Route::get('RubrosGen', 'EmpresasController@RubrosGen');
-Route::post('CargaArchivos', 'EmpresasController@CargaArchivos');
+//ARCHIVOS EMPRESA - ALMACEN DIGITAL
+Route::get('RubrosGen', 'ConsumoController@RubrosGen');
+Route::get('CatSucursales', 'ConsumoController@CatSucursales');
+Route::post('AlmCargaArchivos', 'ConsumoController@AlmCargaArchivos');
 
 //PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
 Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');
@@ -141,14 +142,21 @@ Route::get('ConsultarMovtosDocto', 'GeneralesController@ConsultarMovtosDocto');
 Route::post('EliminarLote', 'GeneralesController@EliminarLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
-Route::post('LoteCargado', 'GeneralesController@LoteCargado');
 Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
 Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
 Route::get('Paginador', 'GeneralesController@Paginador');
 
 //PARA CONSUMO DEL MODULO DE INVENTARIOS
+Route::post('LoteCargado', 'GeneralesController@LoteCargado');
 Route::post('LoteMarcado', 'ConsumoController@LoteMarcado');
 Route::post('LoteConsumo', 'ConsumoController@LoteConsumo');
+Route::post('LoteCatalogos', 'ConsumoController@LoteCatalogos');
+Route::get('DatosAlmacen', 'ConsumoController@DatosAlmacen');
+Route::get('ArchivosAlmacen', 'ConsumoController@ArchivosAlmacen');
+
 
 //10/09/2019 PARA LEER LA BITACORA
 Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');
+
+//STORAGE
+Route::get('DatosStorage', 'ConsumoController@DatosStorage');

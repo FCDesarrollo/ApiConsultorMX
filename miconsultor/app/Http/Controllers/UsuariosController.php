@@ -40,13 +40,20 @@ class UsuariosController extends Controller
         //$password = md5($request->contra);
         $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$request->correo' AND status=1");
 
-        $hash_BD = $usuario[0]->password;
+        if(!empty($usuario)){
+        
+            $hash_BD = $usuario[0]->password;
 
-        if (password_verify($request->contra, $hash_BD)) {
-            $datos = array(
-                "usuario" => $usuario,
-            );
-        } else {
+            if (password_verify($request->contra, $hash_BD)) {
+                $datos = array(
+                    "usuario" => $usuario,
+                );
+            } else {
+                $datos = array(
+                    "usuario" => "",
+                );
+            }
+        }else{
             $datos = array(
                 "usuario" => "",
             );

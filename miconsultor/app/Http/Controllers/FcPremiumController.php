@@ -247,6 +247,8 @@ class FcPremiumController extends Controller
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);
             for ($i=0; $i < $num_registros; $i++) {
+                $fechamod = $registros[$i]['Fechamodificacion'];
+
                 $periodo= $registros[$i]['Periodo'];
                 $ejercicio = $registros[$i]['Ejercicio']; 
                 $archivo = $registros[$i]['Archivo'];

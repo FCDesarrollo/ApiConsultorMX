@@ -220,15 +220,29 @@ class FcPremiumController extends Controller
         $idsubmenu = $request->idsubmenu;
         $tipo = $request->tipodocumento;
         $status = $request->status;
-
+        $x=0;
         $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc='$rfcempresa' AND status=1");
         if (!empty($empresa)){
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);
 
-            $archivos = DB::select("SELECT fecha,archivo,nombrearchivoE,idusuarioE,periodo,ejercicio,tipodocumento,fechamodificacion FROM mc_bitcontabilidad WHERE
+            $archivos = DB::select("SELECT nombrearchivoE,idusuarioE,periodo,ejercicio,tipodocumento,fechamodificacion FROM mc_bitcontabilidad WHERE
                                  idsubmenu = $idsubmenu And status = $status order by fecha desc");
-            $datos = $archivos;
+            
+           foreach($archivos as $t){
+            $usuario = DB::connection("General")->select("SELECT nombre,apellidop FROM mc1001 WHERE idusuario=$t->idusuarioE");
+                if (!empty($usuario)){
+                    $nomE = $usuario[0]->nombre." ".$usuario[0]->apellidop;
+                }else{
+                    $nomE = "NO EXISTE EL AGENTE";
+                }    
+                $archivose[$x] = array("nombrearchivoE" => $t->nombrearchivoE,"periodo" => $t->periodo,
+                                    "ejercicio" => $t->ejercicio,"tipodocumento" => $t->tipodocumento,
+                                    "fechamodificacion" => $t->fechamodificacion,"agente" => $nomE);
+                $x = $x + 1;
+            }
+            
+            $datos = $archivose;
             return $datos;
         } 
         return "false";

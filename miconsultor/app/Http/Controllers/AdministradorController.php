@@ -123,12 +123,14 @@ class AdministradorController extends Controller
 
     public function updateBitacora(Request $request)
     {
-        $valida = $this->usuarioadmin($request->correo, $request->contra);
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
         $now = date('Y-m-d');
         $datos="false"; 
         if ($valida != "2" and $valida != "3"){
-            ConnectDatabaseRFC($request->rfc);
-              
+            ConnectDatabaseRFC($request->Rfc);
+            $movtos = $request->Documento;
+            $num_registros = count($request->Documento);  
+            
             $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE tipodocumento= '$request->Tipodocumento'
                                                 AND periodo= $request->Periodo
                                                 AND ejercicio=$request->Ejercicio");
@@ -136,8 +138,13 @@ class AdministradorController extends Controller
                 DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
                         update(['status' => $request->Status, 'idusuarioE' => $request->IdusuarioE,
-                            'nombrearchivoE' => $request->nombreE, 'fechacorte' => $request->Fechacorte,
-                            'fechaentregado' => $now]);
+                             'fechacorte' => $request->Fechacorte,'fechaentregado' => $now]);
+                            
+                DB::table('mc_detallebitcontabilidad')->where('idbitacora', $result[0]->id)->delete();
+                for ($i=0; $i < $num_registros; $i++) {
+                    DB::table('mc_detallebitcontabilidad')->insertGetId(['idbitacora' => $result[0]->id,
+                         'nombrearchivoE' => $movtos[$i]['NombreE']]);    
+                }
                 $datos="true"; 
             }
         }else{

@@ -220,15 +220,38 @@ class FcPremiumController extends Controller
         $idsubmenu = $request->idsubmenu;
         $tipo = $request->tipodocumento;
         $status = $request->status;
-
+        $x=0;
+        $datos="";
         $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc='$rfcempresa' AND status=1");
         if (!empty($empresa)){
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);
 
-            $archivos = DB::select("SELECT fecha,archivo,nombrearchivoE,idusuarioE,periodo,ejercicio,tipodocumento,fechamodificacion FROM mc_bitcontabilidad WHERE
-                                 idsubmenu = $idsubmenu And status = $status order by fecha desc");
-            $datos = $archivos;
+            $archivos = DB::select("SELECT b.id,idusuarioE,periodo,ejercicio,tipodocumento,fechamodificacion,d.nombrearchivoE FROM mc_bitcontabilidad b 
+                                        INNER JOIN mc_detallebitcontabilidad d ON b.id=d.idbitacora WHERE
+                                     idsubmenu = $idsubmenu AND STATUS = $status ORDER BY fecha DESC");
+            
+          foreach($archivos as $t){
+                $usuario = DB::connection("General")->select("SELECT nombre,apellidop FROM mc1001 WHERE idusuario=$t->idusuarioE");
+                if (!empty($usuario)){
+                    $nomE = $usuario[0]->nombre." ".$usuario[0]->apellidop;
+                }else{
+                    $nomE = "NO EXISTE EL AGENTE";
+                }
+                $servicio = DB::connection("General")->select("SELECT nombreservicio FROM mc0001 WHERE codigoservicio='$t->tipodocumento'");
+                if (!empty($usuario)){
+                    $ser = $servicio[0]->nombreservicio;
+                }else{
+                    $ser = "NO EXISTE EL SERVICIO";
+                }     
+                $archivose[$x] = array("nombrearchivoE" => $t->nombrearchivoE,"periodo" => $t->periodo,
+                                    "ejercicio" => $t->ejercicio,"tipodocumento" => $t->tipodocumento,
+                                    "fechamodificacion" => $t->fechamodificacion,"agente" => $nomE, "servicio" => $ser);
+                $x = $x + 1;
+                $datos = $archivose;
+            }
+            
+            
             return $datos;
         } 
         return "false";
@@ -247,6 +270,8 @@ class FcPremiumController extends Controller
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);
             for ($i=0; $i < $num_registros; $i++) {
+                $fechamod = $registros[$i]['Fechamodificacion'];
+
                 $periodo= $registros[$i]['Periodo'];
                 $ejercicio = $registros[$i]['Ejercicio']; 
                 $archivo = $registros[$i]['Archivo'];

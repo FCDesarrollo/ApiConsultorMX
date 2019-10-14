@@ -153,6 +153,9 @@ Route::post('LoteConsumo', 'ConsumoController@LoteConsumo');
 Route::post('LoteCatalogos', 'ConsumoController@LoteCatalogos');
 Route::get('DatosAlmacen', 'ConsumoController@DatosAlmacen');
 Route::get('ArchivosAlmacen', 'ConsumoController@ArchivosAlmacen');
+Route::post('EliminaArchivoAlmacen', 'ConsumoController@EliminaArchivoAlmacen');
+Route::get('DatosFiltroAvanzado', 'ConsumoController@DatosFiltroAvanzado');
+Route::get('FiltrarDatos', 'ConsumoController@FiltrarDatos');
 
 
 //10/09/2019 PARA LEER LA BITACORA

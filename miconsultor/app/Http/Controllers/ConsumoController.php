@@ -919,41 +919,97 @@ class ConsumoController extends Controller
 ////////////////////////////////---------------------->ALMACEN DIGITAL<-------------------------///////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public function RubrosGen(Request $request)
-    {
-        $rfc = $request->rfcempresa;
-        $empresaBD = DB::connection("General")->select("SELECT empresaBD FROM mc1000 WHERE rfc ='$rfc'");            
-        $array = json_decode(json_encode($empresaBD[0]), True);    
-        $empresa = $array["empresaBD"];
-        if ($empresa != "") {            
-            ConnectaEmpresaDatabase($empresa);       
+    public function RubrosGen(Request $request){
+        //$datos = $request->datos;
+
+        //$rfc = $request->rfcempresa;
+
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, Mod_Contabilidad, Menu_AlmacenDigital, SubM_ExpedientesDigitales);
+
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){  
+
+            ConnectDatabase($autenticacion[0]["idempresa"]);
             $rubros = DB::select("SELECT * FROM mc_rubros");
-            $datos = array(
-                "rubros" => $rubros,
-            );
-        }else{
-            $datos = array(
-                "rubros" => "",
-            );            
+            
+            $array["rubros"] = $rubros;
+    
+
         }
 
-        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function AlmacenConsumo(Request $request){
+
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, Mod_Contabilidad, Menu_AlmacenDigital, SubM_ExpedientesDigitales);
+
+        $FecI = $request->fechai;
+        $FecF = $request->fechaf;
+        $ClaveR = $request->claverubro;
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){  
+
+            ConnectDatabase($autenticacion[0]["idempresa"]);
+
+            $datos = DB::select("SELECT a.fechadocto, a.idusuario, a.rubro, a.idsucursal, det.codigodocumento, det.documento 
+                        FROM mc_almdigital a INNER JOIN mc_almdigital_det det ON a.id = det.idalmdigital WHERE a.fechadocto >= '$FecI' AND a.fechadocto <= '$FecF' AND a.rubro = '$ClaveR';");
+            if(!empty($datos)){
+
+                for ($i=0; $i < count($datos); $i++) { 
+                 
+                    $idusuario = $datos[$i]->idusuario;            
+
+                    $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+
+                    $datos[$i]->usuario = $datosuser[0]->nombre;
+
+                    $claverubro = $datos[$i]->rubro;
+
+                    $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
+
+                    $datos[$i]->nombrerubro = $rubro[0]->nombre;
+
+                    $idsucursal = $datos[$i]->idsucursal;
+
+                    $suc = DB::select("SELECT sucursal FROM mc_catsucursales WHERE idsucursal = $idsucursal");
+
+                    $datos[$i]->sucursal = $suc[0]->sucursal;
+
+                }
+
+                
+            }
+            
+            $array["almacen"] = $datos;
+    
+
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+
     }
 
     public function CatSucursales(Request $request){
-        $rfc = $request->rfcempresa;
-        $empresaBD = DB::connection("General")->select("SELECT empresaBD FROM mc1000 WHERE rfc ='$rfc'");            
-        $array = json_decode(json_encode($empresaBD[0]), True);    
-        $empresa = $array["empresaBD"];
-        if ($empresa != "") {            
-            ConnectaEmpresaDatabase($empresa);       
+
+        $datos = $request->datos;
+        //$rfc = $request->rfcempresa;
+
+        $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, Mod_Contabilidad, Menu_AlmacenDigital, SubM_ExpedientesDigitales); 
+
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){  
+            ConnectDatabase($autenticacion[0]["idempresa"]);
 
             $sucursales = DB::select("SELECT idsucursal, sucursal FROM mc_catsucursales");
-            $datos = array(
-                "sucursales" => $sucursales,
-            );
+
+            $array["sucursales"] = $sucursales;
         }
-        return json_encode($datos, JSON_UNESCAPED_UNICODE);   
+     
+        return json_encode($array, JSON_UNESCAPED_UNICODE);   
     }
 
     function DatosAlmacen(Request $request){

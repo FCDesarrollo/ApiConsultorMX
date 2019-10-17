@@ -158,10 +158,56 @@ class AdministradorController extends Controller
         $valida = $this->usuarioadmin($request->correo, $request->contra);
         if ($valida != "2" and $valida != "3"){
             ConnectDatabase($request->idempresa);
-            $ejercicio = DB::select("SELECT DISTINCT ejercicio FROM mc_bitcontabilidad");
+            $ejercicio = DB::select("SELECT DISTINCT ejercicio FROM mc_bitcontabilidad WHERE status=1");
                 $datos = array(
                    "ejercicios" => $ejercicio,
                 );
+        }else{
+            $datos = $valida;
+        }
+        return $datos;
+    }
+
+    public function listaServicios_bit(Request $request)
+    {
+        $x = 0;
+        $datos ="";
+        $valida = $this->usuarioadmin($request->correo, $request->contra);
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->idempresa);
+            $servicios = DB::select("SELECT DISTINCT tipodocumento FROM mc_bitcontabilidad WHERE status=1");
+            foreach($servicios as $t){
+                $serivicio = DB::connection("General")->select("SELECT codigoservicio,nombreservicio FROM mc0001 WHERE codigoservicio='$t->tipodocumento'");
+                if (!empty($serivicio)){
+                    $archivose[$x] = array("codigoservicio" => $serivicio[0]->codigoservicio,"nombreservicio" => $serivicio[0]->nombreservicio);
+                    $x = $x + 1;
+                }
+            }
+            $datos = $archivose;
+        }else{
+            $datos = $valida;
+        }
+        return $datos;
+    }
+
+    public function listaAgentes_bit(Request $request)
+    {
+        $x = 0;
+        $datos ="";
+        $valida = $this->usuarioadmin($request->correo, $request->contra);
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->idempresa);
+            $agentes = DB::select("SELECT DISTINCT idusuarioE FROM mc_bitcontabilidad WHERE status=1");
+            foreach($agentes as $t){
+                $agente = DB::connection("General")->select("SELECT idusuario,nombre,apellidop,apellidom FROM mc1001 WHERE idusuario=$t->idusuarioE");
+                if (!empty($agente)){
+                    $archivose[$x] = array("idusuario" => $agente[0]->idusuario,"nombre" => 
+                                    $agente[0]->nombre, "apellidop" => $agente[0]->apellidop, "apellidom" =>$agente[0]->apellidom);
+                    $x = $x + 1;
+                    $datos = $archivose;
+                }
+            }
+            
         }else{
             $datos = $valida;
         }

@@ -227,7 +227,7 @@ class FcPremiumController extends Controller
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);
 
-            $archivos = DB::select("SELECT b.id,idusuarioE,periodo,ejercicio,tipodocumento,fechamodificacion,d.nombrearchivoE FROM mc_bitcontabilidad b 
+            $archivos = DB::select("SELECT b.id,idusuarioE,periodo,ejercicio,tipodocumento,fechacorte,d.nombrearchivoE FROM mc_bitcontabilidad b 
                                         INNER JOIN mc_detallebitcontabilidad d ON b.id=d.idbitacora WHERE
                                      idsubmenu = $idsubmenu AND STATUS = $status ORDER BY fecha DESC");
             
@@ -246,7 +246,7 @@ class FcPremiumController extends Controller
                 }     
                 $archivose[$x] = array("nombrearchivoE" => $t->nombrearchivoE,"periodo" => $t->periodo,
                                     "ejercicio" => $t->ejercicio,"tipodocumento" => $t->tipodocumento,
-                                    "fechamodificacion" => $t->fechamodificacion,"agente" => $nomE, "servicio" => $ser);
+                                    "fechamodificacion" => $t->fechacorte,"agente" => $nomE, "servicio" => $ser);
                 $x = $x + 1;
                 $datos = $archivose;
             }

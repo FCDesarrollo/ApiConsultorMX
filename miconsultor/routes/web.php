@@ -113,10 +113,10 @@ Route::get('PermisoSubMenusPerfil', 'GeneralesController@PermisoSubMenusPerfil')
 
 
 //ARCHIVOS EMPRESA - ALMACEN DIGITAL
-Route::get('RubrosGen', 'ConsumoController@RubrosGen');
-Route::get('CatSucursales', 'ConsumoController@CatSucursales');
+Route::post('RubrosGen', 'ConsumoController@RubrosGen');
+Route::post('CatSucursales', 'ConsumoController@CatSucursales');
 Route::post('AlmCargaArchivos', 'ConsumoController@AlmCargaArchivos');
-Route::get('AlmacenConsumo', 'ConsumoController@AlmacenConsumo');
+Route::post('AlmacenConsumo', 'ConsumoController@AlmacenConsumo');
 
 //PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
 Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');

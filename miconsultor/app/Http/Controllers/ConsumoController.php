@@ -1016,7 +1016,7 @@ class ConsumoController extends Controller
                 $idalmacen_det = $registros[$i]['idalmacen_det'];                
                 
                 $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->where("idalmdigital", $idalmacen)->update(['idagente' => $autenticacion[0]["idusuario"], 'fechaprocesado' => now(), 'estatus' => "1"]);                
-                if(!)
+                
 
             }
 

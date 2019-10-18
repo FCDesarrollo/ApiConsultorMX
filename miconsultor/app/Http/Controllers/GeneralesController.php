@@ -814,7 +814,7 @@ class GeneralesController extends Controller
 
     }
 
-    function UpdateLote($idempresa, $tipodocto, $idlote){     
+    /*function UpdateLote($idempresa, $tipodocto, $idlote){     
 
         ConnectDatabase($idempresa);
 
@@ -823,7 +823,7 @@ class GeneralesController extends Controller
         
         DB::table('mc_lotes')->where("id", $idlote)->update(['tipo' => $tipodocto, 'totalregistros' => $totalregistros[0]->totalreg, 'totalcargados' => $n[0]->reg]);
 
-    }
+    }*/
 
     function RegistrarMovtos2($idempresa, $idusuario, $idlote, $iddocto, $tipodocto, $codigo, $movtos, $num_movtos){
 

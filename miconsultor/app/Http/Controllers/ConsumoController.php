@@ -533,6 +533,7 @@ class ConsumoController extends Controller
         $n = DB::select("SELECT count(id) AS reg FROM mc_lotesdocto WHERE idlote = '$idlote' And error <> 1");
         $totalregistros = DB::select("SELECT count(id) AS totalreg FROM mc_lotesdocto WHERE idlote = '$idlote'");
         
+        DB::table('mc_lotes')->where("id", $idlote)->update(['tipo' => $tipodocto, 'totalregistros' => $totalregistros[0]->totalreg, 'totalcargados' => $n[0]->reg]);        
             
         
     }    

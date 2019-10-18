@@ -982,7 +982,7 @@ class ConsumoController extends Controller
 
                 
             }
-            
+
             $array["almacen"] = $datos;
     
 
@@ -991,6 +991,21 @@ class ConsumoController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
 
     }
+
+    function AlmacenMarcado(Request $request){
+
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, Mod_Contabilidad, Menu_AlmacenDigital, SubM_ExpedientesDigitales);
+
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){  
+
+            ConnectDatabase($autenticacion[0]["idempresa"]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
 
     public function CatSucursales(Request $request){
 

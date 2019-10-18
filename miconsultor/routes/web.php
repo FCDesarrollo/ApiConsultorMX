@@ -117,6 +117,7 @@ Route::post('RubrosGen', 'ConsumoController@RubrosGen');
 Route::post('CatSucursales', 'ConsumoController@CatSucursales');
 Route::post('AlmCargaArchivos', 'ConsumoController@AlmCargaArchivos');
 Route::post('AlmacenConsumo', 'ConsumoController@AlmacenConsumo');
+Route::post('AlmacenMarcado', 'ConsumoController@AlmacenMarcado');
 
 //PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
 Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');

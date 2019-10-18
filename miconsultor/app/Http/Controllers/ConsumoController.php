@@ -151,8 +151,8 @@ class ConsumoController extends Controller
             ConnectDatabase($autenticacion[0]['idempresa']);
             
             for ($i=0; $i < count($registros); $i++) {               
-                echo count($registros);
-                echo $registros[$i]['iddocto'];
+                //echo count($registros);
+                //echo $registros[$i]['iddocto'];
                 $id = $registros[$i]['iddocto'];
                 $idadw = $registros[$i]['iddoctoadw'];                
                 
@@ -999,9 +999,27 @@ class ConsumoController extends Controller
 
         $array["error"] = $autenticacion[0]["error"];
 
+        if(isset($request->registros)){
+            $registros = $request->registros;
+        }else{
+            $registros[0]["idalmacen"] = $request->idalmacen;
+            $registros[0]["idalmacen_det"] = $request->idalmacen_det;
+        }
+        
         if($autenticacion[0]['error'] == 0){  
 
             ConnectDatabase($autenticacion[0]["idempresa"]);
+
+            for ($i=0; $i < count($registros); $i++) {               
+
+                $idalmacen = $registros[$i]['idalmacen'];
+                $idalmacen_det = $registros[$i]['idalmacen_det'];                
+                
+                $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->where("idalmdigital", $idalmacen)->update(['idagente' => $autenticacion[0]["idusuario"], 'fechaprocesado' => now(), 'estatus' => "1"]);                
+                if(!)
+
+            }
+
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

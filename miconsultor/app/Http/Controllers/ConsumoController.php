@@ -955,8 +955,8 @@ class ConsumoController extends Controller
 
             ConnectDatabase($autenticacion[0]["idempresa"]);
 
-            $datos = DB::select("SELECT a.fechadocto, a.idusuario, a.rubro, a.idsucursal, det.codigodocumento, det.documento 
-                        FROM mc_almdigital a INNER JOIN mc_almdigital_det det ON a.id = det.idalmdigital WHERE a.fechadocto >= '$FecI' AND a.fechadocto <= '$FecF' AND a.rubro = '$ClaveR';");
+            $datos = DB::select("SELECT det.id, a.fechadocto, a.idusuario, a.rubro, a.idsucursal, det.codigodocumento, det.documento, det.idagente, det.fechaprocesado, det.estatus FROM mc_almdigital a INNER JOIN mc_almdigital_det det ON a.id = det.idalmdigital WHERE a.fechadocto >= '$FecI' AND a.fechadocto <= '$FecF' AND a.rubro = '$ClaveR';");
+
             if(!empty($datos)){
 
                 for ($i=0; $i < count($datos); $i++) { 
@@ -1002,8 +1002,8 @@ class ConsumoController extends Controller
         if(isset($request->registros)){
             $registros = $request->registros;
         }else{
-            $registros[0]["idalmacen"] = $request->idalmacen;
-            $registros[0]["idalmacen_det"] = $request->idalmacen_det;
+            //$registros[0]["idalmacen"] = $request->idalmacen;
+            $registros[0]["id"] = $request->id;
         }
         
         if($autenticacion[0]['error'] == 0){  
@@ -1012,10 +1012,10 @@ class ConsumoController extends Controller
 
             for ($i=0; $i < count($registros); $i++) {               
 
-                $idalmacen = $registros[$i]['idalmacen'];
-                $idalmacen_det = $registros[$i]['idalmacen_det'];                
+                //$idalmacen = $registros[$i]['idalmacen'];
+                $idalmacen_det = $registros[$i]['id'];                
                 
-                $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->where("idalmdigital", $idalmacen)->where("estatus", 0)->update(['idagente' => $autenticacion[0]["idusuario"], 'fechaprocesado' => now(), 'estatus' => "1"]);                
+                $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->where("estatus", 0)->update(['idagente' => $autenticacion[0]["idusuario"], 'fechaprocesado' => now(), 'estatus' => "1"]);                
                 if(!empty($resp)){
                     $registros[$i]["estatus"] = true;                    
                 }else{
@@ -1032,12 +1032,9 @@ class ConsumoController extends Controller
     }
 
 
-    public function CatSucursales(Request $request){
+    function CatSucursales(Request $request){
 
-        $datos = $request->datos;
-        //$rfc = $request->rfcempresa;
-
-        $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, Mod_Contabilidad, Menu_AlmacenDigital, SubM_ExpedientesDigitales); 
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, Mod_Contabilidad, Menu_AlmacenDigital, SubM_ExpedientesDigitales); 
 
         $array["error"] = $autenticacion[0]["error"];
 
@@ -1195,15 +1192,19 @@ class ConsumoController extends Controller
             $Rubro = $datos["rubro"];
             $sucursal = $datos["sucursal"];
             $observaciones = $datos["observaciones"]; 
-            $fechadocto = date("Y-m-d", strtotime($datos["fechadocto"]));
-            $ejercicio = date("y", strtotime($fechadocto));
-            $periodo = date("m", strtotime($fechadocto)); //me da el dia en vez del mes
-            $dia = date("d", strtotime($fechadocto)); //Deberia darme el mes y me da el dia
-            $fechadocto = $ejercicio."-".$dia."-".$periodo;
-            $codfec = $ejercicio.$dia.$periodo; 
+            //$fechadocto = date("Y-m-d", strtotime($datos["fechadocto"]));
+            
+            $fechadocto = $datos["fechadocto"];
+            //$ejercicio = date("y", strtotime($fechadocto));
+            //$periodo = date("m", strtotime($fechadocto)); //me da el dia en vez del mes
+            //$dia = date("d", strtotime($fechadocto)); //Deberia darme el mes y me da el dia
+            //$fechadocto = $ejercicio."-".$dia."-".$periodo;
+            //$codfec = $ejercicio.$periodo.$dia;
+            $string = explode("-", $fechadocto);
+            $codfec = $string[0].$string[1].$string[2];
 
             $codigogral = date("Ymd").$idUsuario.$Rubro.$sucursal;
-            $codarchivo = $datos["rfcempresa"]."_".$codfec."_".$Rubro."_";
+            $codarchivo = $datos["rfcempresa"]."-".$codfec."-".$Rubro."-";
 
             $ArchivosVerificados = $this->VerificaArchivos($autenticacion[0]["idempresa"], $codarchivo, $archivos);
 

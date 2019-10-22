@@ -1186,25 +1186,17 @@ class ConsumoController extends Controller
             $numarchivos = count($archivos);        
             $rfc = $datos["rfcempresa"];
             $now = date('Y-m-d h:i:s A');
-            //$now = strtotime('+6 hour', strtotime($now));
-            //$now->add(new DateInterval('P6H')); 
             $idUsuario = $autenticacion[0]["idusuario"]; 
             $Rubro = $datos["rubro"];
             $sucursal = $datos["sucursal"];
-            $observaciones = $datos["observaciones"]; 
-            //$fechadocto = date("Y-m-d", strtotime($datos["fechadocto"]));
+            $observaciones = $datos["observaciones"];        
             
             $fechadocto = $datos["fechadocto"];
-            //$ejercicio = date("y", strtotime($fechadocto));
-            //$periodo = date("m", strtotime($fechadocto)); //me da el dia en vez del mes
-            //$dia = date("d", strtotime($fechadocto)); //Deberia darme el mes y me da el dia
-            //$fechadocto = $ejercicio."-".$dia."-".$periodo;
-            //$codfec = $ejercicio.$periodo.$dia;
             $string = explode("-", $fechadocto);
-            $codfec = $string[0].$string[1].$string[2];
+            $codfec = substr($string[0], 2).$string[1];
 
             $codigogral = date("Ymd").$idUsuario.$Rubro.$sucursal;
-            $codarchivo = $datos["rfcempresa"]."-".$codfec."-".$Rubro."-";
+            $codarchivo = $datos["rfcempresa"]."_".$codfec."_".$Rubro."_";
 
             $ArchivosVerificados = $this->VerificaArchivos($autenticacion[0]["idempresa"], $codarchivo, $archivos);
 

@@ -165,7 +165,7 @@ Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');
 
 //STORAGE
 Route::get('DatosStorage', 'ConsumoController@DatosStorage');
-Route::post('registraBitacora', 'FcPremiumController@registraBitacora');
+Route::post('registraBitacora', 'AdministradorController@registraBitacora');
 
 //19/09/2019 PARA LA ADMINISTRACION DE EMPRESAS DE LOS AGENTES DESKTOP
 Route::post('datosadmin', 'AdministradorController@datosadmin');

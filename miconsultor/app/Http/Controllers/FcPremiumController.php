@@ -257,51 +257,7 @@ class FcPremiumController extends Controller
         return "false";
     }
 
-    function registraBitacora(Request $request){
-        $rfcempresa = $request->Rfc;
-        $registros = $request->Regbitacora;
-        $num_registros = count($request->Regbitacora);
-
-        $now = date('Y-m-d');
-        $fechamod = date('Y-m-d H:i:s');
-        $reg = "false";
-        $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc='$rfcempresa' AND status=1");
-        if (!empty($empresa)){
-            $idempresa = $empresa[0]->idempresa;
-            ConnectDatabase($idempresa);
-            for ($i=0; $i < $num_registros; $i++) {
-                $fechamod = $registros[$i]['Fechamodificacion'];
-
-                $periodo= $registros[$i]['Periodo'];
-                $ejercicio = $registros[$i]['Ejercicio']; 
-                $archivo = $registros[$i]['Archivo'];
-                $nomarchi = $registros[$i]['Nombrearchivo'];
-                $idusersub = $request->Idusuariosubida;   
-                $status=  $request->Status;
-                $iduserentrega = $request->Idusuarioentrega;
-                $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->Idsubmenu
-                                                    AND tipodocumento= '$request->Tipodocumento'
-                                                    AND periodo= $periodo
-                                                    AND ejercicio=$ejercicio");
-                if(empty($result)){
-                    $idU = DB::table('mc_bitcontabilidad')->insertGetId(
-                        ['idsubmenu' => $request->Idsubmenu,'tipodocumento' => $request->Tipodocumento,
-                        'periodo' => $periodo, 'ejercicio' => $ejercicio,
-                        'fecha' => $now, 'fechamodificacion' => $fechamod,
-                        'archivo' => $archivo, 'nombrearchivoG' => $nomarchi,
-                        'status' => $status,'idusuarioE' => $iduserentrega,
-                        'idusuarioG' => $idusersub]);
-                }else{
-                    DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
-                        where("tipodocumento", $request->Tipodocumento)->
-                        where("periodo", $periodo)->where('ejercicio', $ejercicio)->
-                        update(['fechamodificacion' => $fechamod]);
-                } 
-            }
-            $reg = "true";
-        } 
-        return $reg;
-    }
+    
 
     
 

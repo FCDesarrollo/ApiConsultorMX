@@ -908,34 +908,45 @@ class GeneralesController extends Controller
         $inicio = $request->iniciar;
         $lotespagina = $request->lotespag;
 
-    
-        $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 GROUP BY l.id ORDER BY l.id DESC LIMIT $inicio, $lotespagina");
+        $tabla = $request->tabla; //Contiene el id del submenu
 
-        
-        for($i=0; $i < count($lotes); $i++){
+        if($tabla == 0){ //Recepcion por lotes
 
-            $idlote = $lotes[$i]->id;
+            $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 GROUP BY l.id ORDER BY l.id DESC LIMIT $inicio, $lotespagina");
 
-                       
-            $procesados = DB::select("SELECT id FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
+            for($i=0; $i < count($lotes); $i++){
 
-            $lotes[$i]->procesados = count($procesados);
+                $idlote = $lotes[$i]->id;
 
-            $idusuario = $lotes[$i]->usuario;            
+                           
+                $procesados = DB::select("SELECT id FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
 
-            $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+                $lotes[$i]->procesados = count($procesados);
 
-            $lotes[$i]->usuario = $datosuser[0]->nombre;
+                $idusuario = $lotes[$i]->usuario;            
 
-            $clave = $lotes[$i]->tipo;
+                $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
 
-            $tipo = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = '$clave'");
+                $lotes[$i]->usuario = $datosuser[0]->nombre;
 
-            $lotes[$i]->tipodet = $tipo[0]->tipo;            
-        
+                $clave = $lotes[$i]->tipo;
+
+                $tipo = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = '$clave'");
+
+                $lotes[$i]->tipodet = $tipo[0]->tipo;            
+            
+            }            
+
+            return $lotes;
+                
+        }else if($tabla == 16){ //Expedientes Digitales
+
         }
 
-        return $lotes;       
+        
+
+
+               
 
 
     }

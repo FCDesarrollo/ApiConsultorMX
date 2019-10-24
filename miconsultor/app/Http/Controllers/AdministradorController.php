@@ -178,9 +178,11 @@ class AdministradorController extends Controller
     public function updateBitacora(Request $request)
     {
         $valida = $this->usuarioadmin($request->Correo, $request->Contra);
-        $now = date('Y-m-d');
+        $now = $request->Fechaentregado;
         $datos="false"; 
         if ($valida != "2" and $valida != "3"){
+            $usuario = $valida['usuario'];
+            $iduserent = $usuario[0]->idusuario;
             ConnectDatabaseRFC($request->Rfc);
             $movtos = $request->Documento;
             $num_registros = count($request->Documento);  
@@ -191,13 +193,13 @@ class AdministradorController extends Controller
             if(!empty($result)){
                 DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
-                        update(['status' => $request->Status, 'idusuarioE' => $request->IdusuarioE,
-                             'fechacorte' => $request->Fechacorte,'fechaentregado' => $now]);
+                        update(['status' => $request->Status, 'idusuarioE' => $iduserent,
+                             'fechaentregado' => $now]);
                             
-                DB::table('mc_detallebitcontabilidad')->where('idbitacora', $result[0]->id)->delete();
+                DB::table('mc_bitcontabilidad_det')->where('idbitacora', $result[0]->id)->delete();
                 for ($i=0; $i < $num_registros; $i++) {
-                    DB::table('mc_detallebitcontabilidad')->insertGetId(['idbitacora' => $result[0]->id,
-                         'nombrearchivoE' => $movtos[$i]['NombreE']]);    
+                    DB::table('mc_bitcontabilidad_det')->insertGetId(['idbitacora' => $result[0]->id,
+                         'nombrearchivoE' => $movtos[$i]['NombreE'],'fechacorte' => $movtos[$i]['FechaCorte']]);    
                 }
                 $datos="true"; 
             }
@@ -267,4 +269,21 @@ class AdministradorController extends Controller
         }
         return $datos;
     }
+
+    public function Existe_bitacora(Request $request)
+    {
+        $datos ="false";
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabaseRFC($request->Rfc);
+            $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE tipodocumento= '$request->Tipodocumento'
+                                                AND periodo= $request->Periodo
+                                                AND ejercicio=$request->Ejercicio");
+            if(!empty($result)){
+                $datos ="true";   
+            }                                   
+        }
+        return $datos;
+    }
+
 }

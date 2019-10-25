@@ -209,12 +209,35 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function MaraBitacora(Request $request)
+    {
+        $now = $request->Fechaentregado;
+        $datos="false";
+        $valida = $this->usuarioadmin($request->correo, $request->contra);
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabaseRFC($request->Rfc);
+            $usuario = $valida['usuario'];
+            $iduserent = $usuario[0]->idusuario;
+            $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE tipodocumento= '$request->Tipodocumento'
+                                                AND periodo= $request->Periodo
+                                                AND ejercicio=$request->Ejercicio");
+            if(!empty($result)){
+                DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
+                        where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
+                        update(['status' => $request->Status, 'idusuarioE' => $iduserent,
+                             'fechaentregado' => $now]);
+                $datos="true"; 
+            }
+        }
+        return $datos;
+    }
+
     public function listaejercicios(Request $request)
     {
         $valida = $this->usuarioadmin($request->correo, $request->contra);
         if ($valida != "2" and $valida != "3"){
             ConnectDatabase($request->idempresa);
-            $ejercicio = DB::select("SELECT DISTINCT ejercicio FROM mc_bitcontabilidad WHERE status=1");
+            $ejercicio = DB::select("SELECT DISTINCT ejercicio FROM mc_bitcontabilidad");
                 $datos = array(
                    "ejercicios" => $ejercicio,
                 );

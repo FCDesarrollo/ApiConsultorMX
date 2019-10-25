@@ -179,6 +179,7 @@ class AdministradorController extends Controller
     {
         $valida = $this->usuarioadmin($request->Correo, $request->Contra);
         $now = $request->Fechaentregado;
+        $fechacor = $request->FechaCorte;
         $datos="false"; 
         if ($valida != "2" and $valida != "3"){
             $usuario = $valida['usuario'];
@@ -193,7 +194,7 @@ class AdministradorController extends Controller
             if(!empty($result)){
                 DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
-                        update(['status' => $request->Status, 'idusuarioE' => $iduserent,
+                        update(['status' => $request->Status, 'idusuarioE' => $iduserent,'fechacorte' => $fechacor,
                              'fechaentregado' => $now]);
                             
                 DB::table('mc_bitcontabilidad_det')->where('idbitacora', $result[0]->id)->delete();
@@ -209,7 +210,7 @@ class AdministradorController extends Controller
         return $datos;
     }
 
-    public function MaraBitacora(Request $request)
+    public function MarcaBitacora(Request $request)
     {
         $now = $request->Fechaentregado;
         $datos="false";

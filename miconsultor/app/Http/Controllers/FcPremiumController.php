@@ -227,8 +227,8 @@ class FcPremiumController extends Controller
             $idempresa = $empresa[0]->idempresa;
             ConnectDatabase($idempresa);
 
-            $archivos = DB::select("SELECT b.id,idusuarioE,periodo,ejercicio,tipodocumento,fechacorte,d.nombrearchivoE FROM mc_bitcontabilidad b 
-                                        INNER JOIN mc_detallebitcontabilidad d ON b.id=d.idbitacora WHERE
+            $archivos = DB::select("SELECT b.id,idusuarioE,periodo,ejercicio,tipodocumento,d.fechacorte,d.nombrearchivoE FROM mc_bitcontabilidad b 
+                                        INNER JOIN mc_bitcontabilidad_det d ON b.id=d.idbitacora WHERE
                                      idsubmenu = $idsubmenu AND STATUS = $status ORDER BY fecha DESC");
             
           foreach($archivos as $t){

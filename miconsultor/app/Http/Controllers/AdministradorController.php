@@ -214,7 +214,7 @@ class AdministradorController extends Controller
     {
         $now = $request->Fechaentregado;
         $datos="false";
-        $valida = $this->usuarioadmin($request->correo, $request->contra);
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
         if ($valida != "2" and $valida != "3"){
             ConnectDatabaseRFC($request->Rfc);
             $usuario = $valida['usuario'];

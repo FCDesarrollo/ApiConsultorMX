@@ -229,7 +229,7 @@ class FcPremiumController extends Controller
 
             $archivos = DB::select("SELECT b.id,idusuarioE,periodo,ejercicio,tipodocumento,d.fechacorte,d.nombrearchivoE FROM mc_bitcontabilidad b 
                                         INNER JOIN mc_bitcontabilidad_det d ON b.id=d.idbitacora WHERE
-                                     idsubmenu = $idsubmenu AND STATUS = $status ORDER BY fecha DESC");
+                                     idsubmenu = $idsubmenu AND STATUS = $status ORDER BY d.fechacorte DESC");
             
           foreach($archivos as $t){
                 $usuario = DB::connection("General")->select("SELECT nombre,apellidop FROM mc1001 WHERE idusuario=$t->idusuarioE");

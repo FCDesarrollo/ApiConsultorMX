@@ -1101,6 +1101,7 @@ class ConsumoController extends Controller
 
         for ($i=0; $i < count($archivos); $i++) { 
             $idagente = ($archivos[$i]->idagente != null ? $archivos[$i]->idagente : 0);
+            //$idagente = $archivos[$i]->idagente;
             $datosagente = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idagente");
             if(!empty($datosagente)){
                 $archivos[$i]->agente = $datosagente[0]->nombre;
@@ -1194,9 +1195,11 @@ class ConsumoController extends Controller
             $fechadocto = $datos["fechadocto"];
             $string = explode("-", $fechadocto);
             $codfec = substr($string[0], 2).$string[1];
+            $codfec2 = substr($string[0], 2).$string[1].$string[2];
 
             $codigogral = date("Ymd").$idUsuario.$Rubro.$sucursal;
             $codarchivo = $datos["rfcempresa"]."_".$codfec."_".$Rubro."_";
+            
 
             $ArchivosVerificados = $this->VerificaArchivos($autenticacion[0]["idempresa"], $codarchivo, $archivos);
 
@@ -1206,10 +1209,8 @@ class ConsumoController extends Controller
             if(!empty($suc)){
 
                 ConnectDatabase($autenticacion[0]["idempresa"]);
-                //ConnectaEmpresaDatabase($empresa);     
-                
-                //$codigoalm = date("Ymd").$idUsuario.$Rubro.$sucursal;
-                $codigoalm = $codfec.$idUsuario.$Rubro.$sucursal;
+
+                $codigoalm = substr($string[0], 2).$string[1].$string[2].$idUsuario.$Rubro.$sucursal;    
 
                 $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
 

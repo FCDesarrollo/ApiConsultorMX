@@ -29,11 +29,25 @@ class EmpresasController extends Controller
        
         $idusuario = $request->idusuario;
         if ($request->tipo==4){
-            $empresas = DB::connection("General")->select("SELECT * FROM mc1000 ");
+            $empresas = DB::connection("General")->select("SELECT * FROM mc1000");
         }else{
             $empresas = DB::connection("General")->select("SELECT e.*,u.* FROM mc1000 e 
                                             INNER JOIN mc1002 r ON e.idempresa=r.idempresa 
                                     INNER JOIN mc1001 u ON r.idusuario=u.idusuario WHERE u.idusuario='$idusuario'");
+        }
+
+        for ($i=0; $i < count($empresas); $i++) { 
+            $idempresa = $empresas[$i]->idempresa;
+            ConnectDatabase($idempresa);
+
+            $idper = DB::select("SELECT * FROM mc_userprofile WHERE idusuario = $idusuario");
+
+            $idperfil = $idper[0]->idperfil;
+
+            $perfil = DB::connection("General")->select("SELECT * FROM mc1006 WHERE idperfil = $idperfil");
+
+            $empresas[$i]->perfil = $perfil[0]->nombre;
+
         }
         
        

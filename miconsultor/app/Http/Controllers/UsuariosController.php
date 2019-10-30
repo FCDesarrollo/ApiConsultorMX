@@ -112,17 +112,43 @@ class UsuariosController extends Controller
     {
         if($request->idusuario==0){
             $data = $request->input();
-            $password = $data["password"];        
-            //$data['password'] = md5($password);   
+            $password = $data["password"];             
             $data['password'] = password_hash($password, PASSWORD_BCRYPT);
             unset($data["idusuario"]);
-            $id = DB::connection("General")->table('mc1001')->insertGetId($data);
+            if(isset($data["user_perfil"])){
+                $id = DB::connection("General")->table('mc1001')->insertGetId(['nombre' => $data['nombre'], 'apellidop' => $data['apellidop'], 'apellidom' => $data['apellidom'], 'cel' => $data['cel'], 'correo' => $data['correo'], 'password' => $data['password'], 'status' => $data['status'], 'identificador' => $data['identificador']]);
+
+                $idempresa = $data['idempresa'];       
+
+                DB::connection("General")->table('mc1002')->insert(['idusuario' => $id, 'idempresa' => $idempresa]);
+
+                ConnectDatabase($idempresa);
+
+                $idperfil = $data["user_perfil"];
+
+                DB::table('mc_userprofile')->insertGetId(['idusuario' => $id, 'idperfil' => $idperfil]);
+
+                $permod = DB::connection("General")->select("SELECT * FROM mc1007 WHERE idperfil = $idperfil");
+                for ($i=0; $i < count($permod); $i++) { 
+                    DB::table('mc_usermod')->insertGetId(['idusuario' => $id, 'idperfil' => $idperfil, 'idmodulo' => $permod[$i]->idmodulo, 'tipopermiso' => $permod[$i]->tipopermiso]);
+                }
+                $permen = DB::connection("General")->select("SELECT * FROM mc1008 WHERE idperfil = $idperfil");
+                for ($j=0; $j < count($permen); $j++) { 
+                    DB::table('mc_usermenu')->insertGetId(['idusuario' => $id, 'idperfil' => $idperfil, 'idmodulo' => $permen[$j]->idmodulo, 'idmenu' => $permen[$j]->idmenu, 'tipopermiso' => $permen[$j]->tipopermiso]);
+                }                
+                $persub = DB::connection("General")->select("SELECT * FROM mc1009 WHERE idperfil = $idperfil");
+                for ($k=0; $k < count($persub); $k++) { 
+                    DB::table('mc_usersubmenu')->insertGetId(['idusuario' => $id, 'idperfil' => $idperfil, 'idmenu' => $persub[$k]->idmenu, 'idsubmenu' => $persub[$k]->idsubmenu, 'tipopermiso' => $persub[$k]->tipopermiso]);
+                }
+
+            }else{
+                $id = DB::connection("General")->table('mc1001')->insertGetId($data);    
+            }
         }else{
             $data = $request->input();
             $id = $data["idusuario"];
             unset($data["idusuario"]);
-            $password = $data["password"];        
-            //$data['password'] = md5($password);        
+            $password = $data["password"];
             $data['password'] = password_hash($password, PASSWORD_BCRYPT);    
             DB::connection("General")->table('mc1001')->where("idusuario", $id)->update($data);
         }
@@ -157,8 +183,21 @@ class UsuariosController extends Controller
     public function VerificaUsuario(Request $request)
     {      
         $id = $request->idusuario;
-        DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["tipo"=>"1"]);
-        return $id;        
+        $flag = $request->flag;
+        if($flag == 1){
+            $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE idusuario = $id");
+            if (!password_verify($request->pwd, $usuario[0]->password)) {
+                $pwd = password_hash($request->pwd, PASSWORD_BCRYPT);   
+                DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["password" => $pwd, "tipo" => "1"]);
+
+            }
+            return $usuario;
+        }else{
+            DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["tipo"=>"1"]);
+            return $id;
+        }
+
+        
     }
 
     public function ObtenerUsuarioNuevo(Request $request)

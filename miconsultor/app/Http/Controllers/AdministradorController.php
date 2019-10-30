@@ -318,7 +318,7 @@ class AdministradorController extends Controller
             ConnectDatabaseRFC($request->Rfc);
             $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE tipodocumento= '$request->Tipodocumento'
                                                 AND periodo= $request->Periodo
-                                                AND ejercicio=$request->Ejercicio WHERE status=1");
+                                                AND ejercicio=$request->Ejercicio AND status=1");
             if(!empty($result)){
                 $datos ="true";   
             }                                   

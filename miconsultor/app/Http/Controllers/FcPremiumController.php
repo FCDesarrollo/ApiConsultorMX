@@ -208,8 +208,9 @@ class FcPremiumController extends Controller
         $empresa = DB::connection("General")->select("SELECT idcliente FROM fcclientes WHERE rfc='$rfcempresa' AND status=1");    
         if (!empty($empresa)){
             $idcliente = $empresa[0]->idcliente;
+            //AND equipo='$equipo'
             $licencia = DB::connection("General")->select("SELECT clave_activacion,fechafin FROM fclicencias WHERE
-                                             idcliente='$idcliente' AND equipo='$equipo' AND status=1"); 
+                                             idcliente='$idcliente'  AND status=1"); 
             $retur = "Licencia Valida,".$licencia[0]->clave_activacion.",".$licencia[0]->fechafin;
         }
         return $retur;

@@ -116,7 +116,7 @@ class UsuariosController extends Controller
             $data['password'] = password_hash($password, PASSWORD_BCRYPT);
             unset($data["idusuario"]);
             if(isset($data["user_perfil"])){
-                $id = DB::connection("General")->table('mc1001')->insertGetId(['nombre' => $data['nombre'], 'apellidop' => $data['apellidop'], 'apellidom' => $data['apellidom'], 'cel' => $data['cel'], 'correo' => $data['correo'], 'password' => $data['password'], 'status' => $data['status'], 'identificador' => $data['identificador']]);
+                $id = DB::connection("General")->table('mc1001')->insertGetId(['nombre' => ucwords(strtolower($data['nombre'])), 'apellidop' => ucwords(strtolower($data['apellidop'])), 'apellidom' => ucwords(strtolower($data['apellidom'])), 'cel' => $data['cel'], 'correo' => $data['correo'], 'password' => $data['password'], 'status' => $data['status'], 'identificador' => $data['identificador']]);
 
                 $idempresa = $data['idempresa'];       
 
@@ -232,11 +232,22 @@ class UsuariosController extends Controller
     }
 
 
-    public function DatosPerfil($IDPer)
-    {
-        $modulo = DB::connection("General")->select("SELECT * FROM perfiles WHERE idperfil='$IDPer'");    
+    public function DatosPerfil(Request $request){
+        $rfc = $request->rfcempresa;
+        $usuario = $request->usuario;
+
+        $empresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE RFC = '$rfc'");
+        
+        $usuario = DB::connection("General")->select("SELECT idusuario FROM mc1001 WHERE correo = '$usuario'");
+
+        ConnectDatabase($empresa[0]->idempresa);
+
+        $idperfil = DB::select("SELECT idperfil FROM mc_userprofile WHERE idusuario = '$usuario[0]->idusuario'");         
+
+        $perfil = DB::connection("General")->select("SELECT nombre FROM mc1006 WHERE idperfil = '$idperfil[0]->idperfil'");    
+
         $datos = array(
-            "perfil" => $modulo,
+            "perfil" => $perfil,
         );        
 
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
@@ -346,5 +357,7 @@ class UsuariosController extends Controller
         DB::table('mc_usersubmenu')->where("idusuario", $idusuario)->where("idsubmenu", $idsubmenu)->update(["notificaciones"=>$request->tiponotificacion]);
         return $idsubmenu;
     }
+
+
 
 }

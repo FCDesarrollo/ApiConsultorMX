@@ -1002,8 +1002,8 @@ class ConsumoController extends Controller
         if(isset($request->registros)){
             $registros = $request->registros;
         }else{
-            //$registros[0]["idalmacen"] = $request->idalmacen;
             $registros[0]["id"] = $request->id;
+            $registros[0]["status"] = $request->status;
         }
         
         if($autenticacion[0]['error'] == 0){  
@@ -1012,10 +1012,10 @@ class ConsumoController extends Controller
 
             for ($i=0; $i < count($registros); $i++) {               
 
-                //$idalmacen = $registros[$i]['idalmacen'];
                 $idalmacen_det = $registros[$i]['id'];                
+
+                $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->update(['idagente' => $autenticacion[0]["idusuario"], 'fechaprocesado' => now(), 'estatus' => $registros[$i]["status"]]);
                 
-                $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->where("estatus", 0)->update(['idagente' => $autenticacion[0]["idusuario"], 'fechaprocesado' => now(), 'estatus' => "1"]);                
                 if(!empty($resp)){
                     $registros[$i]["estatus"] = true;                    
                 }else{

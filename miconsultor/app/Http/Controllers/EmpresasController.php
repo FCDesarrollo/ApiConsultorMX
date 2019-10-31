@@ -46,6 +46,7 @@ class EmpresasController extends Controller
 
             $perfil = DB::connection("General")->select("SELECT * FROM mc1006 WHERE idperfil = $idperfil");
 
+            $empresas[$i]->idperfil = $idperfil;
             $empresas[$i]->perfil = $perfil[0]->nombre;
 
         }

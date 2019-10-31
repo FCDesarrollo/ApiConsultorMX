@@ -179,3 +179,4 @@ Route::post('listaserviciosbit', 'AdministradorController@listaServicios_bit');
 Route::post('listaagentesbit', 'AdministradorController@listaAgentes_bit');
 Route::post('existebitacora', 'AdministradorController@Existe_bitacora');
 Route::post('MarcaBitacora', 'AdministradorController@MarcaBitacora');
+Route::post('EntregadoDocumento', 'AdministradorController@EntregadoDocumento');

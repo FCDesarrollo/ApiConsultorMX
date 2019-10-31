@@ -310,4 +310,21 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function EntregadoDocumento(Request $request)
+    {
+        $datos ="false";
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabaseRFC($request->Rfc);
+            $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE tipodocumento= '$request->Tipodocumento'
+                                                AND periodo= $request->Periodo
+                                                AND ejercicio=$request->Ejercicio AND status=1");
+            if(!empty($result)){
+                $datos ="true";   
+            }                                   
+        }
+        return $datos;
+    }
+
+
 }

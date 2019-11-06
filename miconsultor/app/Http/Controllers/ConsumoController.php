@@ -1076,6 +1076,7 @@ class ConsumoController extends Controller
                 $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
 
                 $reg[$i]->rubro = $rubro[0]->nombre;
+                $reg[$i]->claverubro = $claverubro;
 
                 $idsucursal = $reg[$i]->idsucursal;
 
@@ -1148,6 +1149,7 @@ class ConsumoController extends Controller
                     $array["archivo"] = $namecloud;
                 }else{
                     DB::table('mc_almdigital')->where("id", $idalmacen)->delete();                    
+                    $array["archivo"] = $namecloud;
                     $array["totalregistros"] = 0;
                 }
                 $array["eliminado"] = 0;

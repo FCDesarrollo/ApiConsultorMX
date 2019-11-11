@@ -68,7 +68,7 @@ class UsuariosController extends Controller
 
         //$empleados = DB::select("SELECT *, coalesce((select nombre from sucursales where id = empleados.idsucursal),'') AS sucursal FROM empleados WHERE status=1 ORDER BY nombre");
 
-        $empleados = DB::connection("General")->select("SELECT u.*,u.idusuario AS iduser FROM mc1001 u 
+        $empleados = DB::connection("General")->select("SELECT u.*,u.idusuario AS iduser, r.estatus As vinculado FROM mc1001 u 
         INNER JOIN mc1002 r ON u.idusuario=r.idusuario 
         INNER JOIN mc1000 e ON r.idempresa=e.idempresa WHERE r.idempresa='$idempresa'");
 
@@ -116,7 +116,7 @@ class UsuariosController extends Controller
             $data['password'] = password_hash($password, PASSWORD_BCRYPT);
             unset($data["idusuario"]);
             if(isset($data["user_perfil"])){
-                $id = DB::connection("General")->table('mc1001')->insertGetId(['nombre' => $data['nombre'], 'apellidop' => $data['apellidop'], 'apellidom' => $data['apellidom'], 'cel' => $data['cel'], 'correo' => $data['correo'], 'password' => $data['password'], 'status' => $data['status'], 'identificador' => $data['identificador']]);
+                $id = DB::connection("General")->table('mc1001')->insertGetId(['nombre' => ucwords(strtolower($data['nombre'])), 'apellidop' => ucwords(strtolower($data['apellidop'])), 'apellidom' => ucwords(strtolower($data['apellidom'])), 'cel' => $data['cel'], 'correo' => $data['correo'], 'password' => $data['password'], 'status' => $data['status'], 'identificador' => $data['identificador']]);
 
                 $idempresa = $data['idempresa'];       
 
@@ -174,9 +174,15 @@ class UsuariosController extends Controller
 
     public function Desvincular(Request $request)
     {                
+        $datos = $request->objeto;
+
+        $idarchivo = $datos["idarchivo"];
+        $idalmacen = $datos["idalmacen"];
+
         $id = $request->idusuario;
         $idem= $request->idemp;
-        DB::connection("General")->table('mc1002')->where("idusuario", $id)->where("idempresa", $idem)->delete();
+        //DB::connection("General")->table('mc1002')->where("idusuario", $id)->where("idempresa", $idem)->delete();
+        DB::connection("General")->table('mc1002')->where("idusuario", $request->idusuario)->where("idempresa", $request->idempresa)->update(["status" => $request->status, "fecha_vinculacion" => , "idusuario_vinculador" => $re]);        
         return $id;
     }
 
@@ -210,92 +216,20 @@ class UsuariosController extends Controller
         );
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }  
-    
-     public function Modulos(Request $request)
-    {
 
-        $modulos = DB::connection("General")->select("SELECT * FROM modulos");    
-        $datos = array(
-            "modulos" => $modulos,
-        );
-        return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    public function DatosPerfil(Request $request){
+
+        $iduser = $request->idusuario;
+        ConnectDatabase($request->idempresa);
+
+        $idperfil = DB::select("SELECT idperfil FROM mc_userprofile WHERE idusuario = $iduser");         
+        $idperfil = $idperfil[0]->idperfil;
+        
+        $perfil = DB::connection("General")->select("SELECT * FROM mc1006 WHERE idperfil = $idperfil");            
+
+        return json_encode($perfil, JSON_UNESCAPED_UNICODE);
     }
 
-    public function DatosModulo($IDMod)
-    {
-        $modulo = DB::connection("General")->select("SELECT * FROM modulos WHERE idmodulo='$IDMod'");    
-        $datos = array(
-            "modulo" => $modulo,
-        );        
-
-        return json_encode($datos, JSON_UNESCAPED_UNICODE);
-    }
-
-
-    public function DatosPerfil($IDPer)
-    {
-        $modulo = DB::connection("General")->select("SELECT * FROM perfiles WHERE idperfil='$IDPer'");    
-        $datos = array(
-            "perfil" => $modulo,
-        );        
-
-        return json_encode($datos, JSON_UNESCAPED_UNICODE);
-    }
-
-    public function ListaPermisos($IDPer)
-    {
-        $permisos = DB::connection("General")->select("SELECT p.*,m.* FROM permisos p INNER JOIN 
-                                                    modulos m ON p.idmodulo=m.idmodulo WHERE idperfil='$IDPer'");    
-        $datos = array(
-            "permisos" => $permisos,
-        );        
-
-        return json_encode($datos, JSON_UNESCAPED_UNICODE);
-    }
-
-    public function EliminaPermiso(Request $request){
-        $IDPermiso = $request->idpermiso;
-        DB::connection("General")->table('permisos')->where("id", $IDPermiso)->delete();
-        return $IDPermiso;
-    }
-
-    public function GuardaPermiso(Request $request)
-    {
-
-        $IDPerfil = $request->idperfil;
-        $IDModulo = $request->idmodulo;
-        if (DB::connection("General")->select("SELECT * FROM permisos
-                                         WHERE idperfil='$IDPerfil' AND idmodulo='$IDModulo'")){
-        //$permiso["id"]>0){
-            DB::connection("General")->table('permisos')->where("idperfil", $IDPerfil)->
-                    where("idmodulo", $IDModulo)->update(["tipopermiso"=>$request->tipopermiso]);
-        }else{
-            $inserted = DB::connection("General")->table('permisos')->insert(
-                ['idperfil' => $IDPerfil,'idmodulo' => $IDModulo,'tipopermiso' => $request->tipopermiso ]);
-            //$id = DB::connection("General")->table('permisos')->insertGetId($request->input());
-        } 
-        return $IDPerfil;
-    }
-
-    public function GuardaPerfil(Request $request)
-    {
-        if($request->id==0){
-            $ulidperfil = DB::connection("General")->select("SELECT max(idperfil) + 1  FROM perfiles");
-            if ($ulidperfil <= 3){
-                $ulidperfil=4;   
-            }
-            $data = $request->input();
-            unset($data["id"]);
-            $data["idperfil"]=$ulidperfil;
-            $idp = DB::connection("General")->table('perfiles')->insertGetId($data);
-        }else{
-            $data = $request->input();
-            $idp = $data["id"];
-            unset($data["id"]);
-            DB::connection("General")->table('perfiles')->where("id", $idp)->update($data);
-        }
-        return $idp;
-    }
  
     public function ValidarCorreo(Request $request)
     {        
@@ -346,5 +280,7 @@ class UsuariosController extends Controller
         DB::table('mc_usersubmenu')->where("idusuario", $idusuario)->where("idsubmenu", $idsubmenu)->update(["notificaciones"=>$request->tiponotificacion]);
         return $idsubmenu;
     }
+
+
 
 }

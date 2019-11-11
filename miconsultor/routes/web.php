@@ -33,6 +33,7 @@ Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 Route::post('Desvincular', 'UsuariosController@Desvincular');
 Route::get('NotificacionesUsuario', 'UsuariosController@NotificacionesUsuario');
 route::post('ModificaNotificacion', 'UsuariosController@ModificaNotificacion');
+route::post('VinculacionUsuarios', 'UsuariosController@VinculacionUsuarios');
 
 Route::get('ListaUsuariosAdmin/{idempresa}', 'UsuariosController@ListaUsuariosAdmin'); 
 Route::get('ListaUsuarios/{idempresa}', 'UsuariosController@ListaUsuarios'); 

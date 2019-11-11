@@ -148,9 +148,14 @@ class UsuariosController extends Controller
             $data = $request->input();
             $id = $data["idusuario"];
             unset($data["idusuario"]);
-            $password = $data["password"];
-            $data['password'] = password_hash($password, PASSWORD_BCRYPT);    
-            DB::connection("General")->table('mc1001')->where("idusuario", $id)->update($data);
+            if(isset($data["editarusuario"])){
+                DB::connection("General")->table('mc1001')->where("idusuario", $id)->update(["nombre" => $data['nombre'], "apellidop" => $data['apellidop'], "apellidom" => $data['apellidom']]);                
+            }else{
+                $password = $data["password"];
+                $data['password'] = password_hash($password, PASSWORD_BCRYPT);                    
+                DB::connection("General")->table('mc1001')->where("idusuario", $id)->update($data);
+            }
+
         }
         return $id;
     }
@@ -167,23 +172,31 @@ class UsuariosController extends Controller
 
     public function EliminarUsuario(Request $request)
     {                
-        $id = $request->idusuario;
-        DB::connection("General")->table('mc1001')->where("idusuario", $id)->update(["status"=>"0"]);
-        return $id;
+        $idusuario = $request->idusuario;
+        $idempresa = $request->idempresa;
+        DB::connection("General")->table('mc1002')->where("idusuario", $idusuario)->where("idempresa", $idempresa)->delete();
+        
+        ConnectDatabase($idempresa);
+        DB::table('mc_usermod')->where("idusuario", $idusuario)->delete();
+        DB::table('mc_usermenu')->where("idusuario", $idusuario)->delete();
+        DB::table('mc_usersubmenu')->where("idusuario", $idusuario)->delete();
+        DB::table('mc_userprofile')->where("idusuario", $idusuario)->delete();
+
+        return $idusuario;
     }
 
     public function Desvincular(Request $request)
     {                
-        $datos = $request->objeto;
+        $datos = $request->datos;
 
-        $idarchivo = $datos["idarchivo"];
-        $idalmacen = $datos["idalmacen"];
-
-        $id = $request->idusuario;
-        $idem= $request->idemp;
+        $idusuario = $datos["idusuario"];
+        $iduser_vincula = $datos["iduser_vincula"];
+        $idempresa = $datos["idempresa"];
+        $status = $datos["status"];
+        
         //DB::connection("General")->table('mc1002')->where("idusuario", $id)->where("idempresa", $idem)->delete();
-        DB::connection("General")->table('mc1002')->where("idusuario", $request->idusuario)->where("idempresa", $request->idempresa)->update(["status" => $request->status, "fecha_vinculacion" => , "idusuario_vinculador" => $re]);        
-        return $id;
+        $id = DB::connection("General")->table('mc1002')->where("idusuario", $idusuario)->where("idempresa", $idempresa)->update(["estatus" => $status, "fecha_vinculacion" => date("Ymd"), "idusuario_vinculador" => $iduser_vincula]);        
+        return $id; 
     }
 
     public function VerificaUsuario(Request $request)
@@ -263,7 +276,7 @@ class UsuariosController extends Controller
         $idusuario = $request->idusuario;
         ConnectDatabase($idempresa);
 
-        $permisos= DB::select("SELECT mc_usersubmenu.idsubmenu, mc_usersubmenu.notificaciones, mc_usermod.idmodulo, mc_usermod.tipopermiso, mc_usermenu.idmenu, mc_usermenu.tipopermiso FROM mc_usersubmenu LEFT JOIN mc_usermenu ON mc_usermenu.idmenu = mc_usersubmenu.idmenu LEFT JOIN  mc_usermod ON mc_usermod.idmodulo = mc_usermenu.idmodulo WHERE mc_usersubmenu.idusuario = '$idusuario' AND mc_usermod.tipopermiso <> 0");
+        $permisos= DB::select("SELECT mc_usersubmenu.idsubmenu, mc_usersubmenu.notificaciones, mc_usermod.idmodulo, mc_usermod.tipopermiso, mc_usermenu.idmenu, mc_usermenu.tipopermiso FROM mc_usersubmenu LEFT JOIN mc_usermenu ON mc_usermenu.idmenu = mc_usersubmenu.idmenu LEFT JOIN  mc_usermod ON mc_usermod.idmodulo = mc_usermenu.idmodulo WHERE mc_usersubmenu.idusuario = '$idusuario' AND mc_usermenu.idusuario = '$idusuario' AND mc_usermod.idusuario = '$idusuario' AND mc_usermod.tipopermiso <> 0");
         
         $datos = $permisos;       
         return $datos;     
@@ -279,6 +292,33 @@ class UsuariosController extends Controller
 
         DB::table('mc_usersubmenu')->where("idusuario", $idusuario)->where("idsubmenu", $idsubmenu)->update(["notificaciones"=>$request->tiponotificacion]);
         return $idsubmenu;
+    }
+
+    function VinculacionUsuarios(Request $request){
+        $idempresa = $request->idempresa;
+        $idusuario = $request->idusuario;
+        $idperfil = $request->user_perfil;
+
+        DB::connection("General")->table('mc1002')->insert(['idusuario' => $idusuario, 'idempresa' => $idempresa]);
+
+        ConnectDatabase($idempresa);        
+
+        DB::table('mc_userprofile')->insertGetId(['idusuario' => $idusuario, 'idperfil' => $idperfil]);
+
+        $permod = DB::connection("General")->select("SELECT * FROM mc1007 WHERE idperfil = $idperfil");
+        for ($i=0; $i < count($permod); $i++) { 
+            DB::table('mc_usermod')->insertGetId(['idusuario' => $idusuario, 'idperfil' => $idperfil, 'idmodulo' => $permod[$i]->idmodulo, 'tipopermiso' => $permod[$i]->tipopermiso]);
+        }
+        $permen = DB::connection("General")->select("SELECT * FROM mc1008 WHERE idperfil = $idperfil");
+        for ($j=0; $j < count($permen); $j++) { 
+            DB::table('mc_usermenu')->insertGetId(['idusuario' => $idusuario, 'idperfil' => $idperfil, 'idmodulo' => $permen[$j]->idmodulo, 'idmenu' => $permen[$j]->idmenu, 'tipopermiso' => $permen[$j]->tipopermiso]);
+        }                
+        $persub = DB::connection("General")->select("SELECT * FROM mc1009 WHERE idperfil = $idperfil");
+        for ($k=0; $k < count($persub); $k++) { 
+            DB::table('mc_usersubmenu')->insertGetId(['idusuario' => $idusuario, 'idperfil' => $idperfil, 'idmenu' => $persub[$k]->idmenu, 'idsubmenu' => $persub[$k]->idsubmenu, 'tipopermiso' => $persub[$k]->tipopermiso]);
+        }
+
+        return $idusuario;        
     }
 
 

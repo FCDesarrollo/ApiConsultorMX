@@ -197,4 +197,15 @@ class PermisosController extends Controller
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
+    public function RubrosUser(Request $request){
+            ConnectDatabase($request->idempresa);
+            $rubros = DB::select("SELECT * FROM mc_rubros WHERE idsubmenu=$request->idsubmenu");
+            
+            $array["rubros"] = $rubros;
+
+            return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    
+
 }

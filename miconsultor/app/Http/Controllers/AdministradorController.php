@@ -326,5 +326,29 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function addSucursal(Request $request)
+    {
+        $datos ="false";
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            if ($request->Correo != 0){
+
+            }else{
+                $result = DB::select("SELECT idsucursal FROM mc_catsucursales WHERE sucursal= '$request->Sucursal'");
+                if(!empty($result)){
+                    $idsuc = $result[0]->idsucursal;
+                    DB::table('mc_catsucursales')->where("idsucursal", $idsuc)->
+                                update(['rutaadw' => $request->Ruta]);
+                }else{
+                    $idsuc = DB::table('mc_catsucursales')->insertGetId(
+                        ['sucursal' => $request->Sucursal,'rutaadw' => $request->Ruta,
+                        'sincronizado' => 0]);
+                }
+            }
+            $datos = $idsuc;
+        }
+        return $datos;
+    }
 
 }

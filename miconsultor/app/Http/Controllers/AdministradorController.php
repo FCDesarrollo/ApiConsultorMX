@@ -332,7 +332,7 @@ class AdministradorController extends Controller
         $valida = $this->usuarioadmin($request->Correo, $request->Contra);
         if ($valida != "2" and $valida != "3"){
             ConnectDatabase($request->Idempresa);
-            if ($request->Correo != 0){
+            if ($request->Idsucursal != 0){
 
             }else{
                 $result = DB::select("SELECT idsucursal FROM mc_catsucursales WHERE sucursal= '$request->Sucursal'");

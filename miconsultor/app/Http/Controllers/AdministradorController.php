@@ -373,7 +373,7 @@ class AdministradorController extends Controller
                     DB::table('mc_rubros')->insertGetId(['clave' => $movtos[$i]['clave'],
                     'nombre' => $movtos[$i]['nombre'],'tipo' => $movtos[$i]['tipo'], 
                     'status' => $movtos[$i]['status'], 'idmenu' => $movtos[$i]['idmenu'], 'idsubmenu' => $movtos[$i]['idsubmenu']]);
-                }else{
+                }elseif(!empty($result)){
                     DB::table('mc_rubros')->where("id", $result[0]->id)->
                                 update(['status' => $movtos[$i]['status']]);
                 }

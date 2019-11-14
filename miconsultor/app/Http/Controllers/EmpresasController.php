@@ -119,8 +119,19 @@ class EmpresasController extends Controller
     {      
         $id = $request->id;
         $rfc = $request->rfc;
-        DB::connection("General")->table('mc1010')->where("id", $request->id)->update(["rfc"=>$rfc,"estatus"=>"1"]);
-        return $id;        
+        $consulta = DB::connection("General")->select("SELECT * FROM mc1010 WHERE rfc = '$rfc'");
+        if(!empty($consulta)){            
+            $respuesta = array(
+                "registro" => $consulta,
+            );            
+        }else{
+            DB::connection("General")->table('mc1010')->where("id", $request->id)->update(["rfc"=>$rfc,"estatus"=>"1"]);
+            
+            $respuesta = array(
+                "registro" => $id,
+            );            
+        }
+        return json_encode($respuesta, JSON_UNESCAPED_UNICODE);    
     }
 
     public function EliminaAsignaBD(Request $request)

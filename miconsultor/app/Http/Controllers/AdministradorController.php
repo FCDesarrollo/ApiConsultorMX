@@ -395,6 +395,7 @@ class AdministradorController extends Controller
                 "Rubros" => $result,
              );
         }
+        return $datos;
     }
 
 }

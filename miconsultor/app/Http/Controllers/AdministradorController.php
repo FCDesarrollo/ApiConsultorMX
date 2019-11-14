@@ -335,7 +335,8 @@ class AdministradorController extends Controller
             if ($request->Idsucursal != 0){
 
             }else{
-                $result = DB::select("SELECT idsucursal FROM mc_catsucursales WHERE sucursal= '$request->Sucursal'");
+                $result = DB::select("SELECT idsucursal FROM mc_catsucursales 
+                                WHERE sucursal= '$request->Sucursal' AND rutaadw='$request->Ruta' AND sincronizado=1");
                 if(!empty($result)){
                     $idsuc = $result[0]->idsucursal;
                     DB::table('mc_catsucursales')->where("idsucursal", $idsuc)->
@@ -343,11 +344,38 @@ class AdministradorController extends Controller
                 }else{
                     $idsuc = DB::table('mc_catsucursales')->insertGetId(
                         ['sucursal' => $request->Sucursal,'rutaadw' => $request->Ruta,
-                        'sincronizado' => 0]);
+                        'sincronizado' => 1]);
                 }
             }
             $datos = $idsuc;
         }
+        return $datos;
+    }
+
+    public function addRubros(Request $request)
+    {
+        $datos ="false";
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            $movtos = $request->Rubros;
+            $num_registros = count($request->Rubros);
+            
+            for ($i=0; $i < $num_registros; $i++) {
+                $result = DB::select("SELECT id FROM mc_rubros WHERE tipo= $movtos[$i]['tipo'] 
+                                AND idmenu=$movtos[$i]['idmenu'] AND clave='$movtos[$i]['clave']' AND nombre='$movtos[$i]['nombre']'");
+                if(empty($result) and $movtos[$i]['activo'] == 1){
+                    DB::table('mc_rubros')->insertGetId(['clave' => $movtos[$i]['clave'],
+                    'nombre' => $movtos[$i]['nombre'],'tipo' => $movtos[$i]['tipo'], 
+                    'status' => $movtos[$i]['status'], 'idmenu' => $movtos[$i]['idmenu'], 'idsubmenu' => $movtos[$i]['idsubmenu']]);
+                }else{
+                    DB::table('mc_rubros')->where("id", $result[0]->id)->
+                                update(['status' => $movtos[$i]['status']]);
+                }
+            }
+            $datos ="true"; 
+        }
+
         return $datos;
     }
 

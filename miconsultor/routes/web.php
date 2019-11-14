@@ -186,3 +186,4 @@ Route::post('EntregadoDocumento', 'AdministradorController@EntregadoDocumento');
 Route::post('SubMenusFiltro', 'PermisosController@SubMenusFiltro');
 Route::post('RubrosUser', 'PermisosController@RubrosUser');
 Route::post('addSucursal', 'AdministradorController@addSucursal');
+Route::post('addRubros', 'AdministradorController@addRubros');

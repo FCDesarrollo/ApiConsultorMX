@@ -363,8 +363,12 @@ class AdministradorController extends Controller
             $num_registros = count($request->Rubros);
             
             for ($i=0; $i < $num_registros; $i++) {
-                $result = DB::select("SELECT id FROM mc_rubros WHERE tipo= $movtos[$i]['tipo'] 
-                                AND idmenu=$movtos[$i]['idmenu'] AND clave='$movtos[$i]['clave']' AND nombre='$movtos[$i]['nombre']'");
+                $tipo = $movtos[$i]['tipo'];
+                $idmenu = $movtos[$i]['idmenu'];
+                $clave = $movtos[$i]['clave'];
+                $nombre =$movtos[$i]['nombre'];
+                $result = DB::select("SELECT id FROM mc_rubros WHERE tipo= $tipo
+                                AND idmenu=$idmenu AND clave='$clave' AND nombre='$nombre'");
                 if(empty($result) and $movtos[$i]['activo'] == 1){
                     DB::table('mc_rubros')->insertGetId(['clave' => $movtos[$i]['clave'],
                     'nombre' => $movtos[$i]['nombre'],'tipo' => $movtos[$i]['tipo'], 

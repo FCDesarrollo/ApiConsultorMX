@@ -188,7 +188,7 @@ class PermisosController extends Controller
     public function SubMenusFiltro(Request $request){
         $SubMenus = DB::connection("General")->select("SELECT sub.*,men.nombre_menu FROM mc1005 sub 
                                 INNER JOIN mc1004 men ON sub.idmenu=men.idmenu 
-                                WHERE sub.idmenu=$request->idmenu sub.Status = 1");
+                                WHERE sub.idmenu=$request->idmenu AND sub.Status = 1");
 
         $datos = array(
             "submenus" => $SubMenus,
@@ -196,5 +196,16 @@ class PermisosController extends Controller
 
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
+
+    public function RubrosUser(Request $request){
+            ConnectDatabase($request->idempresa);
+            $rubros = DB::select("SELECT * FROM mc_rubros WHERE idsubmenu=$request->idsubmenu");
+            
+            $array["rubros"] = $rubros;
+
+            return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    
 
 }

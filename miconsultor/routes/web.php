@@ -184,3 +184,5 @@ Route::post('EntregadoDocumento', 'AdministradorController@EntregadoDocumento');
 
 //ASOCIACION DIGITAL
 Route::post('SubMenusFiltro', 'PermisosController@SubMenusFiltro');
+Route::post('RubrosUser', 'PermisosController@RubrosUser');
+Route::post('addSucursal', 'AdministradorController@addSucursal');

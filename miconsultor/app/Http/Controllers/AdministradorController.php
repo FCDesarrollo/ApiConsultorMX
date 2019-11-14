@@ -390,7 +390,7 @@ class AdministradorController extends Controller
         $datos ="false";
         if ($valida != "2" and $valida != "3"){
             ConnectDatabase($request->Idempresa);
-            $result = DB::select("SELECT * FROM mc_rubros WHERE idmenu=$idmenu");
+            $result = DB::select("SELECT * FROM mc_rubros WHERE idmenu=$request->idmenu");
             $datos = array(
                 "Rubros" => $result,
              );

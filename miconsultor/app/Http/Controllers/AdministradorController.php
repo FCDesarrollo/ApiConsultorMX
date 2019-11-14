@@ -354,8 +354,9 @@ class AdministradorController extends Controller
 
     public function addRubros(Request $request)
     {
-        $datos ="false";
+        
         $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos = $valida;
         if ($valida != "2" and $valida != "3"){
             ConnectDatabase($request->Idempresa);
             $movtos = $request->Rubros;

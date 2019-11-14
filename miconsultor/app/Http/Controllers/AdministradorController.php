@@ -356,7 +356,7 @@ class AdministradorController extends Controller
     {
         
         $valida = $this->usuarioadmin($request->Correo, $request->Contra);
-        $datos = $valida;
+        $datos ="false";
         if ($valida != "2" and $valida != "3"){
             ConnectDatabase($request->Idempresa);
             $movtos = $request->Rubros;
@@ -382,6 +382,19 @@ class AdministradorController extends Controller
         }
 
         return $datos;
+    }
+
+    public function datosRubros(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos ="false";
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            $result = DB::select("SELECT * FROM mc_rubros WHERE idmenu=$idmenu");
+            $datos = array(
+                "Rubros" => $result,
+             );
+        }
     }
 
 }

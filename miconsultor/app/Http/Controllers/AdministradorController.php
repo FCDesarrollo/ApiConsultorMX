@@ -398,4 +398,18 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function datosSucursal(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos ="false";
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            $result = DB::select("SELECT * FROM mc_catsucursales WHERE sincronizado=$request->Sincronizado");
+            $datos = array(
+                "Sucursales" => $result,
+             );
+        }
+        return $datos;
+    }
+
 }

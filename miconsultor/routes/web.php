@@ -189,3 +189,4 @@ Route::post('addSucursal', 'AdministradorController@addSucursal');
 Route::post('addRubros', 'AdministradorController@addRubros');
 Route::post('datosRubros', 'AdministradorController@datosRubros');
 Route::post('datosSucursal', 'AdministradorController@datosSucursal');
+Route::post('datosRubrosSubMenu', 'AdministradorController@datosRubrosSubMenu');

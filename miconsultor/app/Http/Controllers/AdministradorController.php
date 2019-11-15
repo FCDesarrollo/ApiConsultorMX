@@ -412,4 +412,18 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function datosRubrosSubMenu(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos ="false";
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            $result = DB::select("SELECT * FROM mc_rubros WHERE idmenu=$request->idmenu AND idsubmenu=$request->idsubmenu");
+            $datos = array(
+                "Rubros" => $result,
+             );
+        }
+        return $datos;
+    }
+
 }

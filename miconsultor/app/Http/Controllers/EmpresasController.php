@@ -457,19 +457,19 @@ class EmpresasController extends Controller
             $mc1007 = DB::connection("General")->select("SELECT * FROM mc1007 WHERE idperfil = 1");
             for ($i=0; $i < count($mc1007); $i++) { 
                 DB::table('mc_usermod')->insertGetId(["idusuario" => $usuario, "idperfil" => 1, 
-                    "idmodulo" => $mc1007[$i]["idmodulo"], "tipopermiso" => $mc1007[$i]["tipopermiso"]]);
+                    "idmodulo" => $mc1007[$i]->idmodulo, "tipopermiso" => $mc1007[$i]->tipopermiso]);
             }
 
             $mc1008 = DB::connection("General")->select("SELECT * FROM mc1008 WHERE idperfil = 1");
             for ($i=0; $i < count($mc1008); $i++) { 
                 DB::table('mc_usermenu')->insertGetId(["idusuario" => $usuario, "idperfil" => 1, 
-                    "idmodulo" => $mc1008[$i]["idmodulo"], "idmenu" => $mc1008[$i]["idmenu"], "tipopermiso" => $mc1008[$i]["tipopermiso"]]);
+                    "idmodulo" => $mc1008[$i]->idmodulo, "idmenu" => $mc1008[$i]->idmenu, "tipopermiso" => $mc1008[$i]->tipopermiso]);
             }
 
             $mc1009 = DB::connection("General")->select("SELECT * FROM mc1009 WHERE idperfil = 1");
             for ($i=0; $i < count($mc1009); $i++) { 
                 DB::table('mc_usermod')->insertGetId(["idusuario" => $usuario, "idperfil" => 1, 
-                    "idsubmenu" => $mc1009[$i]["idsubmenu"], "tipopermiso" => $mc1009[$i]["tipopermiso"]]);
+                    "idsubmenu" => $mc1009[$i]->idsubmenu, "tipopermiso" => $mc1009[$i]->tipopermiso]);
             }            
 
             $id=1;            

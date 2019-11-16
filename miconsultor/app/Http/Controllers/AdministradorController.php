@@ -335,7 +335,8 @@ class AdministradorController extends Controller
             if ($request->Idsucursal != 0){
 
             }else{
-                $result = DB::select("SELECT idsucursal FROM mc_catsucursales WHERE sucursal= '$request->Sucursal'");
+                $result = DB::select("SELECT idsucursal FROM mc_catsucursales 
+                                WHERE sucursal= '$request->Sucursal' AND rutaadw='$request->Ruta' AND sincronizado=1");
                 if(!empty($result)){
                     $idsuc = $result[0]->idsucursal;
                     DB::table('mc_catsucursales')->where("idsucursal", $idsuc)->
@@ -343,10 +344,84 @@ class AdministradorController extends Controller
                 }else{
                     $idsuc = DB::table('mc_catsucursales')->insertGetId(
                         ['sucursal' => $request->Sucursal,'rutaadw' => $request->Ruta,
-                        'sincronizado' => 0]);
+                        'sincronizado' => 1]);
                 }
             }
             $datos = $idsuc;
+        }
+        return $datos;
+    }
+
+    public function addRubros(Request $request)
+    {
+        
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos ="false";
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            $movtos = $request->Rubros;
+            $num_registros = count($request->Rubros);
+            
+            for ($i=0; $i < $num_registros; $i++) {
+                $tipo = $movtos[$i]['tipo'];
+                $idmenu = $movtos[$i]['idmenu'];
+                $clave = $movtos[$i]['clave'];
+                $nombre =$movtos[$i]['nombre'];
+                $result = DB::select("SELECT id FROM mc_rubros WHERE tipo= $tipo
+                                AND idmenu=$idmenu AND clave='$clave' AND nombre='$nombre'");
+                if(empty($result) and $movtos[$i]['activo'] == 1){
+                    DB::table('mc_rubros')->insertGetId(['clave' => $movtos[$i]['clave'],
+                    'nombre' => $movtos[$i]['nombre'],'tipo' => $movtos[$i]['tipo'], 
+                    'status' => $movtos[$i]['status'], 'idmenu' => $movtos[$i]['idmenu'], 'idsubmenu' => $movtos[$i]['idsubmenu']]);
+                }elseif(!empty($result)){
+                    DB::table('mc_rubros')->where("id", $result[0]->id)->
+                                update(['status' => $movtos[$i]['status']]);
+                }
+            }
+            $datos ="true"; 
+        }
+
+        return $datos;
+    }
+
+    public function datosRubros(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos ="false";
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            $result = DB::select("SELECT * FROM mc_rubros WHERE idmenu=$request->idmenu");
+            $datos = array(
+                "Rubros" => $result,
+             );
+        }
+        return $datos;
+    }
+
+    public function datosSucursal(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos ="false";
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            $result = DB::select("SELECT * FROM mc_catsucursales WHERE sincronizado=$request->Sincronizado");
+            $datos = array(
+                "Sucursales" => $result,
+             );
+        }
+        return $datos;
+    }
+
+    public function datosRubrosSubMenu(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos ="false";
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            $result = DB::select("SELECT * FROM mc_rubros WHERE idmenu=$request->idmenu AND idsubmenu=$request->idsubmenu");
+            $datos = array(
+                "Rubros" => $result,
+             );
         }
         return $datos;
     }

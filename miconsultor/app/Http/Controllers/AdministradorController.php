@@ -418,9 +418,32 @@ class AdministradorController extends Controller
         $datos ="false";
         if ($valida != "2" and $valida != "3"){
             ConnectDatabase($request->Idempresa);
-            $result = DB::select("SELECT * FROM mc_rubros WHERE idmenu=$request->idmenu AND idsubmenu=$request->idsubmenu");
+            
+            $result = DB::select( "SELECT * FROM mc_rubros WHERE idmenu=$request->idmenu AND idsubmenu=$request->idsubmenu");
             $datos = array(
                 "Rubros" => $result,
+             );
+        }
+        return $datos;
+    }
+
+    public function documentosdigitales(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        $datos ="false";
+        if ($valida != "2" and $valida != "3"){
+            ConnectDatabase($request->Idempresa);
+            
+            if($request->All == "false"){
+                $result = DB::select( "SELECT m.*,d.* FROM mc_almdigital m INNER JOIN mc_almdigital_det d ON m.id=d.idalmdigital
+                                        WHERE YEAR(m.fechadocto)=$request->Ejercicio AND MONTH(m.fechadocto)=$request->Periodo 
+                                        AND m.rubro=$request->Codrubro AND m.idsucursal=$request->Idsucursal ORDER BY m.fechadocto DESC");
+            }else{
+                $result = DB::select( "SELECT m.*,d.* FROM mc_almdigital m INNER JOIN mc_almdigital_det d ON m.id=d.idalmdigital
+                                         ORDER BY m.fechadocto DESC");
+            }
+            $datos = array(
+                "documentos" => $result,
              );
         }
         return $datos;

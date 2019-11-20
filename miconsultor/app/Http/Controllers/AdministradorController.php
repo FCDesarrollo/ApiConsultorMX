@@ -442,7 +442,7 @@ class AdministradorController extends Controller
                 $idsuc = $sucursal[0]->idsucursal;
                 $result = DB::select( "SELECT m.*,d.* FROM mc_almdigital m INNER JOIN mc_almdigital_det d ON m.id=d.idalmdigital
                                         WHERE YEAR(m.fechadocto)=$request->Ejercicio AND MONTH(m.fechadocto)=$request->Periodo 
-                                        AND m.rubro=$request->Codrubro AND m.idsucursal=$idsuc ORDER BY m.fechadocto DESC");
+                                        AND m.rubro='$request->Codrubro' AND m.idsucursal=$idsuc ORDER BY m.fechadocto DESC");
                 }else{
                     return $datos;
                 }

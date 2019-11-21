@@ -468,7 +468,7 @@ class EmpresasController extends Controller
 
             $mc1009 = DB::connection("General")->select("SELECT * FROM mc1009 WHERE idperfil = 1");
             for ($i=0; $i < count($mc1009); $i++) { 
-                DB::table('mc_usermod')->insertGetId(["idusuario" => $usuario, "idperfil" => 1, 
+                DB::table('mc_usersubmenu')->insertGetId(["idusuario" => $usuario, "idperfil" => 1, "idmenu" => $mc1009[$i]->idmenu, 
                     "idsubmenu" => $mc1009[$i]->idsubmenu, "tipopermiso" => $mc1009[$i]->tipopermiso]);
             }            
 
@@ -506,7 +506,30 @@ class EmpresasController extends Controller
     {   
         $empresaBD = $request->empresaBD;        
         ConnectaEmpresaDatabase($empresaBD);                
-        if ($empresaBD != "") {                    
+        if ($empresaBD != "") {                 
+
+            $QueryPerfiles = "DROP TABLE mc_almdigital;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_almdigital_det;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_bitcontabilidad;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_bitcontabilidad_det;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_catclienprov;";
+            DB::statement($QueryPerfiles); 
+            $QueryPerfiles = "DROP TABLE mc_catconceptos;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_catproductos;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_catsucursales;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_lotes;";
+            DB::statement($QueryPerfiles);
+            $QueryPerfiles = "DROP TABLE mc_lotesdocto;";
+            DB::statement($QueryPerfiles); 
+            $QueryPerfiles = "DROP TABLE mc_lotesmovtos;";
+            DB::statement($QueryPerfiles); 
             $QueryPerfiles = "DROP TABLE mc_menupermis;";
             DB::statement($QueryPerfiles);  
             $QueryPerfiles = "DROP TABLE mc_modpermis;";
@@ -522,7 +545,11 @@ class EmpresasController extends Controller
             $QueryPerfiles = "DROP TABLE mc_userprofile;";
             DB::statement($QueryPerfiles);
             $QueryPerfiles = "DROP TABLE mc_usersubmenu;";
+            DB::statement($QueryPerfiles);   
+            $QueryPerfiles = "DROP TABLE mc_rubros;";
             DB::statement($QueryPerfiles);
+
+
             $id= 1;
         }else {
             $id= 0;
@@ -530,8 +557,7 @@ class EmpresasController extends Controller
         return $id;   
     }
     
-    public function EliminarUsuarioEmpresa(Request $request)
-    {  
+    public function EliminarUsuarioEmpresa(Request $request){  
         $idusuario = $request->usuarioId;        
         if ($idusuario != "") {
             DB::connection("General")->table('mc1002')->where('idusuario', $idusuario)->delete();

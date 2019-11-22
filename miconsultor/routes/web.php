@@ -25,6 +25,7 @@ Route::get('ListaEmpresas', 'EmpresasController@ListaEmpresas');
 Route::get('DatosEmpresaAD/{idempresa}', 'EmpresasController@DatosEmpresaAD'); 
 Route::post('EliminarEmpresaAD', 'EmpresasController@EliminarEmpresaAD');
 Route::post('GuardarEmpresaAD', 'EmpresasController@GuardarEmpresaAD');
+Route::get('DatosEmpresa', 'EmpresasController@DatosEmpresa');
 
 ///Usuarios
 Route::post('Login', 'UsuariosController@Login');

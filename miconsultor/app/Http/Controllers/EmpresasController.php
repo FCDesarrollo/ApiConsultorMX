@@ -163,8 +163,6 @@ class EmpresasController extends Controller
                 ) ENGINE=INNODB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";    
             DB::statement($mc_almdigital);
 
-            /*Table structure for table mc_almdigital_det */
-
             $mc_almdigital_det = "create table if not exists mc_almdigital_det (
               id INT(11) NOT NULL AUTO_INCREMENT,
               idalmdigital INT(11) DEFAULT NULL,
@@ -568,6 +566,17 @@ class EmpresasController extends Controller
         }
         return $id;   
     }
+
+    function DatosEmpresa(Request $request){
+      $rfc = $request->rfcempresa;
+      $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE RFC='$rfc'");    
+
+      $datos = array(
+          "empresa" => $empresa,
+      );        
+
+      return json_encode($datos, JSON_UNESCAPED_UNICODE);
+    }    
 
 
      

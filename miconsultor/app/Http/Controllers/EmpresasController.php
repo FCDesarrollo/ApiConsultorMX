@@ -351,6 +351,7 @@ class EmpresasController extends Controller
               status INT(11) DEFAULT '0',
               idmenu INT(11) DEFAULT NULL,
               idsubmenu INT(11) DEFAULT NULL,
+              idplantilla INT(11) DEFAULT NULL,
               PRIMARY KEY (id)
             ) ENGINE=INNODB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_rubros);   

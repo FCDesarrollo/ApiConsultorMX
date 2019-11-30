@@ -160,7 +160,7 @@ class EmpresasController extends Controller
                 idusuario INT(11) DEFAULT NULL, rubro VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL, 
                 idsucursal INT(11) DEFAULT NULL, observaciones VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL, 
                 totalregistros INT(11) DEFAULT '0', totalcargados INT(11) DEFAULT '0', PRIMARY KEY (id) 
-                ) ENGINE=INNODB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";    
+                ) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";    
             DB::statement($mc_almdigital);
 
             $mc_almdigital_det = "create table if not exists mc_almdigital_det (
@@ -173,7 +173,7 @@ class EmpresasController extends Controller
               fechaprocesado DATETIME DEFAULT NULL,
               estatus INT(11) DEFAULT '0',
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";
             DB::statement($mc_almdigital_det);
 
             $mc_bitcontabilidad = "create table if not exists mc_bitcontabilidad (
@@ -201,7 +201,7 @@ class EmpresasController extends Controller
               idbitacora INT(11) DEFAULT NULL,
               nombrearchivoE VARCHAR(255) CHARACTER SET latin1 DEFAULT NULL,
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=59 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_bitcontabilidad_det); 
 
             $mc_catclienprov = "create table if not exists mc_catclienprov (
@@ -253,7 +253,7 @@ class EmpresasController extends Controller
               rutaadw VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
               sincronizado INT(11) DEFAULT '0',
               PRIMARY KEY (idsucursal)
-            ) ENGINE=INNODB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catsucursales); 
             
             $mc_lotes = "create table if not exists mc_lotes (
@@ -320,7 +320,7 @@ class EmpresasController extends Controller
               idmenu INT(11) DEFAULT NULL,
               tipopermiso INT(11) DEFAULT NULL,
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_menupermis);   
 
             $mc_modpermis = "create table if not exists mc_modpermis (
@@ -329,7 +329,7 @@ class EmpresasController extends Controller
               idmodulo INT(11) DEFAULT NULL,
               tipopermiso INT(11) DEFAULT NULL,
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_modpermis);   
 
             $mc_profiles = "create table if not exists mc_profiles (
@@ -340,7 +340,7 @@ class EmpresasController extends Controller
               fecha DATE DEFAULT NULL,
               status INT(11) DEFAULT '1',
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_profiles);   
 
             $mc_rubros = "create table if not exists mc_rubros (
@@ -351,9 +351,9 @@ class EmpresasController extends Controller
               status INT(11) DEFAULT '0',
               idmenu INT(11) DEFAULT NULL,
               idsubmenu INT(11) DEFAULT NULL,
-              idplantilla INT(11) DEFAULT NULL,
+              claveplantilla INT(11) DEFAULT NULL,
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_rubros);   
 
             $mc_submenupermis = "create table if not exists mc_submenupermis (
@@ -364,7 +364,7 @@ class EmpresasController extends Controller
               tipopermiso INT(11) DEFAULT NULL,
               notificaciones INT(11) DEFAULT '0',
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=28 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_submenupermis);   
 
             $mc_usermenu = "create table if not exists mc_usermenu (
@@ -375,7 +375,7 @@ class EmpresasController extends Controller
               idmenu INT(11) NOT NULL,
               tipopermiso INT(11) NOT NULL,
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=71 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_usermenu);
 
             $mc_usermod = "create table if not exists mc_usermod (
@@ -385,7 +385,7 @@ class EmpresasController extends Controller
               idmodulo INT(11) DEFAULT NULL,
               tipopermiso INT(11) DEFAULT NULL,
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=22 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_usermod);                                                                                                    
 
             $mc_userprofile = "create table if not exists mc_userprofile (
@@ -393,7 +393,7 @@ class EmpresasController extends Controller
               idusuario INT(11) DEFAULT NULL,
               idperfil INT(11) DEFAULT NULL,
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_userprofile);           
 
             $mc_usersubmenu = "create table if not exists mc_usersubmenu (
@@ -405,7 +405,7 @@ class EmpresasController extends Controller
               tipopermiso INT(11) NOT NULL,
               notificaciones INT(11) DEFAULT '0',
               PRIMARY KEY (id)
-            ) ENGINE=INNODB AUTO_INCREMENT=190 DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_usersubmenu);                    
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";

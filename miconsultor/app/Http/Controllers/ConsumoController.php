@@ -1179,7 +1179,11 @@ class ConsumoController extends Controller
         $storage[0]->server = $server[0]->servidor_storage;
         return json_encode($storage, JSON_UNESCAPED_UNICODE);
     }
-
+    
+    function DatosStorageADM(){
+        $storage = DB::connection("General")->select("SELECT servidor_storage, usuario_storage, password_storage FROM mc0000");
+        return json_encode($storage, JSON_UNESCAPED_UNICODE);
+    }
 
 
    public function AlmCargaArchivos(Request $request){   

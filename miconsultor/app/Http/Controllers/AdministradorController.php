@@ -464,7 +464,7 @@ class AdministradorController extends Controller
         // if ($valida != "2" and $valida != "3"){
         //     ConnectDatabase($request->Idempresa);
             
-            $result = DB::select( "SELECT usuario_storage,password_storage FROM mc1000 WHERE RFC=$request->rfc");
+            $result = DB::select( "SELECT usuario_storage,password_storage FROM mc1000 WHERE RFC='$request->rfc'");
             $datos = array(
                 "usuario" => $result,
              );

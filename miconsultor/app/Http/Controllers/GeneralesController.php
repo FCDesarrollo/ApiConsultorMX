@@ -943,12 +943,6 @@ class GeneralesController extends Controller
 
         }
 
-        
-
-
-               
-
-
     }
 
     function ChecarCatalogos(Request $request){
@@ -1136,6 +1130,24 @@ class GeneralesController extends Controller
         return $datos;
         //return $respuesta;
 
+    }
+
+    function VerificarClave(Request $request){
+        ConnectDatabase($request->idempresa);
+        $clave = $request->clave;
+        
+        if(isset($request->idmenu)){
+            $idmenu = $request->idmenu;
+        }else{
+            $idmenu = 6;
+        }
+        
+        $idsubmenu = $request->idsubmenu;
+
+        $rubros = DB::select("SELECT * FROM mc_rubros WHERE claveplantilla = $clave AND idmenu = $idmenu AND idsubmenu = $idsubmenu");
+
+        return $rubros;
+        
     }
 
     //-----------------//

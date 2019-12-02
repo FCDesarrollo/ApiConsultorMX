@@ -25,6 +25,7 @@ Route::get('ListaEmpresas', 'EmpresasController@ListaEmpresas');
 Route::get('DatosEmpresaAD/{idempresa}', 'EmpresasController@DatosEmpresaAD'); 
 Route::post('EliminarEmpresaAD', 'EmpresasController@EliminarEmpresaAD');
 Route::post('GuardarEmpresaAD', 'EmpresasController@GuardarEmpresaAD');
+Route::get('DatosEmpresa', 'EmpresasController@DatosEmpresa');
 
 ///Usuarios
 Route::post('Login', 'UsuariosController@Login');
@@ -148,6 +149,7 @@ Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
 Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
 Route::get('Paginador', 'GeneralesController@Paginador');
+Route::post('VerificarClave', 'GeneralesController@VerificarClave');
 
 //PARA CONSUMO DEL MODULO DE INVENTARIOS
 Route::post('LoteCargado', 'GeneralesController@LoteCargado');
@@ -166,6 +168,7 @@ Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');
 
 //STORAGE
 Route::get('DatosStorage', 'ConsumoController@DatosStorage');
+Route::get('DatosStorageADM', 'ConsumoController@DatosStorageADM');
 Route::post('registraBitacora', 'AdministradorController@registraBitacora');
 
 //19/09/2019 PARA LA ADMINISTRACION DE EMPRESAS DE LOS AGENTES DESKTOP

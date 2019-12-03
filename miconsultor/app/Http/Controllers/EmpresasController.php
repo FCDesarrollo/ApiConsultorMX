@@ -87,7 +87,7 @@ class EmpresasController extends Controller
             $data = $request->input();
             $id = $data["idempresa"];
             unset($data["idempresa"]);
-            DB::connection("General")->table('mc1000')->where("idempresa", $id)->update($data);
+            DB::connection("General")->table('mc1000')->where("idempresa", $data["idempresa"])->update($data);
         }
         return $id;
     }

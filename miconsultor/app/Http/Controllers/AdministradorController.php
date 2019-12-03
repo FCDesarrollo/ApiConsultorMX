@@ -457,4 +457,19 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function usuarionube(Request $request)
+    {
+        // $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        // $datos ="false";
+        // if ($valida != "2" and $valida != "3"){
+        //     ConnectDatabase($request->Idempresa);
+            
+            $result = DB::select( "SELECT usuario_storage,password_storage FROM mc1000 WHERE RFC='$request->rfc'");
+            $datos = array(
+                "usuario" => $result,
+             );
+        //}
+        return $datos;
+    }
+
 }

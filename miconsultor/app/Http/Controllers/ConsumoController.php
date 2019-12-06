@@ -14,13 +14,16 @@ class ConsumoController extends Controller
 
         $conexion[0]['error'] = 0;
         
-        $idempresa = DB::connection("General")->select("SELECT idempresa, rutaempresa FROM mc1000 WHERE RFC = '$RFCEmpresa'");
+        $idempresa = DB::connection("General")->select("SELECT idempresa,rutaempresa,usuario_storage,password_storage,RFC FROM mc1000 WHERE RFC = '$RFCEmpresa'");
         
         if(!empty($idempresa)){
 
             $Pwd = $Password; //password_hash($Password, PASSWORD_BCRYPT); //md5($Password);
 
             $conexion[0]['idempresa'] = $idempresa[0]->idempresa;
+            $conexion[0]['rfc'] = $idempresa[0]->RFC;
+            $conexion[0]['userstorage'] = $idempresa[0]->usuario_storage;
+            $conexion[0]['passstorage'] = $idempresa[0]->password_storage;
 
             $idusuario = DB::connection("General")->select("SELECT idusuario, password FROM mc1001 WHERE correo = '$Usuario'");
 
@@ -1172,6 +1175,8 @@ class ConsumoController extends Controller
 
     }
 
+    
+
     function DatosStorage(Request $request){
         $rfc = $request->rfcempresa;
         $server = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
@@ -1284,6 +1289,111 @@ class ConsumoController extends Controller
         
     }
 
+    function CambiaRubroDocumento(Request $request)
+    {
+   
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 2, 5, 16);
+        
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){
+            
+            ConnectDatabase($autenticacion[0]["idempresa"]);   
+
+            $idDocDig = $request->iddocumento;
+            $claverubroant = $request->claverubroant;
+            $claverubronew = $request->claverubronew;
+            $observa = $request->observaciones;
+            $idmenu = $request->idmenu;
+            $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
+            $nomAr = $request->nombrearchivo;
+            $carpetaIni = $request->carpetaini;
+            $carpetaFin = $request->carpetafin;
+            $newnom = str_replace($claverubroant,$claverubronew, $nomAr);
+            $dat =explode(".", $newnom);
+            $newar = $dat[0];
+            $result = DB::select("SELECT idalmdigital,codigodocumento FROM mc_almdigital_det WHERE id=$idDocDig");
+            if(!empty($result)){
+                // $idDigital = $result[0]->idalmdigital;
+                
+
+                // $lote = DB::select("SELECT * FROM mc_almdigital WHERE id=$idDigital");
+                // if(!empty($lote)){
+                //     $lfecha = $lote[0]->fechadocto;
+                //     $lusuario = $lote[0]->idusuario;
+                //     $lsucursal = $lote[0]->idsucursal;
+                //     $codigoalm = str_replace($lote[0]->rubro,$claverubronew, $lote[0]->codigoalm);
+                //     $existelote = DB::select("SELECT * FROM mc_almdigital WHERE fechadocto='$lfecha' 
+                //                                 AND idusuario=$lusuario AND idsucursal=$lsucursal AND rubro='$claverubronew'");
+                //     if(!empty($existelote)){
+                //         $lid = $existelote[0]->id;
+                //         $cantReg = $existelote[0]->totalregistros + 1;
+                //         $cantCarg = $existelote[0]->totalcargados + 1;
+
+                //         DB::table('mc_almdigital_det')->where("id", $idDocDig)->
+                //         update(['idalmdigital' => $lid, 'codigodocumento' => $newar ]);
+                        
+                //         DB::table('mc_almdigital')->where("id", $lid)->
+                //         update(['totalregistros' => $cantReg, 'totalcargados' => $cantCarg]);
+                //     }else{
+                //         $now = date('Y-m-d h:i:s A');
+
+                //         $idU = DB::table('mc_almdigital')->insertGetId(
+                //             ['fechadecarga' => $now,'fechadocto' => $lfecha,
+                //             'codigoalm' => $codigoalm, 'idusuario' => $lusuario,
+                //             'rubro' => $claverubronew, 'idsucursal' => $lsucursal,
+                //             'observaciones' => $observa, 'totalregistros' => 1,
+                //             'totalcargados' => 1]);
+                        
+                //         DB::table('mc_almdigital_det')->where("id", $idDocDig)->
+                //         update(['idalmdigital' => $idU, 'codigodocumento' => $newar ]);
+                //     }                            
+                // }
+
+                $userSto = $autenticacion[0]["userstorage"];
+                $passSto = $autenticacion[0]["passstorage"];
+                $res = $this->MoverDocumento($userSto, $passSto, 
+                            $idmenu, $carpIni, $nomAr, $carpetaIni, $carpetaFin, $newnom);
+            }   
+            
+        }else{
+            $array["error"] = $autenticacion[0]["error"];
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    
+    public function MoverDocumento(String $userSto,String $passSto,int $idMenu,String $carpIni,
+                                            String $nomAr,String $carRubroIn,String $carRubroFin,String $newnom)
+    {
+        $regresa ='NO';
+
+        $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+        $servidor = $result[0]->servidor_storage;
+
+        $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
+        if ( !empty($result) ){
+            
+            //$nomcar = $result[0]->nombre_carpeta;
+            $ch = curl_init();         
+            $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'.$carRubroIn.'/'.$nomAr;
+            print($url);
+                curl_setopt_array($ch,
+                    array(
+                        CURLOPT_URL => $url,
+                        CURLOPT_VERBOSE => 1,
+                        CURLOPT_USERPWD => $userSto.':'.$passSto,
+                        CURLOPT_HTTPHEADER => array('Destination: https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'.$carRubroFin.'/'.$newnom),
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_CUSTOMREQUEST => 'MOVE',
+                    )
+            );
+            $regresa = curl_exec($ch);   
+            curl_close($ch);
+        }
+        return $regresa;
+    }
+    
     function SaveStorage($filename, $source, $target_path){
 
     }

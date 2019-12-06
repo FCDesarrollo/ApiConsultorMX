@@ -1352,7 +1352,7 @@ class ConsumoController extends Controller
                 $userSto = $autenticacion[0]["userstorage"];
                 $passSto = $autenticacion[0]["passstorage"];
                 $res = $this->MoverDocumento($userSto, $passSto, 
-                            $idmenu, $carpIni, $nomAr, $carpetaIni, $carpetaFin);
+                            $idmenu, $carpIni, $nomAr, $carpetaIni, $carpetaFin, $newnom);
             }   
             
         }else{

@@ -1184,7 +1184,7 @@ class ConsumoController extends Controller
         $storage[0]->server = $server[0]->servidor_storage;
         return json_encode($storage, JSON_UNESCAPED_UNICODE);
     }
-    
+
     function DatosStorageADM(){
         $storage = DB::connection("General")->select("SELECT servidor_storage, usuario_storage, password_storage FROM mc0000");
         return json_encode($storage, JSON_UNESCAPED_UNICODE);
@@ -1243,8 +1243,8 @@ class ConsumoController extends Controller
                         $codigodocumento = $ArchivosVerificados["archivos"][$contador]["codigo"];                        
                         if($ArchivosVerificados["archivos"][$contador]["status"] == 0){
                         
-                            DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento]);
-                            
+                            $ArchivosVerificados["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento]);
+                            $ArchivosVerificados["archivos"][$contador]["idalmacen"] = $idalm;
                         }
                         $contador++;            
                     } 
@@ -1256,8 +1256,9 @@ class ConsumoController extends Controller
                         $nomDoc = $ArchivosVerificados["archivos"][$contador]["archivo"]; 
                         $codigodocumento = $ArchivosVerificados["archivos"][$contador]["codigo"];
                         if($ArchivosVerificados["archivos"][$contador]["status"] == 0){
-                            DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'idsucursal' => $reg[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento]);
-                           $cont = $cont + 1; 
+                           $ArchivosVerificados["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'idsucursal' => $reg[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento]);
+                           $cont = $cont + 1;
+                           $ArchivosVerificados["archivos"][$contador]["idalmacen"] = $reg[0]->id; 
                         }
                         $contador++;
                     } 

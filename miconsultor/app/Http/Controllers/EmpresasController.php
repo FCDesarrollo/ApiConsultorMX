@@ -577,7 +577,35 @@ class EmpresasController extends Controller
       );        
 
       return json_encode($datos, JSON_UNESCAPED_UNICODE);
-    }    
+    }   
+
+    function DatosFacturacion(Request $request){
+      $datos = $request->objeto;
+      $idempresa = $datos["idempresa"];
+      DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["calle" => $datos['calle'], "colonia" => $datos['colonia'], "num_ext" => $datos['num_ext'], "num_int" => $datos['num_int'], "codigopostal" => $datos['codigopostal'], "municipio" => $datos['municipio'], "ciudad" => $datos['ciudad'], "estado" => $datos['estado'], "telefono" => $datos['telefono']]);
+      return $idempresa;
+
+    } 
+
+    function ActualizaVigencia(Request $request){
+      
+      $vigencia = $request->vigencia;
+      $idempresa = $request->idempresa;
+      $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa = $idempresa"); 
+
+      $fecha_actual = strtotime($empresa[0]->vigencia);
+      $fecha_entrada = strtotime($vigencia);
+
+      if($fecha_actual > $fecha_entrada){
+        $status = 0;
+      }else{
+        DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["vigencia" => $vigencia]);
+        $status = 1;
+      }    
+
+      return $status;
+        
+    }
 
 
      

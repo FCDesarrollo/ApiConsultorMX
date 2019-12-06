@@ -1310,7 +1310,8 @@ class ConsumoController extends Controller
             $carpetaIni = $request->carpetaini;
             $carpetaFin = $request->carpetafin;
             $newnom = str_replace($claverubroant,$claverubronew, $nomAr);
-
+            $dat =explode(".", $newnom);
+            $newar = $dat[0];
             $result = DB::select("SELECT idalmdigital,codigodocumento FROM mc_almdigital_det WHERE id=$idDocDig");
             if(!empty($result)){
                 $idDigital = $result[0]->idalmdigital;
@@ -1330,7 +1331,7 @@ class ConsumoController extends Controller
                         $cantCarg = $existelote[0]->totalcargados + 1;
 
                         DB::table('mc_almdigital_det')->where("id", $idDocDig)->
-                        update(['idalmdigital' => $lid]);
+                        update(['idalmdigital' => $lid, 'codigodocumento' => $newar ]);
                         
                         DB::table('mc_almdigital')->where("id", $lid)->
                         update(['totalregistros' => $cantReg, 'totalcargados' => $cantCarg]);
@@ -1345,7 +1346,7 @@ class ConsumoController extends Controller
                             'totalcargados' => 1]);
                         
                         DB::table('mc_almdigital_det')->where("id", $idDocDig)->
-                        update(['idalmdigital' => $idU]);
+                        update(['idalmdigital' => $idU, 'codigodocumento' => $newar ]);
                     }                            
                 }
 
@@ -1371,7 +1372,9 @@ class ConsumoController extends Controller
         $servidor = $result[0]->servidor_storage;
 
         $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
+        print('Hola1');
         if ( !empty($result) ){
+            print($result[0]->nombre_carpeta);
             $nomcar = $result[0]->nombre_carpeta;
             $ch = curl_init();         
             $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'.$carRubroIn.'/'.$nomAr;

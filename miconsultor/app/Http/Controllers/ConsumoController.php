@@ -1291,10 +1291,8 @@ class ConsumoController extends Controller
 
     function CambiaRubroDocumento(Request $request)
     {
-        $datos = $request->datos;
-        //$archivos = $request->archivos;        
-
-        $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, 2, 5, 16);
+   
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 2, 5, 16);
         
         $array["error"] = $autenticacion[0]["error"];
 
@@ -1302,14 +1300,14 @@ class ConsumoController extends Controller
             
             ConnectDatabase($autenticacion[0]["idempresa"]);   
 
-            $idDocDig = $datos["iddocumento"];
-            $claverubro = $datos["claverubro"];
-            $observa = $datos["observaciones"];
-            $idmenu = $datos["idmenu"];
+            $idDocDig = $request->iddocumento;
+            $claverubro = $request->claverubro;
+            $observa = $request->observaciones;
+            $idmenu = $request->idmenu;
             $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
-            $nomAr = $datos["nombrearchivo"];
-            $carpetaIni = $datos["carpetaini"];
-            $carpetaFin = $datos["carpetafin"];
+            $nomAr = $request->nombrearchivo;
+            $carpetaIni = $request->carpetaini;
+            $carpetaFin = $request->carpetafin;
 
             $result = DB::select("SELECT idalmdigital FROM mc_almdigital_det WHERE id=$idDocDig");
             if(!empty($result)){

@@ -1340,7 +1340,7 @@ class ConsumoController extends Controller
                         $idU = DB::table('mc_almdigital')->insertGetId(
                             ['fechadecarga' => $now,'fechadocto' => $lfecha,
                             'codigoalm' => $codigoalm, 'idusuario' => $lusuario,
-                            'rubro' => $claverubro, 'idsucursal' => $lsucursal,
+                            'rubro' => $claverubronew, 'idsucursal' => $lsucursal,
                             'observaciones' => $observa, 'totalregistros' => 1,
                             'totalcargados' => 1]);
                         

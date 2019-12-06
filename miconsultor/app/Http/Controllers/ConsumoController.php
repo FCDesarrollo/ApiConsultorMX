@@ -1301,26 +1301,29 @@ class ConsumoController extends Controller
             ConnectDatabase($autenticacion[0]["idempresa"]);   
 
             $idDocDig = $request->iddocumento;
-            $claverubro = $request->claverubro;
+            $claverubroant = $request->claverubroant;
+            $claverubronew = $request->claverubronew;
             $observa = $request->observaciones;
             $idmenu = $request->idmenu;
             $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
             $nomAr = $request->nombrearchivo;
             $carpetaIni = $request->carpetaini;
             $carpetaFin = $request->carpetafin;
+            $newnom = str_replace($claverubroant,$claverubronew, $nomAr);
 
-            $result = DB::select("SELECT idalmdigital FROM mc_almdigital_det WHERE id=$idDocDig");
+            $result = DB::select("SELECT idalmdigital,codigodocumento FROM mc_almdigital_det WHERE id=$idDocDig");
             if(!empty($result)){
                 $idDigital = $result[0]->idalmdigital;
+                
 
                 $lote = DB::select("SELECT * FROM mc_almdigital WHERE id=$idDigital");
                 if(!empty($lote)){
                     $lfecha = $lote[0]->fechadocto;
                     $lusuario = $lote[0]->idusuario;
                     $lsucursal = $lote[0]->idsucursal;
-                    $codigoalm = str_replace($lote[0]->rubro,$claverubro, $lote[0]->idsucursal);
+                    $codigoalm = str_replace($lote[0]->rubro,$claverubro, $lote[0]->codigoalm);
                     $existelote = DB::select("SELECT * FROM mc_almdigital WHERE fechadocto='$lfecha' 
-                                                AND idusuario=$lusuario AND idsucursal=$lsucursal AND rubro='$claverubro'");
+                                                AND idusuario=$lusuario AND idsucursal=$lsucursal AND rubro='$claverubronew'");
                     if(!empty($existelote)){
                         $lid = $existelote[0]->id;
                         $cantReg = $existelote[0]->totalregistros + 1;
@@ -1349,7 +1352,7 @@ class ConsumoController extends Controller
                 $userSto = $autenticacion[0]["userstorage"];
                 $passSto = $autenticacion[0]["passstorage"];
                 $res = $this->MoverDocumento($userSto, $passSto, 
-                            $idmenu, $carpIni, $nomAr,$carpetaIni, $carpetaFin );
+                            $idmenu, $carpIni, $nomAr, $carpetaIni, $carpetaFin);
             }   
             
         }else{
@@ -1360,7 +1363,7 @@ class ConsumoController extends Controller
 
     
     public function MoverDocumento(String $userSto,String $passSto,int $idMenu,String $carpIni,
-  String $nomAr,String $carRubroIn,String $carRubroFin)
+                                            String $nomAr,String $carRubroIn,String $carRubroFin,String $newnom)
     {
         $regresa ='NO';
 
@@ -1377,7 +1380,7 @@ class ConsumoController extends Controller
                         CURLOPT_URL => $url,
                         CURLOPT_VERBOSE => 1,
                         CURLOPT_USERPWD => $userSto.':'.$passSto,
-                        CURLOPT_HTTPHEADER => array('Destination: https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'.$carRubroFin.'/'.$nomAr),
+                        CURLOPT_HTTPHEADER => array('Destination: https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'.$carRubroFin.'/'.$newnom),
                         CURLOPT_RETURNTRANSFER => true,
                         CURLOPT_CUSTOMREQUEST => 'MOVE',
                     )

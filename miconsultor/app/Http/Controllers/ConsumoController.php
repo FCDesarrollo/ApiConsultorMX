@@ -1321,7 +1321,7 @@ class ConsumoController extends Controller
                     $lfecha = $lote[0]->fechadocto;
                     $lusuario = $lote[0]->idusuario;
                     $lsucursal = $lote[0]->idsucursal;
-                    $codigoalm = str_replace($lote[0]->rubro,$claverubro, $lote[0]->codigoalm);
+                    $codigoalm = str_replace($lote[0]->rubro,$claverubronew, $lote[0]->codigoalm);
                     $existelote = DB::select("SELECT * FROM mc_almdigital WHERE fechadocto='$lfecha' 
                                                 AND idusuario=$lusuario AND idsucursal=$lsucursal AND rubro='$claverubronew'");
                     if(!empty($existelote)){

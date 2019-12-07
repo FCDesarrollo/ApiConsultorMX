@@ -1377,7 +1377,6 @@ class ConsumoController extends Controller
             $nomcar = $result[0]->nombre_carpeta;
             $ch = curl_init();         
             $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'.$carRubroIn.'/'.$nomAr;
-            print($url);
                 curl_setopt_array($ch,
                     array(
                         CURLOPT_URL => $url,

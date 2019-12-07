@@ -1314,41 +1314,41 @@ class ConsumoController extends Controller
             $newar = $dat[0];
             $result = DB::select("SELECT idalmdigital,codigodocumento FROM mc_almdigital_det WHERE id=$idDocDig");
             if(!empty($result)){
-                // $idDigital = $result[0]->idalmdigital;
+                $idDigital = $result[0]->idalmdigital;
                 
 
-                // $lote = DB::select("SELECT * FROM mc_almdigital WHERE id=$idDigital");
-                // if(!empty($lote)){
-                //     $lfecha = $lote[0]->fechadocto;
-                //     $lusuario = $lote[0]->idusuario;
-                //     $lsucursal = $lote[0]->idsucursal;
-                //     $codigoalm = str_replace($lote[0]->rubro,$claverubronew, $lote[0]->codigoalm);
-                //     $existelote = DB::select("SELECT * FROM mc_almdigital WHERE fechadocto='$lfecha' 
-                //                                 AND idusuario=$lusuario AND idsucursal=$lsucursal AND rubro='$claverubronew'");
-                //     if(!empty($existelote)){
-                //         $lid = $existelote[0]->id;
-                //         $cantReg = $existelote[0]->totalregistros + 1;
-                //         $cantCarg = $existelote[0]->totalcargados + 1;
+                $lote = DB::select("SELECT * FROM mc_almdigital WHERE id=$idDigital");
+                if(!empty($lote)){
+                    $lfecha = $lote[0]->fechadocto;
+                    $lusuario = $lote[0]->idusuario;
+                    $lsucursal = $lote[0]->idsucursal;
+                    $codigoalm = str_replace($lote[0]->rubro,$claverubronew, $lote[0]->codigoalm);
+                    $existelote = DB::select("SELECT * FROM mc_almdigital WHERE fechadocto='$lfecha' 
+                                                AND idusuario=$lusuario AND idsucursal=$lsucursal AND rubro='$claverubronew'");
+                    if(!empty($existelote)){
+                        $lid = $existelote[0]->id;
+                        $cantReg = $existelote[0]->totalregistros + 1;
+                        $cantCarg = $existelote[0]->totalcargados + 1;
 
-                //         DB::table('mc_almdigital_det')->where("id", $idDocDig)->
-                //         update(['idalmdigital' => $lid, 'codigodocumento' => $newar ]);
+                        DB::table('mc_almdigital_det')->where("id", $idDocDig)->
+                        update(['idalmdigital' => $lid, 'codigodocumento' => $newar ]);
                         
-                //         DB::table('mc_almdigital')->where("id", $lid)->
-                //         update(['totalregistros' => $cantReg, 'totalcargados' => $cantCarg]);
-                //     }else{
-                //         $now = date('Y-m-d h:i:s A');
+                        DB::table('mc_almdigital')->where("id", $lid)->
+                        update(['totalregistros' => $cantReg, 'totalcargados' => $cantCarg]);
+                    }else{
+                        $now = date('Y-m-d h:i:s A');
 
-                //         $idU = DB::table('mc_almdigital')->insertGetId(
-                //             ['fechadecarga' => $now,'fechadocto' => $lfecha,
-                //             'codigoalm' => $codigoalm, 'idusuario' => $lusuario,
-                //             'rubro' => $claverubronew, 'idsucursal' => $lsucursal,
-                //             'observaciones' => $observa, 'totalregistros' => 1,
-                //             'totalcargados' => 1]);
+                        $idU = DB::table('mc_almdigital')->insertGetId(
+                            ['fechadecarga' => $now,'fechadocto' => $lfecha,
+                            'codigoalm' => $codigoalm, 'idusuario' => $lusuario,
+                            'rubro' => $claverubronew, 'idsucursal' => $lsucursal,
+                            'observaciones' => $observa, 'totalregistros' => 1,
+                            'totalcargados' => 1]);
                         
-                //         DB::table('mc_almdigital_det')->where("id", $idDocDig)->
-                //         update(['idalmdigital' => $idU, 'codigodocumento' => $newar ]);
-                //     }                            
-                // }
+                        DB::table('mc_almdigital_det')->where("id", $idDocDig)->
+                        update(['idalmdigital' => $idU, 'codigodocumento' => $newar ]);
+                    }                            
+                }
 
                 $userSto = $autenticacion[0]["userstorage"];
                 $passSto = $autenticacion[0]["passstorage"];

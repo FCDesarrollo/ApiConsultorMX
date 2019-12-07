@@ -164,6 +164,7 @@ Route::get('ArchivosAlmacen', 'ConsumoController@ArchivosAlmacen');
 Route::post('EliminaArchivoAlmacen', 'ConsumoController@EliminaArchivoAlmacen');
 Route::get('DatosFiltroAvanzado', 'ConsumoController@DatosFiltroAvanzado');
 Route::get('FiltrarDatos', 'ConsumoController@FiltrarDatos');
+Route::post('LinkDescarga', 'ConsumoController@LinkDescarga');
 
 
 //10/09/2019 PARA LEER LA BITACORA

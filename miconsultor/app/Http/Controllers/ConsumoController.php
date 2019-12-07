@@ -1591,4 +1591,22 @@ class ConsumoController extends Controller
 
     }
 
+    function LinkDescarga(Request $request){
+        $datos = $request->objeto;
+        $links = $datos["datos"];
+
+        ConnectDatabase($datos["idempresa"]);
+
+        for ($i=0; $i < count($links); $i++) { 
+            $idarchivo = $links[$i]["idarchivo"];
+            $idalmacen = $links[$i]["idalmacen"];
+            $link_descarga = $links[$i]["link"];
+            DB::table('mc_almdigital_det')->where("id", $idarchivo)->where("idalmdigital", $idalmacen)->update(['download' => $link_descarga]);
+        }
+
+        return $datos["idempresa"];
+
+
+    }
+
 }

@@ -1374,7 +1374,7 @@ class ConsumoController extends Controller
         $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
         if ( !empty($result) ){
             
-            //$nomcar = $result[0]->nombre_carpeta;
+            $nomcar = $result[0]->nombre_carpeta;
             $ch = curl_init();         
             $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'.$carRubroIn.'/'.$nomAr;
             print($url);

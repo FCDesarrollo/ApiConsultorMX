@@ -172,6 +172,7 @@ class EmpresasController extends Controller
               idagente INT(11) DEFAULT NULL,
               fechaprocesado DATETIME DEFAULT NULL,
               estatus INT(11) DEFAULT '0',
+              download VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
               PRIMARY KEY (id)
             ) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";
             DB::statement($mc_almdigital_det);

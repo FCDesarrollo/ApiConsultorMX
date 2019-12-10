@@ -1362,26 +1362,31 @@ class ConsumoController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function delDocAPI(String $userSto,String $passSto,String $nomAr)
+    public function delDocAPI(String $userSto,String $passSto,String $nomAr,int $idMenu)
     {
         $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
         $servidor = $result[0]->servidor_storage;
 
-        $ch = curl_init();         
-        $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/CRM/'.$userSto.'/Entrada/AlmacenDigital/ExpedientesDigitales/'. $nomAr;
-            curl_setopt_array($ch,
-            array(
-                CURLOPT_URL => $url,
-                CURLOPT_VERBOSE => 1,
-                CURLOPT_USERPWD => $userSto.':'.$passSto,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_BINARYTRANSFER => true,
-                CURLOPT_CUSTOMREQUEST => 'DELETE',
-            )
-        );
-        $regresa = curl_exec($ch);
-        //print_r($regresa);   
-        curl_close($ch);
+        $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
+        if ( !empty($result) ){
+            
+            $nomcar = $result[0]->nombre_carpeta;
+            $ch = curl_init();         
+            $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/CRM/'.$userSto.'/Entrada/'.$nomcar.'/'. $nomAr;
+                curl_setopt_array($ch,
+                array(
+                    CURLOPT_URL => $url,
+                    CURLOPT_VERBOSE => 1,
+                    CURLOPT_USERPWD => $userSto.':'.$passSto,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_BINARYTRANSFER => true,
+                    CURLOPT_CUSTOMREQUEST => 'DELETE',
+                )
+            );
+            $regresa = curl_exec($ch);
+            //print_r($regresa);   
+            curl_close($ch);
+        }
     }
 
     function EliminaDocumentoAll(Request $request){
@@ -1406,7 +1411,8 @@ class ConsumoController extends Controller
                 }
                 $userSto = $autenticacion[0]["userstorage"];
                 $passSto = $autenticacion[0]["passstorage"];
-                $res = $this->delDocAPI($userSto, $passSto, $newnom);
+                $idmenu = $request->idmenu;
+                $res = $this->delDocAPI($userSto, $passSto, $newnom, $idmenu);
             }
         }else{
             $array["error"] = $autenticacion[0]["error"];

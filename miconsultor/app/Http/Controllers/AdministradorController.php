@@ -372,10 +372,11 @@ class AdministradorController extends Controller
                 if(empty($result) and $movtos[$i]['activo'] == 1){
                     DB::table('mc_rubros')->insertGetId(['clave' => $movtos[$i]['clave'],
                     'nombre' => $movtos[$i]['nombre'],'tipo' => $movtos[$i]['tipo'], 
-                    'status' => $movtos[$i]['status'], 'idmenu' => $movtos[$i]['idmenu'], 'idsubmenu' => $movtos[$i]['idsubmenu']]);
+                    'status' => $movtos[$i]['status'], 'idmenu' => $movtos[$i]['idmenu'],
+                     'idsubmenu' => $movtos[$i]['idsubmenu'], 'claveplantilla' => $movtos[$i]['plantilla']]);
                 }elseif(!empty($result)){
                     DB::table('mc_rubros')->where("id", $result[0]->id)->
-                                update(['status' => $movtos[$i]['status']]);
+                                update(['status' => $movtos[$i]['status'], 'claveplantilla' => $movtos[$i]['plantilla']]);
                 }
             }
             $datos ="true"; 

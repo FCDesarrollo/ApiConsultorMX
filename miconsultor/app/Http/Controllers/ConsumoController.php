@@ -916,7 +916,12 @@ class ConsumoController extends Controller
 
         return $array;       
 
-    }        
+    }     
+
+    function Plantillas(){
+
+
+    }   
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1126,6 +1131,16 @@ class ConsumoController extends Controller
 
         return json_encode($archivos, JSON_UNESCAPED_UNICODE);
     }
+
+    function ArchivosCorreccionLinks(Request $request){
+        $idempresa = $request->idempresa;
+
+        ConnectDatabase($idempresa);
+        
+        $archivos = DB::select("SELECT * FROM mc_almdigital_det");
+
+        return json_encode($archivos, JSON_UNESCAPED_UNICODE);
+    }    
 
     function EliminaArchivoAlmacen(Request $request){
         $datos = $request->objeto;

@@ -472,4 +472,17 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function Plantillas(Request $request)
+    {
+        $datos="false";
+        $valida = $this->usuarioadmin($request->Correo, $request->Contra);
+        if ($valida != "2" and $valida != "3"){
+            $result = DB::select( "SELECT * FROM mc1011");
+            $datos = array(
+                "plantillas" => $result,
+             );
+        }
+        return $datos;
+    }
+
 }

@@ -200,3 +200,4 @@ Route::post('datosSucursal', 'AdministradorController@datosSucursal');
 Route::post('datosRubrosSubMenu', 'AdministradorController@datosRubrosSubMenu');
 Route::post('documentosdigitales', 'AdministradorController@documentosdigitales');
 Route::post('usuarionube', 'AdministradorController@usuarionube');
+Route::post('Plantillas', 'AdministradorController@Plantillas');

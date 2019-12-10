@@ -1362,7 +1362,7 @@ class ConsumoController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function delDocAPI(String $userSto,String $passSto,String $nomAr,int $idMenu)
+    public function delDocAPI(String $userSto,String $passSto,String $nomAr,int $idMenu,string $carpIni)
     {
         $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
         $servidor = $result[0]->servidor_storage;
@@ -1372,8 +1372,8 @@ class ConsumoController extends Controller
             
             $nomcar = $result[0]->nombre_carpeta;
             $ch = curl_init();         
-            $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/CRM/'.$userSto.'/Entrada/'.$nomcar.'/'. $nomAr;
-                curl_setopt_array($ch,
+            $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'. $nomAr;  
+            curl_setopt_array($ch,
                 array(
                     CURLOPT_URL => $url,
                     CURLOPT_VERBOSE => 1,
@@ -1395,6 +1395,8 @@ class ConsumoController extends Controller
         $array["error"] = $autenticacion[0]["error"];
         $newnom = $request->archivo;
         if($autenticacion[0]['error'] == 0){
+            $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
+
             $archivo = DB::select("SELECT * FROM mc_almdigital_det WHERE id = $request->idarchivo And estatus != 1");
 
             if(!empty($archivo)){
@@ -1412,7 +1414,7 @@ class ConsumoController extends Controller
                 $userSto = $autenticacion[0]["userstorage"];
                 $passSto = $autenticacion[0]["passstorage"];
                 $idmenu = $request->idmenu;
-                $res = $this->delDocAPI($userSto, $passSto, $newnom, $idmenu);
+                $res = $this->delDocAPI($userSto, $passSto, $newnom, $idmenu, $carpIni);
             }
         }else{
             $array["error"] = $autenticacion[0]["error"];

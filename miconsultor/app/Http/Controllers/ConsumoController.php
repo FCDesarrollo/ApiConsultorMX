@@ -1362,11 +1362,33 @@ class ConsumoController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function delDocAPI(String $userSto,String $passSto,String $nomAr)
+    {
+        $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+        $servidor = $result[0]->servidor_storage;
+
+        $ch = curl_init();         
+        $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/CRM/'.$userSto.'/Entrada/AlmacenDigital/ExpedientesDigitales/'. $nomAr;
+            curl_setopt_array($ch,
+            array(
+                CURLOPT_URL => $url,
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => $userSto.':'.$passSto,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'DELETE',
+            )
+        );
+        $regresa = curl_exec($ch);
+        //print_r($regresa);   
+        curl_close($ch);
+    }
+
     function EliminaDocumentoAll(Request $request){
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 2, 5, 16);
         
         $array["error"] = $autenticacion[0]["error"];
-
+        $newnom = $request->archivo;
         if($autenticacion[0]['error'] == 0){
             $archivo = DB::select("SELECT * FROM mc_almdigital_det WHERE id = $request->idarchivo And estatus != 1");
 
@@ -1382,6 +1404,9 @@ class ConsumoController extends Controller
                 }else{
                     DB::table('mc_almdigital')->where("id", $idalmacen)->delete();                    
                 }
+                $userSto = $autenticacion[0]["userstorage"];
+                $passSto = $autenticacion[0]["passstorage"];
+                $res = $this->delDocAPI($userSto, $passSto, $newnom);
             }
         }else{
             $array["error"] = $autenticacion[0]["error"];

@@ -1362,6 +1362,32 @@ class ConsumoController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function EliminaDocumentoAll(Request $request){
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 2, 5, 16);
+        
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){
+            $archivo = DB::select("SELECT * FROM mc_almdigital_det WHERE id = $request->idarchivo And estatus != 1");
+
+            if(!empty($archivo)){
+                $idalmacen = $archivo[0]->idalmdigital;
+                DB::table('mc_almdigital_det')->where('id', $request->idarchivo)->delete();
+                $totalr = DB::select("SELECT totalregistros FROM mc_almdigital WHERE id = $idalmacen");
+                $totalc = DB::select("SELECT count(id) as tc FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
+
+                if($totalc[0]->tc > 0){
+                    $totalregistros = $totalr[0]->totalregistros - 1;
+                    DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalc[0]->tc]);
+                }else{
+                    DB::table('mc_almdigital')->where("id", $idalmacen)->delete();                    
+                }
+            }
+        }else{
+            $array["error"] = $autenticacion[0]["error"];
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
     
     public function MoverDocumento(String $userSto,String $passSto,int $idMenu,String $carpIni,
                                             String $nomAr,String $carRubroIn,String $carRubroFin,String $newnom)
@@ -1387,7 +1413,8 @@ class ConsumoController extends Controller
                         CURLOPT_CUSTOMREQUEST => 'MOVE',
                     )
             );
-            $regresa = curl_exec($ch);   
+            $regresa = curl_exec($ch);
+            //print_r($regresa);   
             curl_close($ch);
         }
         return $regresa;

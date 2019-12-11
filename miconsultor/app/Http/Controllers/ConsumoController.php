@@ -1076,20 +1076,24 @@ class ConsumoController extends Controller
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
             $rubros = DB::select("SELECT * FROM mc_rubros WHERE idmenu = $idmenu AND idsubmenu = $idsubmenu");
+            $filtro = "";
+            $nr = count($rubros);
+            if($nr == "1"){
+                $claverubro = $rubros[0]->clave;
+                $filtro = "rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
+            }else{
+                for ($j=0; $j < $nr; $j++) { 
+                    $claverubro = $rubros[$j]->clave;
+                    
+                    if($j == ($nr -1)){
+                        $filtro = $filtro." rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
+                    }else{
+                        $filtro = $filtro." rubro = '".$claverubro."' OR ";
+                    }
 
-            for ($j=0; $j < count($rubros); $j++) { 
-                $claverubro = $rubros[$j]->clave;
-                
-                if($j=0){
-                    $filtro = $filtro + "rubro = ".$clave;
-                }elseif($j=count($rubros)){
-                    $filtro = $filtro + "rubro = ".$clave." ORDER BY fechadocto DESC"; 
-                }else{
-                    $filtro = $filtro + "rubro = ".$clave." AND ";
                 }
-
             }
-
+            
             $reg = DB::select("SELECT * FROM mc_almdigital WHERE ".$filtro);
 
             for ($i=0; $i < count($reg); $i++) { 

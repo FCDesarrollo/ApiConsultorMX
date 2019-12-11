@@ -1072,7 +1072,25 @@ class ConsumoController extends Controller
 
         if(!empty($idempresa)){
             ConnectDatabase($idempresa[0]->idempresa);
-            $reg = DB::select("SELECT * FROM mc_almdigital ORDER BY fechadocto DESC");
+
+            $idmenu = $request->idmenu;
+            $idsubmenu = $request->idsubmenu;
+            $rubros = DB::select("SELECT * FROM mc_rubros WHERE idmenu = $idmenu AND idsubmenu = $idsubmenu");
+
+            for ($j=0; $j < count($rubros); $j++) { 
+                $claverubro = $rubros[$j]->clave;
+                
+                if($j=0){
+                    $filtro = $filtro + "rubro = ".$clave;
+                }elseif($j=count($rubros)){
+                    $filtro = $filtro + "rubro = ".$clave." ORDER BY fechadocto DESC"; 
+                }else{
+                    $filtro = $filtro + "rubro = ".$clave." AND ";
+                }
+
+            }
+
+            $reg = DB::select("SELECT * FROM mc_almdigital WHERE ".$filtro);
 
             for ($i=0; $i < count($reg); $i++) { 
 
@@ -1102,6 +1120,12 @@ class ConsumoController extends Controller
                 $reg[$i]->sucursal = $suc[0]->sucursal;
 
             }
+
+
+                
+
+
+
         }else{
             $reg = array(
                 "datos" => "",

@@ -1233,6 +1233,8 @@ class ConsumoController extends Controller
 
     function ExtraerConsecutivo(Request $request){
 
+        $datos = $request->objeto;
+
         $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, 2, $datos["idmenu"], $datos["idsubmenu"]);
         
         if($autenticacion[0]['error'] == 0){  
@@ -1241,10 +1243,11 @@ class ConsumoController extends Controller
 
             $fecha = now();
             $fecha = strtotime($fecha);
-            $m = date("Y", $fecha) + 1;
-            $y = date("m", $fecha);
+            $mes = intval(date("m", $fecha));
+            $año = intval(date("Y", $fecha));
+            $rubro = $datos["rubro"];
 
-            $ultregistro = DB::select("SELECT * FROM mc_almdigital WHERE rubro = 'PAG' AND fechadecarga = (SELECT MAX(fechadecarga) FROM mc_almdigital WHERE MONTH(fechadecarga) = $m AND YEAR(fechadecarga) = $y);");
+            $ultregistro = DB::select("SELECT * FROM mc_almdigital WHERE rubro = '$rubro' AND fechadecarga = (SELECT MAX(fechadecarga) FROM mc_almdigital WHERE MONTH(fechadecarga) = $mes AND YEAR(fechadecarga) = $año)");
 
             if(!empty($ultregistro)){
                 $idalmacen = $ultregistro[0]->id;
@@ -1256,6 +1259,7 @@ class ConsumoController extends Controller
                 $consecutivo = "0001";
             }
             
+            $array["error"] = $autenticacion[0]["error"];
             $array["consecutivo"] = $consecutivo;
 
         }else{

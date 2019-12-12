@@ -918,10 +918,6 @@ class ConsumoController extends Controller
 
     }     
 
-    function Plantillas(){
-
-
-    }   
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1076,60 +1072,62 @@ class ConsumoController extends Controller
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
             $rubros = DB::select("SELECT * FROM mc_rubros WHERE idmenu = $idmenu AND idsubmenu = $idsubmenu");
-            $filtro = "";
-            $nr = count($rubros);
-            if($nr == "1"){
-                $claverubro = $rubros[0]->clave;
-                $filtro = "rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
-            }else{
-                for ($j=0; $j < $nr; $j++) { 
-                    $claverubro = $rubros[$j]->clave;
-                    
-                    if($j == ($nr -1)){
-                        $filtro = $filtro." rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
-                    }else{
-                        $filtro = $filtro." rubro = '".$claverubro."' OR ";
+
+            if(!empty($rubros)){
+                $filtro = "";
+                $nr = count($rubros);
+
+                if($nr == "1"){
+                    $claverubro = $rubros[0]->clave;
+                    $filtro = "rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
+                }else{
+                    for ($j=0; $j < $nr; $j++) { 
+                        $claverubro = $rubros[$j]->clave;
+                        
+                        if($j == ($nr -1)){
+                            $filtro = $filtro." rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
+                        }else{
+                            $filtro = $filtro." rubro = '".$claverubro."' OR ";
+                        }
+
                     }
+                }
+                
+                $reg = DB::select("SELECT * FROM mc_almdigital WHERE ".$filtro);
+
+                for ($i=0; $i < count($reg); $i++) { 
+
+                    $idalm = $reg[$i]->id;
+                               
+                    $procesados = DB::select("SELECT id FROM mc_almdigital_det WHERE idalmdigital = $idalm And estatus = 1");
+
+                    $reg[$i]->procesados = count($procesados);
+
+                    $idusuario = $reg[$i]->idusuario;            
+
+                    $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+
+                    $reg[$i]->usuario = $datosuser[0]->nombre;
+
+                    $claverubro = $reg[$i]->rubro;
+
+                    $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
+
+                    $reg[$i]->rubro = $rubro[0]->nombre;
+                    $reg[$i]->claverubro = $claverubro;
+
+                    $idsucursal = $reg[$i]->idsucursal;
+
+                    $suc = DB::select("SELECT sucursal FROM mc_catsucursales WHERE idsucursal = $idsucursal");
+
+                    $reg[$i]->sucursal = $suc[0]->sucursal;
 
                 }
+            }else{
+                $reg = array(
+                    "datos" => "",
+                );
             }
-            
-            $reg = DB::select("SELECT * FROM mc_almdigital WHERE ".$filtro);
-
-            for ($i=0; $i < count($reg); $i++) { 
-
-                $idalm = $reg[$i]->id;
-                           
-                $procesados = DB::select("SELECT id FROM mc_almdigital_det WHERE idalmdigital = $idalm And estatus = 1");
-
-                $reg[$i]->procesados = count($procesados);
-
-                $idusuario = $reg[$i]->idusuario;            
-
-                $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
-
-                $reg[$i]->usuario = $datosuser[0]->nombre;
-
-                $claverubro = $reg[$i]->rubro;
-
-                $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
-
-                $reg[$i]->rubro = $rubro[0]->nombre;
-                $reg[$i]->claverubro = $claverubro;
-
-                $idsucursal = $reg[$i]->idsucursal;
-
-                $suc = DB::select("SELECT sucursal FROM mc_catsucursales WHERE idsucursal = $idsucursal");
-
-                $reg[$i]->sucursal = $suc[0]->sucursal;
-
-            }
-
-
-                
-
-
-
         }else{
             $reg = array(
                 "datos" => "",
@@ -1231,6 +1229,40 @@ class ConsumoController extends Controller
     function DatosStorageADM(){
         $storage = DB::connection("General")->select("SELECT servidor_storage, usuario_storage, password_storage FROM mc0000");
         return json_encode($storage, JSON_UNESCAPED_UNICODE);
+    }
+
+    function ExtraerConsecutivo(Request $request){
+
+        $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, 2, $datos["idmenu"], $datos["idsubmenu"]);
+        
+        if($autenticacion[0]['error'] == 0){  
+
+            ConnectDatabase($autenticacion[0]["idempresa"]);
+
+            $fecha = now();
+            $fecha = strtotime($fecha);
+            $m = date("Y", $fecha) + 1;
+            $y = date("m", $fecha);
+
+            $ultregistro = DB::select("SELECT * FROM mc_almdigital WHERE rubro = 'PAG' AND fechadecarga = (SELECT MAX(fechadecarga) FROM mc_almdigital WHERE MONTH(fechadecarga) = $m AND YEAR(fechadecarga) = $y);");
+
+            if(!empty($ultregistro)){
+                $idalmacen = $ultregistro[0]->id;
+                $ultarchivo = DB::select("SELECT * FROM mc_almdigital_det WHERE id = (SELECT MAX(id) FROM mc_almdigital_det WHERE idalmdigital = $idalmacen)");
+                $nombre_a = $ultarchivo[0]->codigodocumento;
+                $consecutivo = substr($nombre_a, -4);
+                $consecutivo = $consecutivo + 1;
+            }else{
+                $consecutivo = "0001";
+            }
+            
+            $array["consecutivo"] = $consecutivo;
+
+        }else{
+            $array["error"] = $autenticacion[0]["error"]; //ERROR DE AUTENTICACION
+        }    
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);              
     }
 
 

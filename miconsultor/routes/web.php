@@ -123,6 +123,7 @@ Route::post('AlmCargaArchivos', 'ConsumoController@AlmCargaArchivos');
 Route::post('AlmacenConsumo', 'ConsumoController@AlmacenConsumo');
 Route::post('AlmacenMarcado', 'ConsumoController@AlmacenMarcado');
 Route::post('CambiaRubroDocumento', 'ConsumoController@CambiaRubroDocumento');
+Route::post('ExtraerConsecutivo', 'ConsumoController@ExtraerConsecutivo');
 
 //PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
 Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');

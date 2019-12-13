@@ -293,12 +293,13 @@ class GeneralesController extends Controller
 
         $filtro = "";
         for ($i=0; $i < count($tipos); $i++) { 
-            $filtro = $filtro." And l.tipo = ".$tipos[$i]->claveplantilla;    
+            $filtro = $filtro." l.tipo = ".$tipos[$i]->claveplantilla." OR ";    
         }
+        $filtro = substr($filtro, 0, -4);
 
         if(count($tipos) > 0){
 
-            $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 ".$filtro." GROUP BY l.id ORDER BY l.id DESC");
+            $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 And ".$filtro." GROUP BY l.id ORDER BY l.id DESC");
 
             
             for($i=0; $i < count($lotes); $i++){

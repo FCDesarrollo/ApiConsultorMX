@@ -285,38 +285,49 @@ class GeneralesController extends Controller
 
     function ConsultarLotes(Request $request){
         $idempresa = $request->idempresa;
-    //    $lotespagina = $request->iniciar - 1;
         ConnectDatabase($idempresa); 
+        $idmenu = $request->idmenu;
+        $idsubmenu =$request->idsubmenu;
 
-        $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 GROUP BY l.id ORDER BY l.id DESC");
-        //$lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 GROUP BY l.id ORDER BY l.id DESC LIMIT $lotespagina, 1");
+        $tipos = DB::select("SELECT claveplantilla FROM mc_rubros WHERE idmenu = $idmenu And idsubmenu = $idsubmenu");
 
+        $filtro = "";
+        for ($i=0; $i < count($tipos); $i++) { 
+            $filtro = $filtro." And l.tipo = ".$tipo[$i]->claveplantilla;    
+        }
 
-        
-        for($i=0; $i < count($lotes); $i++){
+        if(count($tipos) > 0){
 
-            $idlote = $lotes[$i]->id;
-                       
-            $procesados = DB::select("SELECT id FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
+            $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 ".$filtro." GROUP BY l.id ORDER BY l.id DESC");
 
-            $lotes[$i]->procesados = count($procesados);
-
-            $idusuario = $lotes[$i]->usuario;            
-
-            $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
-
-            $lotes[$i]->usuario = $datosuser[0]->nombre;
-
-            $clave = $lotes[$i]->tipo;
-
-            $tipo = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = '$clave'");
-
-            $lotes[$i]->tipodet = $tipo[0]->tipo;
-
-            //$suc = DB::select("SELECT sucursal FROM mc_lotesdocto WHERE idlote = $idlote");
-
-            //$lotes[$i]->sucursal = $suc[0]->sucursal;
             
+            for($i=0; $i < count($lotes); $i++){
+
+                $idlote = $lotes[$i]->id;
+                           
+                $procesados = DB::select("SELECT id FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
+
+                $lotes[$i]->procesados = count($procesados);
+
+                $idusuario = $lotes[$i]->usuario;            
+
+                $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+
+                $lotes[$i]->usuario = $datosuser[0]->nombre;
+
+                $clave = $lotes[$i]->tipo;
+
+                $tipo = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = '$clave'");
+
+                $lotes[$i]->tipodet = $tipo[0]->tipo;
+
+                //$suc = DB::select("SELECT sucursal FROM mc_lotesdocto WHERE idlote = $idlote");
+
+                //$lotes[$i]->sucursal = $suc[0]->sucursal;
+                
+            }
+        }else{
+            $lotes = [];
         }
 
         return $lotes;           

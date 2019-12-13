@@ -293,7 +293,7 @@ class GeneralesController extends Controller
 
         $filtro = "";
         for ($i=0; $i < count($tipos); $i++) { 
-            $filtro = $filtro." And l.tipo = ".$tipo[$i]->claveplantilla;    
+            $filtro = $filtro." And l.tipo = ".$tipos[$i]->claveplantilla;    
         }
 
         if(count($tipos) > 0){

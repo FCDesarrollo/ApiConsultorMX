@@ -1006,13 +1006,17 @@ class GeneralesController extends Controller
 
             }
             
-            $concepto = DB::select("SELECT * FROM mc_catconceptos WHERE codigoconcepto = '$codconcepto'");
+            //$concepto = DB::select("SELECT * FROM mc_catconceptos WHERE codigoconcepto = '$codconcepto'");
+            $concepto = DB::select("SELECT * FROM mc_rubros WHERE clave = '$codconcepto'");
             if(empty($concepto)){
                 $dato[1]['status'] = 1;
                 $datos[$i]['conceptoreg'] = 1;
             }else{
                 if(is_null($datos[$i]['nombreconcepto'])){
-                    $datos[$i]['nombreconcepto'] = $concepto[0]->nombreconcepto;
+                    $datos[$i]['nombreconcepto'] = $concepto[0]->nombre;
+                    $datos[$i]['idmenu'] = $concepto[0]->idmenu;
+                    $datos[$i]['idsubmenu'] = $concepto[0]->idsubmenu;
+                    $datos[$i]['clave'] = $concepto[0]->claveplantilla;
                 }
             }
             

@@ -1241,17 +1241,20 @@ class ConsumoController extends Controller
 
             ConnectDatabase($autenticacion[0]["idempresa"]);
 
-            $fecha = now();
+            //$fecha = now();
+            $fecha = $datos["fechadocto"];
             $fecha = strtotime($fecha);
             $mes = intval(date("m", $fecha));
             $año = intval(date("Y", $fecha));
             $rubro = $datos["rubro"];
 
-            $ultregistro = DB::select("SELECT * FROM mc_almdigital WHERE rubro = '$rubro' AND fechadecarga = (SELECT MAX(fechadecarga) FROM mc_almdigital WHERE MONTH(fechadecarga) = $mes AND YEAR(fechadecarga) = $año)");
+            $ultregistro = DB::select("SELECT MAX(d.id) AS id FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE a.rubro = '$rubro' AND MONTH(a.fechadocto) = $mes AND YEAR(a.fechadocto) = $año");
+
+            //$ultregistro = DB::select("SELECT d.* FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE MONTH(a.fechadecarga) = $mes AND YEAR(a.fechadecarga) = $año AND codigodocumento = (SELECT MAX(codigodocumento) FROM mc_almdigital_det)");
 
             if(!empty($ultregistro)){
-                $idalmacen = $ultregistro[0]->id;
-                $ultarchivo = DB::select("SELECT * FROM mc_almdigital_det WHERE id = (SELECT MAX(id) FROM mc_almdigital_det WHERE idalmdigital = $idalmacen)");
+                $ultimoid = $ultregistro[0]->id;
+                $ultarchivo = DB::select("SELECT codigodocumento FROM mc_almdigital_det WHERE id = $ultimoid");
                 $nombre_a = $ultarchivo[0]->codigodocumento;
                 $consecutivo = substr($nombre_a, -4);
                 $consecutivo = $consecutivo + 1;

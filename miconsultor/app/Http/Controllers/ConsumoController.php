@@ -918,10 +918,6 @@ class ConsumoController extends Controller
 
     }     
 
-    function Plantillas(){
-
-
-    }   
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1072,35 +1068,65 @@ class ConsumoController extends Controller
 
         if(!empty($idempresa)){
             ConnectDatabase($idempresa[0]->idempresa);
-            $reg = DB::select("SELECT * FROM mc_almdigital ORDER BY fechadocto DESC");
 
-            for ($i=0; $i < count($reg); $i++) { 
+            $idmenu = $request->idmenu;
+            $idsubmenu = $request->idsubmenu;
+            $rubros = DB::select("SELECT * FROM mc_rubros WHERE idmenu = $idmenu AND idsubmenu = $idsubmenu");
 
-                $idalm = $reg[$i]->id;
-                           
-                $procesados = DB::select("SELECT id FROM mc_almdigital_det WHERE idalmdigital = $idalm And estatus = 1");
+            if(!empty($rubros)){
+                $filtro = "";
+                $nr = count($rubros);
 
-                $reg[$i]->procesados = count($procesados);
+                if($nr == "1"){
+                    $claverubro = $rubros[0]->clave;
+                    $filtro = "rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
+                }else{
+                    for ($j=0; $j < $nr; $j++) { 
+                        $claverubro = $rubros[$j]->clave;
+                        
+                        if($j == ($nr -1)){
+                            $filtro = $filtro." rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
+                        }else{
+                            $filtro = $filtro." rubro = '".$claverubro."' OR ";
+                        }
 
-                $idusuario = $reg[$i]->idusuario;            
+                    }
+                }
+                
+                $reg = DB::select("SELECT * FROM mc_almdigital WHERE ".$filtro);
 
-                $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+                for ($i=0; $i < count($reg); $i++) { 
 
-                $reg[$i]->usuario = $datosuser[0]->nombre;
+                    $idalm = $reg[$i]->id;
+                               
+                    $procesados = DB::select("SELECT id FROM mc_almdigital_det WHERE idalmdigital = $idalm And estatus = 1");
 
-                $claverubro = $reg[$i]->rubro;
+                    $reg[$i]->procesados = count($procesados);
 
-                $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
+                    $idusuario = $reg[$i]->idusuario;            
 
-                $reg[$i]->rubro = $rubro[0]->nombre;
-                $reg[$i]->claverubro = $claverubro;
+                    $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
 
-                $idsucursal = $reg[$i]->idsucursal;
+                    $reg[$i]->usuario = $datosuser[0]->nombre;
 
-                $suc = DB::select("SELECT sucursal FROM mc_catsucursales WHERE idsucursal = $idsucursal");
+                    $claverubro = $reg[$i]->rubro;
 
-                $reg[$i]->sucursal = $suc[0]->sucursal;
+                    $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
 
+                    $reg[$i]->rubro = $rubro[0]->nombre;
+                    $reg[$i]->claverubro = $claverubro;
+
+                    $idsucursal = $reg[$i]->idsucursal;
+
+                    $suc = DB::select("SELECT sucursal FROM mc_catsucursales WHERE idsucursal = $idsucursal");
+
+                    $reg[$i]->sucursal = $suc[0]->sucursal;
+
+                }
+            }else{
+                $reg = array(
+                    "datos" => "",
+                );
             }
         }else{
             $reg = array(
@@ -1205,6 +1231,47 @@ class ConsumoController extends Controller
         return json_encode($storage, JSON_UNESCAPED_UNICODE);
     }
 
+    function ExtraerConsecutivo(Request $request){
+
+        $datos = $request->datos;
+        
+        $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, 2, $datos["idmenu"], $datos["idsubmenu"]);
+        
+        if($autenticacion[0]['error'] == 0){  
+
+            ConnectDatabase($autenticacion[0]["idempresa"]);
+
+            //$fecha = now();
+            $fecha = $datos["fechadocto"];
+            $fecha = strtotime($fecha);
+            $mes = intval(date("m", $fecha));
+            $año = intval(date("Y", $fecha));
+            $rubro = $datos["rubro"];
+
+            $ultregistro = DB::select("SELECT MAX(d.id) AS id FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE a.rubro = '$rubro' AND MONTH(a.fechadocto) = $mes AND YEAR(a.fechadocto) = $año");
+
+            //$ultregistro = DB::select("SELECT d.* FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE MONTH(a.fechadecarga) = $mes AND YEAR(a.fechadecarga) = $año AND codigodocumento = (SELECT MAX(codigodocumento) FROM mc_almdigital_det)");
+
+            if(!empty($ultregistro)){
+                $ultimoid = $ultregistro[0]->id;
+                $ultarchivo = DB::select("SELECT codigodocumento FROM mc_almdigital_det WHERE id = $ultimoid");
+                $nombre_a = $ultarchivo[0]->codigodocumento;
+                $consecutivo = substr($nombre_a, -4);
+                $consecutivo = $consecutivo + 1;
+            }else{
+                $consecutivo = "0001";
+            }
+            
+            $array["error"] = $autenticacion[0]["error"];
+            $array["consecutivo"] = $consecutivo;
+
+        }else{
+            $array["error"] = $autenticacion[0]["error"]; //ERROR DE AUTENTICACION
+        }    
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);              
+    }
+
 
    public function AlmCargaArchivos(Request $request){   
 
@@ -1233,11 +1300,12 @@ class ConsumoController extends Controller
             $codfec2 = substr($string[0], 2).$string[1].$string[2];
 
             $codigogral = date("Ymd").$idUsuario.$Rubro.$sucursal;
-            $codarchivo = $datos["rfcempresa"]."_".$codfec."_".$Rubro."_";
-            
+            //$codarchivo = $datos["rfcempresa"]."_".$codfec."_".$Rubro."_";           
+            $idmenu = $datos["idmenu"];
+            $idsubmenu = $datos["idsubmenu"];
+            $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
 
-            $ArchivosVerificados = $this->VerificaArchivos($autenticacion[0]["idempresa"], $codarchivo, $archivos, $fechadocto, $Rubro);
-
+            $ArchivosVerificados = $this->VerificaArchivos($autenticacion[0]["idempresa"], $archivos, $fechadocto, $Rubro, $idmenu, $idsubmenu, $carpIni, $autenticacion[0]["userstorage"], $autenticacion[0]["passstorage"]);
             $contador = 0;           
 
             $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
@@ -1255,10 +1323,12 @@ class ConsumoController extends Controller
                     while (isset($ArchivosVerificados["archivos"][$contador])) {
 
                         $nomDoc = $ArchivosVerificados["archivos"][$contador]["archivo"];
-                        $codigodocumento = $ArchivosVerificados["archivos"][$contador]["codigo"];                        
+                        $codigodocumento = $ArchivosVerificados["archivos"][$contador]["codigo"];
+                        $link = $ArchivosVerificados["archivos"][$contador]["link"];
+
                         if($ArchivosVerificados["archivos"][$contador]["status"] == 0){
                         
-                            $ArchivosVerificados["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento]);
+                            $ArchivosVerificados["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
                             $ArchivosVerificados["archivos"][$contador]["idalmacen"] = $idalm;
                         }
                         $contador++;            
@@ -1268,13 +1338,18 @@ class ConsumoController extends Controller
                 }else{
                     $cont = 0;
                     while (isset($ArchivosVerificados["archivos"][$contador])) {
+
                         $nomDoc = $ArchivosVerificados["archivos"][$contador]["archivo"]; 
                         $codigodocumento = $ArchivosVerificados["archivos"][$contador]["codigo"];
+                        $link = $ArchivosVerificados["archivos"][$contador]["link"];
+                        
                         if($ArchivosVerificados["archivos"][$contador]["status"] == 0){
-                           $ArchivosVerificados["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'idsucursal' => $reg[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento]);
+                           
+                           $ArchivosVerificados["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'idsucursal' => $reg[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
                            $cont = $cont + 1;
                            $ArchivosVerificados["archivos"][$contador]["idalmacen"] = $reg[0]->id; 
                         }
+
                         $contador++;
                     } 
 
@@ -1473,63 +1548,58 @@ class ConsumoController extends Controller
     }
 
 
-    function VerificaArchivos($idempresa, $codigo, $archivos, $fecha, $rubro){                   
+    function VerificaArchivos($idempresa, $archivos, $fecha, $rubro, $idmenu, $idsubmenu, $carpIni, $userSt, $pwdSt){                   
 
         ConnectDatabase($idempresa);
         $regexp = "/^[a-zA-Z0-9\-_]*$/";
         $array["error"] = 1;      
 
-        //$countreg = DB::select("SELECT COUNT(id) as n FROM mc_almdigital_det");
-        $countreg = DB::select("SELECT COUNT(det.id) AS n FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE rubro = '$rubro'");
-        
-        if(empty($countreg)){
-            $tamNumero = 1;    
-            $countreg = 0;
-        }else{
-            $tamNumero = strlen($countreg[0]->n);    
-            $countreg = $countreg[0]->n;
-        }         
+        $carpMenu = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1005 WHERE idsubmenu=$idsubmenu");
+        $carpMenu = $carpMenu[0]->nombre_carpeta;
 
         for ($i=0; $i < count($archivos); $i++) { 
-            $archivo = $archivos[$i];
+            $archivo = $archivos[$i]["archivo"];
 
-            $resultado = preg_match($regexp, $archivo);
+            $codigodocumento = $archivos[$i]["codigo"];
+            $status = $archivos[$i]["status"];
+            $link = $archivos[$i]["link"];
 
-            $countreg = $countreg + 1;
-            if(strlen($countreg) == 1){
-                $consecutivo = "000".$countreg;
-            }elseif (strlen($countreg) == 2){
-                $consecutivo = "00".$countreg;
-            }elseif (strlen($countreg) == 3){
-                $consecutivo = "0".$countreg;
-            }else{
-                $consecutivo = $countreg;
-            }            
-
-            $codigodocumento = $codigo.$consecutivo;
-
-            if($resultado){
+            if($status == 1){
                 $array["archivos"][$i]["archivo"] = $archivo;
                 $array["archivos"][$i]["codigo"] = $codigodocumento;
-                $array["archivos"][$i]["status"] = 2; //Nombre Invalido                
-            }else{
-                //$ele = DB::select("SELECT * FROM mc_almdigital_det WHERE documento = '$archivo'");
-                //$ele = DB::select("SELECT * FROM mc_almdigital_det WHERE codigodocumento like '$codigo%' AND documento = '$archivo'");       
+                $array["archivos"][$i]["link"] = "";
+                $array["archivos"][$i]["status"] = 1; //no se pudo subir el archivo               
+                $array["archivos"][$i]["detalle"] = "¡No se pudo cargar el archivo!";
+            }else if($status == 2){    
+                $array["archivos"][$i]["archivo"] = $archivo;
+                $array["archivos"][$i]["codigo"] = $codigodocumento;
+                $array["archivos"][$i]["link"] = "";
+                $array["archivos"][$i]["status"] = 2; //Archivo Dañado
+                $array["archivos"][$i]["detalle"] = "¡Archivo Dañado!";
+            }else{    
                 $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND rubro = '$rubro'");
                 if(empty($ele)){
                     $array["error"] = 0;
                     $array["archivos"][$i]["archivo"] = $archivo;
                     $array["archivos"][$i]["codigo"] = $codigodocumento;                    
-                    $array["archivos"][$i]["consecutivo"] = $consecutivo;
+                    $array["archivos"][$i]["link"] = $link;
                     $array["archivos"][$i]["status"] = 0; //Nuevo  
+                    $array["archivos"][$i]["detalle"] = "¡Cargado Correctamente!";
                 }else{
                     //$archivos[$i]["status"] = 1;    
                     $array["archivos"][$i]["archivo"] = $archivo;
                     $array["archivos"][$i]["codigo"] = $codigodocumento;
-                    $array["archivos"][$i]["status"] = 1; //Duplicado            
-                    
+                    $array["archivos"][$i]["link"] = "";
+                    $array["archivos"][$i]["status"] = 3; //Duplicado    
+                    $array["archivos"][$i]["detalle"] = "¡Ya existe!";                    
                 }
                 
+            }
+
+            if($array["archivos"][$i]["status"] != 0){
+                $type = explode(".", $archivo);
+                $archivo = $carpMenu."/".$codigodocumento.".".$type[1];
+                $resp = $this->delDocAPI($userSt, $pwdSt, $archivo, $idmenu, $carpIni);                
             }
 
         }

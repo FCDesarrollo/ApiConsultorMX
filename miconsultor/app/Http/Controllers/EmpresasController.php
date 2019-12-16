@@ -154,13 +154,19 @@ class EmpresasController extends Controller
         ConnectaEmpresaDatabase($empresaBD);                
         if ($empresaBD != "") {    
 
-            $mc_almdigital = "create table if not exists mc_almdigital ( 
-                id INT(11) NOT NULL AUTO_INCREMENT, fechadecarga DATETIME DEFAULT NULL, 
-                fechadocto DATE DEFAULT NULL, codigoalm VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL, 
-                idusuario INT(11) DEFAULT NULL, rubro VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL, 
-                idsucursal INT(11) DEFAULT NULL, observaciones VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL, 
-                totalregistros INT(11) DEFAULT '0', totalcargados INT(11) DEFAULT '0', PRIMARY KEY (id) 
-                ) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";    
+            $mc_almdigital = "create table if not exists mc_almdigital (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                fechadecarga DATETIME DEFAULT NULL,
+                fechadocto DATE DEFAULT NULL,
+                codigoalm VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
+                idusuario INT(11) DEFAULT NULL,
+                idmodulo INT(11) DEFAULT 0,
+                idsucursal INT(11) DEFAULT NULL,
+                observaciones VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                totalregistros INT(11) DEFAULT 0,
+                totalcargados INT(11) DEFAULT 0,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";
             DB::statement($mc_almdigital);
 
             $mc_almdigital_det = "create table if not exists mc_almdigital_det (
@@ -171,8 +177,12 @@ class EmpresasController extends Controller
               documento VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
               idagente INT(11) DEFAULT NULL,
               fechaprocesado DATETIME DEFAULT NULL,
-              estatus INT(11) DEFAULT '0',
+              estatus INT(11) DEFAULT 0,
               download VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+              idmodulo INT(11) DEFAULT 0,
+              conceptoadw VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+              folioadw INT(11) DEFAULT 0,
+              serieadw VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
               PRIMARY KEY (id)
             ) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;";
             DB::statement($mc_almdigital_det);

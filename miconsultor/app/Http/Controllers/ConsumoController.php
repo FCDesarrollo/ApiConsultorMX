@@ -1027,10 +1027,14 @@ class ConsumoController extends Controller
 
                 $idalmacen_det = $registros[$i]['id'];                
 
-                $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->update(['idagente' => $autenticacion[0]["idusuario"], 'fechaprocesado' => now(), 'estatus' => $registros[$i]["status"]]);
+                $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->
+                            update(['idagente' => $autenticacion[0]["idusuario"],
+                             'fechaprocesado' => $registros[$i]["fechapro"], 'estatus' => $registros[$i]["status"], 
+                             'idrubro' => $registros[$i]["idrubro"], 'conceptoadw' => $registros[$i]["concepto"],
+                             'folioadw' => $registros[$i]["folio"], 'serieadw' => $registros[$i]["serie"] ]);
                 
                 if(!empty($resp)){
-                    $registros[$i]["estatus"] = true;                    
+                    $registros[$i]["estatus"] = true;            
                 }else{
                     $registros[$i]["estatus"] = false;
                 }

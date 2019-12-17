@@ -1021,7 +1021,7 @@ class ConsumoController extends Controller
             $registros[0]["idrubro"] = $request->idrubro;
             $registros[0]["concepto"] = $request->concepto;
             $registros[0]["folio"] = $request->folio;
-            $registros[0]["serie"] = $request->concepto;
+            $registros[0]["serie"] = $request->serie;
         }
         
         if($autenticacion[0]['error'] == 0){  
@@ -1034,7 +1034,7 @@ class ConsumoController extends Controller
                
                 $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->
                             update(['idagente' => $autenticacion[0]["idusuario"],
-                             'fechaprocesado' => $registros[$i]["fechapro"], 'estatus' => $registros[$i]["status"], 
+                             'fechaprocesado' => date_create($registros[$i]["fechapro"]), 'estatus' => $registros[$i]["status"], 
                              'idrubro' => $registros[$i]["idrubro"], 'conceptoadw' => $registros[$i]["concepto"],
                              'folioadw' => $registros[$i]["folio"], 'serieadw' => $registros[$i]["serie"] ]);
                 

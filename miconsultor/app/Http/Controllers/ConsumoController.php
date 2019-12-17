@@ -1075,29 +1075,30 @@ class ConsumoController extends Controller
 
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
-            $rubros = DB::select("SELECT * FROM mc_rubros WHERE idmenu = $idmenu AND idsubmenu = $idsubmenu");
+            // $rubros = DB::select("SELECT * FROM mc_rubros WHERE idmenu = $idmenu AND idsubmenu = $idsubmenu");
 
-            if(!empty($rubros)){
-                $filtro = "";
-                $nr = count($rubros);
+            // if(!empty($rubros)){
+            //     $filtro = "";
+            //     $nr = count($rubros);
 
-                if($nr == "1"){
-                    $claverubro = $rubros[0]->clave;
-                    $filtro = "rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
-                }else{
-                    for ($j=0; $j < $nr; $j++) { 
-                        $claverubro = $rubros[$j]->clave;
+            //     if($nr == "1"){
+            //         $claverubro = $rubros[0]->clave;
+            //         $filtro = "rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
+            //     }else{
+            //         for ($j=0; $j < $nr; $j++) { 
+            //             $claverubro = $rubros[$j]->clave;
                         
-                        if($j == ($nr -1)){
-                            $filtro = $filtro." rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
-                        }else{
-                            $filtro = $filtro." rubro = '".$claverubro."' OR ";
-                        }
+            //             if($j == ($nr -1)){
+            //                 $filtro = $filtro." rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
+            //             }else{
+            //                 $filtro = $filtro." rubro = '".$claverubro."' OR ";
+            //             }
 
-                    }
-                }
+            //         }
+            //     }
                 
-                $reg = DB::select("SELECT * FROM mc_almdigital WHERE ".$filtro);
+            //    $reg = DB::select("SELECT * FROM mc_almdigital WHERE ".$filtro);
+            $reg = DB::select("SELECT * FROM mc_almdigital WHERE idmodulo = $idsubmenu ORDER BY fechadocto DESC");
 
                 for ($i=0; $i < count($reg); $i++) { 
 
@@ -1113,12 +1114,12 @@ class ConsumoController extends Controller
 
                     $reg[$i]->usuario = $datosuser[0]->nombre;
 
-                    $claverubro = $reg[$i]->rubro;
+                    // $claverubro = $reg[$i]->rubro;
 
-                    $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
+                    // $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
 
-                    $reg[$i]->rubro = $rubro[0]->nombre;
-                    $reg[$i]->claverubro = $claverubro;
+                    // $reg[$i]->rubro = $rubro[0]->nombre;
+                    // $reg[$i]->claverubro = $claverubro;
 
                     $idsucursal = $reg[$i]->idsucursal;
 
@@ -1127,11 +1128,11 @@ class ConsumoController extends Controller
                     $reg[$i]->sucursal = $suc[0]->sucursal;
 
                 }
-            }else{
-                $reg = array(
-                    "datos" => "",
-                );
-            }
+            // }else{
+            //     $reg = array(
+            //         "datos" => "",
+            //     );
+            // }
         }else{
             $reg = array(
                 "datos" => "",
@@ -1250,9 +1251,9 @@ class ConsumoController extends Controller
             $fecha = strtotime($fecha);
             $mes = intval(date("m", $fecha));
             $año = intval(date("Y", $fecha));
-            $rubro = $datos["rubro"];
-
-            $ultregistro = DB::select("SELECT MAX(d.id) AS id FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE a.rubro = '$rubro' AND MONTH(a.fechadocto) = $mes AND YEAR(a.fechadocto) = $año");
+//            $rubro = $datos["rubro"];
+            $mod = $datos['idsubmenu'];
+            $ultregistro = DB::select("SELECT MAX(d.id) AS id FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE a.idmodulo = $mod AND MONTH(a.fechadocto) = $mes AND YEAR(a.fechadocto) = $año");
 
             //$ultregistro = DB::select("SELECT d.* FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE MONTH(a.fechadecarga) = $mes AND YEAR(a.fechadecarga) = $año AND codigodocumento = (SELECT MAX(codigodocumento) FROM mc_almdigital_det)");
 
@@ -1283,7 +1284,7 @@ class ConsumoController extends Controller
         $datos = $request->datos;
         //$archivos = $request->archivos;        
 
-        $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, 2, 5, 16);
+        $autenticacion = $this->ValidarConexion($datos["rfcempresa"], $datos["usuario"], $datos["pwd"], 0, 2, $datos["idmenu"], $datos["idsubmenu"]);
         
         $array["error"] = $autenticacion[0]["error"];
 
@@ -1294,7 +1295,7 @@ class ConsumoController extends Controller
             $rfc = $datos["rfcempresa"];
             $now = date('Y-m-d h:i:s A');
             $idUsuario = $autenticacion[0]["idusuario"]; 
-            $Rubro = $datos["rubro"];
+            //$Rubro = $datos["rubro"];
             $sucursal = $datos["sucursal"];
             $observaciones = $datos["observaciones"];        
             
@@ -1303,13 +1304,18 @@ class ConsumoController extends Controller
             $codfec = substr($string[0], 2).$string[1];
             $codfec2 = substr($string[0], 2).$string[1].$string[2];
 
-            $codigogral = date("Ymd").$idUsuario.$Rubro.$sucursal;
-            //$codarchivo = $datos["rfcempresa"]."_".$codfec."_".$Rubro."_";           
             $idmenu = $datos["idmenu"];
             $idsubmenu = $datos["idsubmenu"];
+
+            $CarpSubM = DB::connection("General")->select("SELECT nombre_submenu FROM mc1005 WHERE idsubmenu=$idsubmenu");
+            $CarpSubM = $CarpSubM[0]->nombre_submenu;
+            $CarpSubM = substr(strtoupper($CarpSubM), 0, 3);
+
+//            $codigogral = date("Ymd").$idUsuario.$Rubro.$sucursal;
+            $codigogral = date("Ymd").$idUsuario.$CarpSubM.$sucursal;
             $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
 
-            $ArchivosVerificados = $this->VerificaArchivos($autenticacion[0]["idempresa"], $archivos, $fechadocto, $Rubro, $idmenu, $idsubmenu, $carpIni, $autenticacion[0]["userstorage"], $autenticacion[0]["passstorage"]);
+            $ArchivosVerificados = $this->VerificaArchivos($autenticacion[0]["idempresa"], $archivos, $fechadocto, $idmenu, $idsubmenu, $carpIni, $autenticacion[0]["userstorage"], $autenticacion[0]["passstorage"]);
             $contador = 0;           
 
             $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
@@ -1317,12 +1323,12 @@ class ConsumoController extends Controller
 
                 ConnectDatabase($autenticacion[0]["idempresa"]);
 
-                $codigoalm = substr($string[0], 2).$string[1].$string[2].$idUsuario.$Rubro.$sucursal;    
+                $codigoalm = substr($string[0], 2).$string[1].$string[2].$idUsuario.$CarpSubM.$sucursal;    
 
                 $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
 
                 if(empty($reg)){
-                    $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'rubro' => $Rubro, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]); 
+                    $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'idmodulo' => $idsubmenu, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]); 
 
                     while (isset($ArchivosVerificados["archivos"][$contador])) {
 
@@ -1547,12 +1553,7 @@ class ConsumoController extends Controller
         return $regresa;
     }
     
-    function SaveStorage($filename, $source, $target_path){
-
-    }
-
-
-    function VerificaArchivos($idempresa, $archivos, $fecha, $rubro, $idmenu, $idsubmenu, $carpIni, $userSt, $pwdSt){                   
+    function VerificaArchivos($idempresa, $archivos, $fecha, $idmenu, $idsubmenu, $carpIni, $userSt, $pwdSt){
 
         ConnectDatabase($idempresa);
         $regexp = "/^[a-zA-Z0-9\-_]*$/";
@@ -1581,7 +1582,8 @@ class ConsumoController extends Controller
                 $array["archivos"][$i]["status"] = 2; //Archivo Dañado
                 $array["archivos"][$i]["detalle"] = "¡Archivo Dañado!";
             }else{    
-                $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND rubro = '$rubro'");
+                //$ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND rubro = '$rubro'");
+                $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND idmodulo = $idsubmenu");
                 if(empty($ele)){
                     $array["error"] = 0;
                     $array["archivos"][$i]["archivo"] = $archivo;

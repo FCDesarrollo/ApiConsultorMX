@@ -1026,10 +1026,10 @@ class ConsumoController extends Controller
             for ($i=0; $i < count($registros); $i++) {               
 
                 $idalmacen_det = $registros[$i]['id'];                
-
+                $fechaPro = $registros[$i]["fechapro"];
                 $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->
                             update(['idagente' => $autenticacion[0]["idusuario"],
-                             'fechaprocesado' => $registros[$i]["fechapro"], 'estatus' => $registros[$i]["status"], 
+                             'fechaprocesado' => $fechaPro, 'estatus' => $registros[$i]["status"], 
                              'idrubro' => $registros[$i]["idrubro"], 'conceptoadw' => $registros[$i]["concepto"],
                              'folioadw' => $registros[$i]["folio"], 'serieadw' => $registros[$i]["serie"] ]);
                 

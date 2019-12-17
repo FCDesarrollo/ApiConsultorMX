@@ -1026,7 +1026,7 @@ class ConsumoController extends Controller
             for ($i=0; $i < count($registros); $i++) {               
 
                 $idalmacen_det = $registros[$i]['id'];                
-                $fechaPro = $registros[$i]["fechapro"];
+                $fechaPro = date_create($registros[$i]["fechapro"]);
                 $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->
                             update(['idagente' => $autenticacion[0]["idusuario"],
                              'fechaprocesado' => $fechaPro, 'estatus' => $registros[$i]["status"], 

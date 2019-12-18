@@ -1257,7 +1257,7 @@ class ConsumoController extends Controller
 
             //$ultregistro = DB::select("SELECT d.* FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE MONTH(a.fechadecarga) = $mes AND YEAR(a.fechadecarga) = $año AND codigodocumento = (SELECT MAX(codigodocumento) FROM mc_almdigital_det)");
 
-            if(!empty($ultregistro)){
+            if(!empty($ultregistro) || $ultregistro > 0){
                 $ultimoid = $ultregistro[0]->id;
                 $ultarchivo = DB::select("SELECT codigodocumento FROM mc_almdigital_det WHERE id = $ultimoid");
                 $nombre_a = $ultarchivo[0]->codigodocumento;
@@ -1569,20 +1569,7 @@ class ConsumoController extends Controller
             $status = $archivos[$i]["status"];
             $link = $archivos[$i]["link"];
 
-            if($status == 1){
-                $array["archivos"][$i]["archivo"] = $archivo;
-                $array["archivos"][$i]["codigo"] = $codigodocumento;
-                $array["archivos"][$i]["link"] = "";
-                $array["archivos"][$i]["status"] = 1; //no se pudo subir el archivo               
-                $array["archivos"][$i]["detalle"] = "¡No se pudo cargar el archivo!";
-            }else if($status == 2){    
-                $array["archivos"][$i]["archivo"] = $archivo;
-                $array["archivos"][$i]["codigo"] = $codigodocumento;
-                $array["archivos"][$i]["link"] = "";
-                $array["archivos"][$i]["status"] = 2; //Archivo Dañado
-                $array["archivos"][$i]["detalle"] = "¡Archivo Dañado!";
-            }else{    
-                //$ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND rubro = '$rubro'");
+            if($status == 0){
                 $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND idmodulo = $idsubmenu");
                 if(empty($ele)){
                     $array["error"] = 0;
@@ -1596,11 +1583,50 @@ class ConsumoController extends Controller
                     $array["archivos"][$i]["archivo"] = $archivo;
                     $array["archivos"][$i]["codigo"] = $codigodocumento;
                     $array["archivos"][$i]["link"] = "";
-                    $array["archivos"][$i]["status"] = 3; //Duplicado    
+                    $array["archivos"][$i]["status"] = 4; //Duplicado    
                     $array["archivos"][$i]["detalle"] = "¡Ya existe!";                    
                 }
-                
+            }else{
+                $array["archivos"][$i]["archivo"] = $archivo;
+                $array["archivos"][$i]["codigo"] = $codigodocumento;
+                $array["archivos"][$i]["link"] = "";
+                $array["archivos"][$i]["status"] = $status; //Archivo Dañado
+                $array["archivos"][$i]["detalle"] = $archivos[$i]["error"];
             }
+
+
+            // if($status == 1){
+            //     $array["archivos"][$i]["archivo"] = $archivo;
+            //     $array["archivos"][$i]["codigo"] = $codigodocumento;
+            //     $array["archivos"][$i]["link"] = "";
+            //     $array["archivos"][$i]["status"] = 1; //no se pudo subir el archivo               
+            //     $array["archivos"][$i]["detalle"] = "¡No se pudo cargar el archivo!";
+            // }else if($status == 2){    
+            //     $array["archivos"][$i]["archivo"] = $archivo;
+            //     $array["archivos"][$i]["codigo"] = $codigodocumento;
+            //     $array["archivos"][$i]["link"] = "";
+            //     $array["archivos"][$i]["status"] = 2; //Archivo Dañado
+            //     $array["archivos"][$i]["detalle"] = "¡Archivo Dañado!";
+            // }else{    
+            //     //$ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND rubro = '$rubro'");
+            //     $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND idmodulo = $idsubmenu");
+            //     if(empty($ele)){
+            //         $array["error"] = 0;
+            //         $array["archivos"][$i]["archivo"] = $archivo;
+            //         $array["archivos"][$i]["codigo"] = $codigodocumento;                    
+            //         $array["archivos"][$i]["link"] = $link;
+            //         $array["archivos"][$i]["status"] = 0; //Nuevo  
+            //         $array["archivos"][$i]["detalle"] = "¡Cargado Correctamente!";
+            //     }else{
+            //         //$archivos[$i]["status"] = 1;    
+            //         $array["archivos"][$i]["archivo"] = $archivo;
+            //         $array["archivos"][$i]["codigo"] = $codigodocumento;
+            //         $array["archivos"][$i]["link"] = "";
+            //         $array["archivos"][$i]["status"] = 3; //Duplicado    
+            //         $array["archivos"][$i]["detalle"] = "¡Ya existe!";                    
+            //     }
+                
+            // }
 
             if($array["archivos"][$i]["status"] != 0){
                 $type = explode(".", $archivo);

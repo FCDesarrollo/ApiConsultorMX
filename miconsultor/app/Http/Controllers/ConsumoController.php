@@ -1262,12 +1262,16 @@ class ConsumoController extends Controller
 
             //$ultregistro = DB::select("SELECT d.* FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE MONTH(a.fechadecarga) = $mes AND YEAR(a.fechadecarga) = $año AND codigodocumento = (SELECT MAX(codigodocumento) FROM mc_almdigital_det)");
 
-            if(!empty($ultregistro) || $ultregistro > 0){
+            if(!empty($ultregistro)){                
                 $ultimoid = $ultregistro[0]->id;
-                $ultarchivo = DB::select("SELECT codigodocumento FROM mc_almdigital_det WHERE id = $ultimoid");
-                $nombre_a = $ultarchivo[0]->codigodocumento;
-                $consecutivo = substr($nombre_a, -4);
-                $consecutivo = $consecutivo + 1;
+                if($ultimoid > 0){
+                    $ultarchivo = DB::select("SELECT codigodocumento FROM mc_almdigital_det WHERE id = $ultimoid");
+                    $nombre_a = $ultarchivo[0]->codigodocumento;
+                    $consecutivo = substr($nombre_a, -4);
+                    $consecutivo = $consecutivo + 1;
+                }else{
+                    $consecutivo = "0001";    
+                }
             }else{
                 $consecutivo = "0001";
             }
@@ -1332,6 +1336,7 @@ class ConsumoController extends Controller
 
                 $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
 
+                $n = 0;
                 if(empty($reg)){
                     $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'idmodulo' => $idsubmenu, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]); 
 
@@ -1345,10 +1350,15 @@ class ConsumoController extends Controller
                         
                             $ArchivosVerificados["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
                             $ArchivosVerificados["archivos"][$contador]["idalmacen"] = $idalm;
+                            $n = $n + 1;
                         }
                         $contador++;            
                     } 
-                    DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $contador]);
+                    if($n > 0){
+                        DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $contador]);
+                    }else{
+                        DB::table('mc_almdigital')->where("id", $idalm)->delete();
+                    }
 
                 }else{
                     $cont = 0;
@@ -1375,7 +1385,8 @@ class ConsumoController extends Controller
                     $idalm = $reg[0]->id;
                     $totalcargados = DB::select("SELECT COUNT(id) As tc FROM mc_almdigital_det WHERE idalmdigital = $idalm");
                     $totalregistros = $reg[0]->totalregistros + $cont;
-                    DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
+                
+                    DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, ' totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
                 }
                                                           
 
@@ -1702,7 +1713,7 @@ class ConsumoController extends Controller
             $fechaini = $datos["fechaini"];
             $fechafin = $datos["fechafin"];
             $iduser = $datos["idusuario"];
-            $claverubro = $datos["claverubro"];
+            //$claverubro = $datos["claverubro"];
             $sucursal = $datos["idsucursal"];
             $orden = $datos["orden"];
             
@@ -1741,7 +1752,8 @@ class ConsumoController extends Controller
 
                     $reg[$i]->sucursal = $suc[0]->sucursal;
 
-                    if($iduser == 0 && $claverubro == 0 && $idsucursal == 0){
+                    //if($iduser == 0 && $claverubro == 0 && $idsucursal == 0){
+                    if($iduser == 0 && $idsucursal == 0){    
                         $array["datos"][$j] = $reg[$i];
                         $j = $j + 1;
                         $flag = 1;
@@ -1753,12 +1765,12 @@ class ConsumoController extends Controller
                     
                     for ($x=0; $x < count($reg); $x++) {                    
                         if($iduser == $reg[$x]->idusuario OR $iduser == 0){
-                            if($claverubro == $reg[$x]->rubro OR $claverubro == 0){
+                            //if($claverubro == $reg[$x]->rubro OR $claverubro == 0){
                                 if($sucursal == $reg[$x]->idsucursal OR $sucursal == 0){
                                     $array["datos"][$j] = $reg[$x];
                                     $j = $j + 1;
                                 }
-                            }
+                            //}
                         }
                     }
                 }
@@ -1789,5 +1801,84 @@ class ConsumoController extends Controller
 
 
     }
+
+    function EliminaDocumentosAPI(Request $request){
+
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, Mod_BandejaEntrada, $request->idmenu, $request->idsubmenu);
+        
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){
+            ConnectDatabase($autenticacion[0]["idempresa"]);
+
+            $datos = $request->archivos;
+            $userSto = $request->u_storage;
+            $passSto = $request->p_storage;
+            $idMenu = $request->idmenu;
+
+            $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
+
+            $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+            $servidor = $result[0]->servidor_storage;
+            $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
+            $nomcar = $result[0]->nombre_carpeta;
+            
+            for ($i=0; $i < count($datos); $i++) { 
+                $idarchivo = $datos[$i];
+
+                $archivo = DB::select("SELECT idalmdigital, codigodocumento, documento FROM mc_almdigital_det WHERE id = $idarchivo");
+
+                $idalmacen = $archivo[0]->idalmdigital;
+                $type = explode(".", $archivo[0]->documento);
+                $arch = $carpMenu."/".$archivo[0]->codigodocumento.".".$type[1];
+                
+                
+                $ch = curl_init();         
+                $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'. $arch;  
+                curl_setopt_array($ch,
+                    array(
+                        CURLOPT_URL => $url,
+                        CURLOPT_VERBOSE => 1,
+                        CURLOPT_USERPWD => $userSto.':'.$passSto,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_BINARYTRANSFER => true,
+                        CURLOPT_CUSTOMREQUEST => 'DELETE',
+                    )
+                );
+                curl_exec($ch);
+                curl_close($ch);   
+
+                $error_no = curl_errno($ch);
+
+                if($error_no == 0){                
+
+                    DB::table('mc_almdigital_det')->where("id", $idarchivo)->delete();                   
+                    $totalr = DB::select("SELECT totalregistros FROM mc_almdigital WHERE id = $idalmacen");
+                    $totalc = DB::select("SELECT count(id) as tc FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
+                    if($totalc[0]->tc > 0){
+                        $totalregistros = $totalr[0]->totalregistros - 1;
+                        DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalc[0]->tc]);
+                    }else{
+                        DB::table('mc_almdigital')->where("id", $idalmacen)->delete();                    
+                    }
+
+                    $array["archivos"][$i]["status"] = 0;
+                    $array["archivos"][$i]["detalle"] = "¡Archivo Eliminado Correctamente!";
+
+                }else{
+                    $array["archivos"][$i]["status"] = 1;
+                    $array["archivos"][$i]["detalle"] = "¡No se pudo eliminar el archivo!";
+                }         
+
+
+            }
+
+            
+
+        }        
+
+        return $array;
+
+    }    
 
 }

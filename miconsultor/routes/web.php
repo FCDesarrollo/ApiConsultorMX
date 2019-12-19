@@ -124,6 +124,7 @@ Route::post('AlmacenConsumo', 'ConsumoController@AlmacenConsumo');
 Route::post('AlmacenMarcado', 'ConsumoController@AlmacenMarcado');
 Route::post('CambiaRubroDocumento', 'ConsumoController@CambiaRubroDocumento');
 Route::post('ExtraerConsecutivo', 'ConsumoController@ExtraerConsecutivo');
+Route::post('EliminaDocumentosAPI', 'ConsumoController@EliminaDocumentosAPI');
 
 //PARA EL ADMINISTRADOR GENERAL DE LA PAGINA
 Route::get('LoginAdmin', 'AdministradorController@LoginAdmin');

@@ -1355,7 +1355,7 @@ class ConsumoController extends Controller
                         $contador++;            
                     } 
                     if($n > 0){
-                        DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $contador]);
+                        DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $n]);
                     }else{
                         DB::table('mc_almdigital')->where("id", $idalm)->delete();
                     }
@@ -1386,7 +1386,7 @@ class ConsumoController extends Controller
                     $totalcargados = DB::select("SELECT COUNT(id) As tc FROM mc_almdigital_det WHERE idalmdigital = $idalm");
                     $totalregistros = $reg[0]->totalregistros + $cont;
                 
-                    DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, ' totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
+                    DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
                 }
                                                           
 
@@ -1809,71 +1809,88 @@ class ConsumoController extends Controller
         $array["error"] = $autenticacion[0]["error"];
 
         if($autenticacion[0]['error'] == 0){
-            ConnectDatabase($autenticacion[0]["idempresa"]);
+            if($autenticacion[0]['permisosubmenu'] == 3){
+                ConnectDatabase($autenticacion[0]["idempresa"]);
 
-            $datos = $request->archivos;
-            $userSto = $request->u_storage;
-            $passSto = $request->p_storage;
-            $idMenu = $request->idmenu;
+                $datos = $request->archivos;
+                $userSto = $autenticacion[0]["userstorage"];
+                $passSto = $autenticacion[0]["passstorage"];
+                $idMenu = $request->idmenu;
+                $idSubMenu = $request->idsubmenu;
 
-            $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
+                $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
 
-            $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
-            $servidor = $result[0]->servidor_storage;
-            $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
-            $nomcar = $result[0]->nombre_carpeta;
-            
-            for ($i=0; $i < count($datos); $i++) { 
-                $idarchivo = $datos[$i];
-
-                $archivo = DB::select("SELECT idalmdigital, codigodocumento, documento FROM mc_almdigital_det WHERE id = $idarchivo");
-
-                $idalmacen = $archivo[0]->idalmdigital;
-                $type = explode(".", $archivo[0]->documento);
-                $arch = $carpMenu."/".$archivo[0]->codigodocumento.".".$type[1];
+                $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+                $servidor = $result[0]->servidor_storage;
+                $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
+                $nomcar = $result[0]->nombre_carpeta;
+                $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1005 WHERE idsubmenu=$idSubMenu");
+                $carpSubMenu = $result[0]->nombre_carpeta;
                 
-                
-                $ch = curl_init();         
-                $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'. $arch;  
-                curl_setopt_array($ch,
-                    array(
-                        CURLOPT_URL => $url,
-                        CURLOPT_VERBOSE => 1,
-                        CURLOPT_USERPWD => $userSto.':'.$passSto,
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_BINARYTRANSFER => true,
-                        CURLOPT_CUSTOMREQUEST => 'DELETE',
-                    )
-                );
-                curl_exec($ch);
-                curl_close($ch);   
+                for ($i=0; $i < count($datos); $i++) { 
+                    $idarchivo = $datos[$i]["idarchivo"];
 
-                $error_no = curl_errno($ch);
+                    $archivo = DB::select("SELECT idalmdigital, codigodocumento, documento, estatus FROM mc_almdigital_det WHERE id = $idarchivo");
 
-                if($error_no == 0){                
+                    $idalmacen = $archivo[0]->idalmdigital;
+                    $type = explode(".", $archivo[0]->documento);
+                    $arch = $carpSubMenu."/".$archivo[0]->codigodocumento.".".$type[1];
 
-                    DB::table('mc_almdigital_det')->where("id", $idarchivo)->delete();                   
-                    $totalr = DB::select("SELECT totalregistros FROM mc_almdigital WHERE id = $idalmacen");
-                    $totalc = DB::select("SELECT count(id) as tc FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
-                    if($totalc[0]->tc > 0){
-                        $totalregistros = $totalr[0]->totalregistros - 1;
-                        DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalc[0]->tc]);
+                    if($archivo[0]->estatus == 0){                    
+                        
+                        $ch = curl_init();         
+                        $url = 'https://'.$servidor.'/remote.php/dav/files/'.$userSto.'/'.$carpIni.'/'.$nomcar.'/'. $arch;  
+                        curl_setopt_array($ch,
+                            array(
+                                CURLOPT_URL => $url,
+                                CURLOPT_VERBOSE => 1,
+                                CURLOPT_USERPWD => $userSto.':'.$passSto,
+                                CURLOPT_RETURNTRANSFER => true,
+                                CURLOPT_BINARYTRANSFER => true,
+                                CURLOPT_CUSTOMREQUEST => 'DELETE',
+                            )
+                        );
+                        $resp = curl_exec($ch);
+                        curl_close($ch);   
+
+                        
+                        //$error_no = curl_errno($ch);
+
+                        if(empty($resp)){                
+                            $array["idalmacen"] = $idalmacen;
+
+                            DB::table('mc_almdigital_det')->where("id", $idarchivo)->delete();                   
+                            $totalr = DB::select("SELECT totalregistros FROM mc_almdigital WHERE id = $idalmacen");
+                            $totalc = DB::select("SELECT count(id) as tc FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
+                            if($totalc[0]->tc > 0){
+                                $totalregistros = $totalr[0]->totalregistros - 1;
+                                DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalc[0]->tc]);
+                            }else{
+                                DB::table('mc_almdigital')->where("id", $idalmacen)->delete();  
+                                $array["idalmacen"] = 0;                  
+                            }
+
+                            $array["archivos"][$i]["status"] = 0;
+                            $array["archivos"][$i]["detalle"] = "¡Archivo Eliminado Correctamente!";
+                            $array["archivos"][$i]["archivo"] = $archivo[0]->documento;                        
+
+                         }else{
+                             $array["archivos"][$i]["status"] = 1;
+                             $array["archivos"][$i]["detalle"] = "¡No se pudo eliminar el archivo!";
+                             $array["archivos"][$i]["archivo"] = $archivo[0]->documento;
+                             $array["archivos"][$i]["curlError"] = $resp;
+                        }         
                     }else{
-                        DB::table('mc_almdigital')->where("id", $idalmacen)->delete();                    
+                        $array["archivos"][$i]["status"] = 2;
+                        $array["archivos"][$i]["detalle"] = "¡No se puede eliminar un archivo que ya ha sido procesado!";
+                        $array["archivos"][$i]["archivo"] = $archivo[0]->documento;
                     }
 
-                    $array["archivos"][$i]["status"] = 0;
-                    $array["archivos"][$i]["detalle"] = "¡Archivo Eliminado Correctamente!";
 
-                }else{
-                    $array["archivos"][$i]["status"] = 1;
-                    $array["archivos"][$i]["detalle"] = "¡No se pudo eliminar el archivo!";
-                }         
-
-
-            }
-
-            
+                }
+            }else{
+                $array["error"] = 4; //Sin Permisos para eliminar.
+            }            
 
         }        
 

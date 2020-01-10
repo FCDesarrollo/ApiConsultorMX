@@ -1034,8 +1034,6 @@ class ConsumoController extends Controller
                 $idalmacen_det = $registros[$i]['id'];                
                 $iddoc = $registros[$i]['iddoc'];  
 
-                $sta = DB::select("SELECT count(*) as num FROM mc_almdigital_doc WHERE idalmdigitaldet=$idalmacen_det");
-                
                 if ($registros[$i]["status"] == 1){
                     $doc = DB::select("SELECT * FROM mc_almdigital_doc WHERE idalmdigitaldet = $idalmacen_det AND iddocadw=$iddoc");
 
@@ -1048,6 +1046,10 @@ class ConsumoController extends Controller
                     DB::table('mc_almdigital_doc')->where("idalmdigitaldet", $idalmacen_det)->
                             where("iddocadw", $iddoc)->delete();
                 }
+
+
+                $reg = DB::select("SELECT count(idalmdigitaldet) as reg FROM mc_almdigital_doc WHERE idalmdigitaldet=$idalmacen_det");
+                $sta = ($reg > 0 ? 1 : 0);
 
                 $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->
                             update(['idagente' => $autenticacion[0]["idusuario"],

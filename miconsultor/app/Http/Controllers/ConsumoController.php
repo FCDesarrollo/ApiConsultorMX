@@ -1022,6 +1022,7 @@ class ConsumoController extends Controller
             $registros[0]["concepto"] = $request->concepto;
             $registros[0]["folio"] = $request->folio;
             $registros[0]["serie"] = $request->serie;
+            $registros[0]["iddoc"] = $request->iddoc;
         }
         
         if($autenticacion[0]['error'] == 0){  

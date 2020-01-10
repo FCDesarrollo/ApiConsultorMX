@@ -1031,13 +1031,23 @@ class ConsumoController extends Controller
             for ($i=0; $i < count($registros); $i++) {               
 
                 $idalmacen_det = $registros[$i]['id'];                
-               
+                $iddoc = $registros[$i]['iddoc'];  
+
+                $sta = DB::select("SELECT count(*) as num FROM mc_almdigital_doc WHERE idalmdigitaldet=$idalmacen_det");;
+                
+                if ($registros[$i]["status"] == 1){
+                    DB::table('mc_almdigital_doc')->insertGetId(['idalmdigitaldet' => $idalmacen_det,
+                            'iddocadw' => $iddoc,'conceptoadw' => $registros[$i]["concepto"],
+                            'idrubro' => $registros[$i]["idrubro"],'folioadw' => $registros[$i]["folio"], 'serieadw' => $registros[$i]["serie"]]); 
+                }else{
+                    DB::table('mc_almdigital_doc')->where("idalmdigitaldet", $idalmacen_det)->
+                            where("iddocadw", $iddoc)->delete();
+                }
+
                 $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->
                             update(['idagente' => $autenticacion[0]["idusuario"],
-                             'fechaprocesado' => date_create($registros[$i]["fechapro"]), 'estatus' => $registros[$i]["status"], 
-                             'idrubro' => $registros[$i]["idrubro"], 'conceptoadw' => $registros[$i]["concepto"],
-                             'folioadw' => $registros[$i]["folio"], 'serieadw' => $registros[$i]["serie"] ]);
-                
+                            'fechaprocesado' => date_create($registros[$i]["fechapro"]), 'estatus' => $sta]);
+
                 if(!empty($resp)){
                     $registros[$i]["estatus"] = true;            
                 }else{

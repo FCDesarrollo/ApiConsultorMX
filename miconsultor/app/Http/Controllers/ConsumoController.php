@@ -1049,7 +1049,7 @@ class ConsumoController extends Controller
 
 
                 $reg = DB::select("SELECT count(idalmdigitaldet) as reg FROM mc_almdigital_doc WHERE idalmdigitaldet=$idalmacen_det");
-                $sta = ($reg > 0 ? 1 : 0);
+                $sta = ($reg[0]->reg > 0 ? 1 : 0);
 
                 $resp = DB::table('mc_almdigital_det')->where("id", $idalmacen_det)->
                             update(['idagente' => $autenticacion[0]["idusuario"],

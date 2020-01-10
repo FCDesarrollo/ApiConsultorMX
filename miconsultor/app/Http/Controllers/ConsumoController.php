@@ -1034,12 +1034,16 @@ class ConsumoController extends Controller
                 $idalmacen_det = $registros[$i]['id'];                
                 $iddoc = $registros[$i]['iddoc'];  
 
-                $sta = DB::select("SELECT count(*) as num FROM mc_almdigital_doc WHERE idalmdigitaldet=$idalmacen_det");;
+                $sta = DB::select("SELECT count(*) as num FROM mc_almdigital_doc WHERE idalmdigitaldet=$idalmacen_det");
                 
                 if ($registros[$i]["status"] == 1){
-                    DB::table('mc_almdigital_doc')->insertGetId(['idalmdigitaldet' => $idalmacen_det,
+                    $doc = DB::select("SELECT * FROM mc_almdigital_doc WHERE idalmdigitaldet = $idalmacen_det AND iddocadw=$iddoc");
+
+                    if(empty($doc)){
+                        DB::table('mc_almdigital_doc')->insertGetId(['idalmdigitaldet' => $idalmacen_det,
                             'iddocadw' => $iddoc,'conceptoadw' => $registros[$i]["concepto"],
-                            'idrubro' => $registros[$i]["idrubro"],'folioadw' => $registros[$i]["folio"], 'serieadw' => $registros[$i]["serie"]]); 
+                            'idrubro' => $registros[$i]["idrubro"],'folioadw' => $registros[$i]["folio"], 'serieadw' => $registros[$i]["serie"]]);
+                    }  
                 }else{
                     DB::table('mc_almdigital_doc')->where("idalmdigitaldet", $idalmacen_det)->
                             where("iddocadw", $iddoc)->delete();

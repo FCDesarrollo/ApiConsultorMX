@@ -179,7 +179,7 @@ class EmpresasController extends Controller
               fechaprocesado DATETIME DEFAULT NULL,
               estatus INT(11) DEFAULT 0,
               download VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
-              idmodulo INT(11) DEFAULT 0,
+              idrubro INT(11) DEFAULT 0,
               conceptoadw VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
               folioadw INT(11) DEFAULT 0,
               serieadw VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
@@ -482,8 +482,8 @@ class EmpresasController extends Controller
             $mc1013 = "insert ".$empresaBD.".mc_rubros SELECT * FROM dublockc_MCGenerales.mc1013;";
             DB::statement($mc1013);
             
-            $mc1014 = "insert ".$empresaBD.".mc_conceptos SELECT * FROM dublockc_MCGenerales.mc1014;";
-            DB::statement($mc1014);
+            //$mc1014 = "insert ".$empresaBD.".mc_conceptos SELECT * FROM dublockc_MCGenerales.mc1014;";
+            //DB::statement($mc1014);
             
             $id = 1;
         }else {

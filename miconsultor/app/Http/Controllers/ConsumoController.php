@@ -1622,7 +1622,7 @@ class ConsumoController extends Controller
             $link = $archivos[$i]["link"];
 
             if($status == 0){
-                $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND idmodulo = $idsubmenu");
+                $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND a.idmodulo = $idsubmenu");
                 if(empty($ele)){
                     $array["error"] = 0;
                     $array["archivos"][$i]["archivo"] = $archivo;

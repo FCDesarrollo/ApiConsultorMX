@@ -266,6 +266,8 @@ class EmpresasController extends Controller
               PRIMARY KEY (idsucursal)
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catsucursales); 
+
+           
             
             $mc_lotes = "create table if not exists mc_lotes (
               id INT(11) NOT NULL AUTO_INCREMENT,
@@ -428,6 +430,42 @@ class EmpresasController extends Controller
               serieadw VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_almdigital_doc);
+            
+            $mc_conceptos = "create table if not exists mc_conceptos (
+                id int(11) NOT NULL AUTO_INCREMENT,
+                nombre_concepto varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                fecha date DEFAULT NULL,
+                status int(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                DB::statement($mc_conceptos);
+
+            $mc_requerimientos = "create table if not exists mc_requerimientos (
+                idReq int(11) NOT NULL AUTO_INCREMENT,
+                fecha date DEFAULT NULL,
+                id_usuario int(11) DEFAULT NULL,
+                id_departamento int(11) DEFAULT NULL,
+                descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                importe_estimado double DEFAULT NULL,
+                estado_documento int(11) DEFAULT NULL,
+                id_concepto int(11) DEFAULT NULL,
+                serie varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                folio varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (idReq)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                DB::statement($mc_requerimientos);
+
+              $mc_requerimientos_bit = "create table if not exists mc_requerimientos_bit (
+                id_bit int(11) NOT NULL,
+                id_req int(11) DEFAULT NULL,
+                fecha date DEFAULT NULL,
+                status int(11) DEFAULT NULL,
+                PRIMARY KEY (id_bit)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_requerimientos_bit);
+
+              
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
             DB::statement($mc1006);
@@ -442,7 +480,10 @@ class EmpresasController extends Controller
             DB::statement($mc1009);
 
             $mc1013 = "insert ".$empresaBD.".mc_rubros SELECT * FROM dublockc_MCGenerales.mc1013;";
-            DB::statement($mc1013);            
+            DB::statement($mc1013);
+            
+            $mc1014 = "insert ".$empresaBD.".mc_conceptos SELECT * FROM dublockc_MCGenerales.mc1014;";
+            DB::statement($mc1014);
             
             $id = 1;
         }else {
@@ -450,6 +491,10 @@ class EmpresasController extends Controller
         }
         return $id;
     }
+
+
+
+
     public function UsuarioEmpresa(Request $request)
         {  
             $usuario = $request->idusuario;

@@ -1171,16 +1171,25 @@ class ConsumoController extends Controller
         $archivos = DB::select("SELECT * FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
 
         for ($i=0; $i < count($archivos); $i++) { 
-            $idagente = ($archivos[$i]->idagente != null ? $archivos[$i]->idagente : 0);
-            //$idagente = $archivos[$i]->idagente;
-            $datosagente = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idagente");
-            if(!empty($datosagente)){
+            if($archivos[$i]->estatus == 1){
+                //$idagente = ($archivos[$i]->idagente != null ? $archivos[$i]->idagente : 0);
+                $idagente = $archivos[$i]->idagente;
+                $datosagente = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idagente");
                 $archivos[$i]->agente = $datosagente[0]->nombre;
+                if($archivos[$i]->conceptoadw == null){
+                    $idalmdigitaldet = $archivos[$i]->id;
+                    $det = DB::select("SELECT * FROM mc_almdigital_doc WHERE idalmdigitaldet = $idalmdigitaldet");
+                    $concefolser = "";
+                    for ($j=0; $j < count($det); $j++) { 
+                        $concefolser = $concefolser.$det[$j]->conceptoadw." ".$det[$j]->folioadw."-".$det[$j]->serieadw.", ";
+                    }
+                    $archivos[$i]->conceptoadw = $concefolser;
+                }
             }else{
                 $archivos[$i]->agente = "¡No ha sido procesado!";
             }
-        }
 
+        }
 
         return json_encode($archivos, JSON_UNESCAPED_UNICODE);
     }

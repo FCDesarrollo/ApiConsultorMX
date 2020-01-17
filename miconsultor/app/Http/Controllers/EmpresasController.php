@@ -417,7 +417,17 @@ class EmpresasController extends Controller
               notificaciones INT(11) DEFAULT '0',
               PRIMARY KEY (id)
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-            DB::statement($mc_usersubmenu);                    
+            DB::statement($mc_usersubmenu);
+
+            $mc_almdigital_doc = "create table if not exists mc_almdigital_doc (
+              idalmdigitaldet INT(11) NOT NULL,
+              iddocadw INT(11) NOT NULL,
+              idrubro INT(11) DEFAULT NULL,
+              conceptoadw VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+              folioadw INT(11) DEFAULT NULL,
+              serieadw VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL
+            ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_almdigital_doc);
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
             DB::statement($mc1006);

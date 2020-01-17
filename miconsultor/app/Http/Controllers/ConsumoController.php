@@ -85,6 +85,16 @@ class ConsumoController extends Controller
 
    
 
+
+
+
+
+
+
+
+
+
+    
     public function LoteConsumo(Request $request){ 
         
         $RFCEmpresa = $request->rfcempresa;

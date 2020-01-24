@@ -19,7 +19,7 @@ class AppController extends Controller
         if($autenticacion[0]['error'] == 0){
             $idusuario = $autenticacion[0]['idusuario'];
 
-            $array["menus"] = DB::connection("General")->select("SELECT * FROM mc1005 WHERE idmenu=5");
+            $array["submenus"] = DB::connection("General")->select("SELECT * FROM mc1005 WHERE (idmenu=5 or idmenu=10)");
 
             $empresas = DB::connection("General")->select("SELECT e.* FROM mc1000 e INNER JOIN mc1002 r ON e.idempresa=r.idempresa 
                                                             WHERE idusuario=$idusuario");
@@ -30,7 +30,7 @@ class AppController extends Controller
                 $sucursales = DB::select("SELECT * FROM mc_catsucursales");
                 $empresas[$i]->sucursales = $sucursales;
    
-                $permisos = DB::select("SELECT * FROM mc_usersubmenu WHERE idmenu = 5 AND idusuario=$idusuario");
+                $permisos = DB::select("SELECT * FROM mc_usersubmenu WHERE (idmenu = 5 or idmenu= 10) AND idusuario=$idusuario");
 
                 $empresas[$i]->permisos = $permisos;
                 $array["empresas"][$i] = $empresas[$i];

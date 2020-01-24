@@ -18,6 +18,7 @@ Route::get('/', function () {
 ///Pruebas
 Route::get('Pruebas', 'UsuariosController@Pruebas');
 
+Route::post('AlmacenCargado', 'GeneralesController@AlmacenCargado');
 //Route::get('ListaSucursales/{idempresa}', 'EmpresasController@ListaSucursales');
 
 //Empresas

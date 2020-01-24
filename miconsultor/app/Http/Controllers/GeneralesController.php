@@ -1168,4 +1168,249 @@ class GeneralesController extends Controller
 
     //-----------------//
 
+
+    public function AlmacenCargado(Request $request){
+        //$datos = $request->datos;
+        $archivos = $request->file();
+        $numarchivos = count($archivos);
+        $autenticacion = (new ConsumoController)->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 2, $request->idmenu, $request->idsubmenu);
+
+        $array["error"] = $autenticacion[0]["error"];
+
+        if($autenticacion[0]['error'] == 0){
+
+            ConnectDatabase($autenticacion[0]["idempresa"]);
+            $idUsuario = $autenticacion[0]["idusuario"]; 
+            $idmenu = $request->idmenu;
+            $idsubmenu = $request->idsubmenu;
+            $empresa = $request->rfcempresa;
+            $fechadocto = $request->fechadocto;
+            $sucursal = $request->sucursal;
+            $observaciones = $request->observaciones;
+            $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+            $servidor = $result[0]->servidor_storage;
+            $u_storage = $autenticacion[0]["userstorage"];
+            $p_storage = $autenticacion[0]["passstorage"];          
+            $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idmenu");        
+            $menu = $result[0]->nombre_carpeta;
+            $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1005 WHERE idsubmenu=$idsubmenu");  
+            $submenu = $result[0]->nombre_carpeta;     
+
+            $consecutivo = $this->SiguienteNumero($autenticacion[0]["idempresa"], $fechadocto, $idsubmenu);                 
+            $countreg = $consecutivo;
+
+            $cont = 0;
+
+            foreach ($archivos as $key) {  
+                
+                if(strlen($countreg) == 1){
+                    $consecutivo = "000".$countreg;
+                }elseif (strlen($countreg) == 2){
+                    $consecutivo = "00".$countreg;
+                }elseif (strlen($countreg) == 3){
+                    $consecutivo = "0".$countreg;
+                }else{
+                    $consecutivo = $countreg;
+                }
+
+                $resultado = $this->SubirArchivosCloud($key->getClientOriginalName(), $key, $request->rfcempresa, $servidor, $u_storage, $p_storage, $menu, $submenu, $fechadocto, $consecutivo);
+
+                if($resultado["archivo"]["error"] == 0){
+
+                    $target_path = $resultado["archivo"]["target"];
+                    $link = $this->GetLinkCloud($target_path, $servidor, $u_storage, $p_storage);
+
+                    if($link != ""){
+                        $array2["archivos"][$cont] =  array(
+                            "archivo" => $key->getClientOriginalName(),
+                            "codigo" => $resultado["archivo"]["codigo"],
+                            "link" => $link,
+                            "status" => 0,
+                            "detalle" => "¡Cargado Correctamente!"
+                        );
+                        $countreg = $countreg + 1;
+                    }else{
+                        $array2["archivos"][$cont] =  array(
+                            "archivo" => $key->getClientOriginalName(),
+                            "codigo" => $resultado["archivo"]["codigo"],
+                            "link" => $link,
+                            "status" => 2,
+                            "detalle" => "¡Link no generado, error al subir!"
+                        );                    
+                    }                    
+
+                }else{
+                    $array2["archivos"][$cont] =  array(
+                        "archivo" => $key->getClientOriginalName(),
+                        "codigo" => "",
+                        "link" => "",
+                        "status" => 1,
+                        "detalle" => "¡No se pudo subir el archivo!"
+                    );
+                }
+
+                $cont = $cont + 1;
+            }
+
+            $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
+            $CarpSubM = $submenu;
+            $CarpSubM = substr(strtoupper($CarpSubM), 0, 3);
+            $string = explode("-", $fechadocto);
+            $contador = 0;
+            $now = date('Y-m-d h:i:s A');      
+        //VERIFICA SI NO EXISTE EL ARCHIVO
+            $ArchivosV = (new ConsumoController)->VerificaArchivos($autenticacion[0]["idempresa"], $array2["archivos"], $fechadocto, $idmenu, $idsubmenu, $carpIni, $autenticacion[0]["userstorage"], $autenticacion[0]["passstorage"]);
+        //REGISTRAR EN BASE DE DATOS LOS ARCHIVOS CARGADOS CORRECTAMENTE    
+            $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
+            if(!empty($suc)){
+
+                ConnectDatabase($autenticacion[0]["idempresa"]);
+
+                $codigoalm = substr($string[0], 2).$string[1].$string[2].$idUsuario.$CarpSubM.$sucursal;    
+
+                $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
+
+                $n = 0;
+                if(empty($reg)){
+                    $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'idmodulo' => $idsubmenu, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]);
+                    while (isset($ArchivosV["archivos"][$contador])) {
+                        $nomDoc = $ArchivosV["archivos"][$contador]["archivo"];
+                        $codigodocumento = $ArchivosV["archivos"][$contador]["codigo"];
+                        $link = $ArchivosV["archivos"][$contador]["link"];
+                        if($ArchivosV["archivos"][$contador]["status"] == 0){
+                        
+                            $ArchivosV["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
+                            $ArchivosV["archivos"][$contador]["idalmacen"] = $idalm;
+                            $n = $n + 1;
+                        }
+                        $contador++;            
+                    } 
+                    if($n > 0){
+                        DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $n]);
+                    }else{
+                        DB::table('mc_almdigital')->where("id", $idalm)->delete();
+                    }
+                }else{
+                    $cont = 0;
+                    while (isset($ArchivosV["archivos"][$contador])) {
+                        $nomDoc = $ArchivosV["archivos"][$contador]["archivo"]; 
+                        $codigodocumento = $ArchivosV["archivos"][$contador]["codigo"];
+                        $link = $ArchivosV["archivos"][$contador]["link"];                        
+                        if($ArchivosV["archivos"][$contador]["status"] == 0){                           
+                           $ArchivosV["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'idsucursal' => $reg[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
+                           $cont = $cont + 1;
+                           $ArchivosV["archivos"][$contador]["idalmacen"] = $reg[0]->id; 
+                        }
+                        $contador++;
+                    }
+                    if($observaciones == ""){
+                        $observaciones = $reg[0]->observaciones;
+                    }
+                    $idalm = $reg[0]->id;
+                    $totalcargados = DB::select("SELECT COUNT(id) As tc FROM mc_almdigital_det WHERE idalmdigital = $idalm");
+                    $totalregistros = $reg[0]->totalregistros + $cont;                
+                    DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
+                }
+                $array["archivos"] = $ArchivosV["archivos"];
+            }else{
+                $array["error"] = 21; //ERROR EN LA SUCURSAL, NO REGISTRADA
+            }    
+        }else{
+            $array["error"] = $autenticacion[0]["error"]; //ERROR DE AUTENTICACION
+        }    
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);     
+    }
+
+    function GetLinkCloud($link, $server, $user, $pass){
+       $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "https://".$user.":".$pass."@".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");
+        curl_setopt($ch, CURLOPT_VERBOSE, 1);       
+        curl_setopt($ch, CURLOPT_USERPWD, $user.":".$pass);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "path=CRM/".$link."&shareType=3");
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('OCS-APIRequest:true'));
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        $httpResponse = curl_exec($ch);
+        $httpResponse = explode("\n\r\n", $httpResponse);
+        $body = $httpResponse[1];      
+        $Respuesta= simplexml_load_string($body);        
+        $url = ((string)$Respuesta[0]->data->url);
+        curl_close($ch);
+        return $url;        
+    }
+
+    function SubirArchivosCloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password, $menu, $submenu, $fechadocto, $consecutivo){
+
+        $mod = substr(strtoupper($submenu), 0, 3);
+        $directorio = $rfcempresa.'/Entrada/'.$menu.'/'.$submenu;        
+        $string = explode("-", $fechadocto);
+        $codfec = substr($string[0], 2).$string[1];        
+        $codarchivo = $rfcempresa."_".$codfec."_".$mod."_";         
+
+        $ch = curl_init();   
+            $file = $archivo_name;
+            $filename = $codarchivo.$consecutivo;
+            $source = $ruta_temp; //Obtenemos un nombre temporal del archivo        
+            $type = explode(".", $file);            
+            $target_path = $directorio.'/'.$filename.".".$type[count($type)-1];    
+
+            $gestor = fopen($source, "r");
+            $contenido = fread($gestor, filesize($source));
+
+            curl_setopt_array($ch,
+                array(
+                    CURLOPT_URL => 'https://'.$servidor.'/remote.php/dav/files/'.$usuario.'/CRM/'. $target_path,
+                    CURLOPT_VERBOSE => 1,
+                    CURLOPT_USERPWD => $usuario.':'.$password,
+                    CURLOPT_POSTFIELDS => $contenido,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_BINARYTRANSFER => true,
+                    CURLOPT_CUSTOMREQUEST => 'PUT',
+                )
+            );
+            $resp = curl_exec($ch);
+            $error_no = curl_errno($ch);
+            fclose($gestor);
+        curl_close($ch);
+
+        $array["archivo"]["target"] = $target_path;
+        $array["archivo"]["codigo"] = $filename;
+        $array["archivo"]["error"] = $error_no;
+
+        return $array;
+
+    }    
+
+    function SiguienteNumero($idempresa, $fechadocto, $idmodulo){
+        ConnectDatabase($idempresa);
+
+        $fecha = $fechadocto;
+        $fecha = strtotime($fecha);
+        $mes = intval(date("m", $fecha));
+        $año = intval(date("Y", $fecha));
+        $mod = $idmodulo;
+        $ultregistro = DB::select("SELECT MAX(d.id) AS id FROM mc_almdigital a INNER JOIN mc_almdigital_det d ON a.id = d.idalmdigital WHERE a.idmodulo = $mod AND MONTH(a.fechadocto) = $mes AND YEAR(a.fechadocto) = $año");
+
+        if(!empty($ultregistro)){                
+            $ultimoid = $ultregistro[0]->id;
+            if($ultimoid > 0){
+                $ultarchivo = DB::select("SELECT codigodocumento FROM mc_almdigital_det WHERE id = $ultimoid");
+                $nombre_a = $ultarchivo[0]->codigodocumento;
+                $consecutivo = substr($nombre_a, -4);
+                $consecutivo = $consecutivo + 1;
+            }else{
+                $consecutivo = "0001";    
+            }
+        }else{
+            $consecutivo = "0001";
+        }
+
+        return $consecutivo;
+    }
+
+
+
 }

@@ -49,7 +49,7 @@ class AppController extends Controller
         $conexion[0]['error'] = 0;
 
         $Pwd = $Password;
-        $Usuario = DB::connection("General")->select("SELECT idusuario, password FROM mc1001 WHERE correo = '$Usuario'");
+        $Usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo = '$Usuario'");
         if(!empty($Usuario)){                 
 
             $conexion[0]['idusuario'] = $Usuario[0]->idusuario;

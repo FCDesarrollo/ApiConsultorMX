@@ -18,7 +18,8 @@ class AppController extends Controller
 
         if($autenticacion[0]['error'] == 0){
             $idusuario = $autenticacion[0]['idusuario'];
-
+            
+            $array["usuario"] = $autenticacion[0]["usuario"];
             $array["submenus"] = DB::connection("General")->select("SELECT * FROM mc1005 WHERE (idmenu=5 or idmenu=10)");
 
             $empresas = DB::connection("General")->select("SELECT e.* FROM mc1000 e INNER JOIN mc1002 r ON e.idempresa=r.idempresa 
@@ -52,7 +53,7 @@ class AppController extends Controller
         if(!empty($Usuario)){                 
 
             $conexion[0]['idusuario'] = $Usuario[0]->idusuario;
-
+            $conexion[0]['usuario'] = $Usuario;
             $ID = $Usuario[0]->idusuario;
 
             //if(password_verify($request->contra, $hash_BD)) {

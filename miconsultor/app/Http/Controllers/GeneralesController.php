@@ -1171,157 +1171,154 @@ class GeneralesController extends Controller
 
     public function AlmacenCargado(Request $request){
         //$datos = $request->datos;
-        if($request->hasFile()){
-            $archivos = $request->file();
-            $numarchivos = count($archivos);
-            $autenticacion = (new ConsumoController)->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 2, $request->idmenu, $request->idsubmenu);
+        $archivos = $request->file();
+        $numarchivos = count($archivos);
+        $autenticacion = (new ConsumoController)->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 2, $request->idmenu, $request->idsubmenu);
 
-            $array["error"] = $autenticacion[0]["error"];
+        $array["error"] = $autenticacion[0]["error"];
 
-            if($autenticacion[0]['error'] == 0){
+        if($autenticacion[0]['error'] == 0){
 
-                ConnectDatabase($autenticacion[0]["idempresa"]);
-                $idUsuario = $autenticacion[0]["idusuario"]; 
-                $idmenu = $request->idmenu;
-                $idsubmenu = $request->idsubmenu;
-                $empresa = $request->rfcempresa;
-                $fechadocto = $request->fechadocto;
-                $sucursal = $request->sucursal;
-                $observaciones = $request->observaciones;
-                $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
-                $servidor = $result[0]->servidor_storage;
-                $u_storage = $autenticacion[0]["userstorage"];
-                $p_storage = $autenticacion[0]["passstorage"];          
-                $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idmenu");        
-                $menu = $result[0]->nombre_carpeta;
-                $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1005 WHERE idsubmenu=$idsubmenu");  
-                $submenu = $result[0]->nombre_carpeta;     
+            ConnectDatabase($autenticacion[0]["idempresa"]);
+            $idUsuario = $autenticacion[0]["idusuario"]; 
+            $idmenu = $request->idmenu;
+            $idsubmenu = $request->idsubmenu;
+            $empresa = $request->rfcempresa;
+            $fechadocto = $request->fechadocto;
+            $sucursal = $request->sucursal;
+            $observaciones = $request->observaciones;
+            $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+            $servidor = $result[0]->servidor_storage;
+            $u_storage = $autenticacion[0]["userstorage"];
+            $p_storage = $autenticacion[0]["passstorage"];          
+            $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idmenu");        
+            $menu = $result[0]->nombre_carpeta;
+            $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1005 WHERE idsubmenu=$idsubmenu");  
+            $submenu = $result[0]->nombre_carpeta;     
 
-                $consecutivo = $this->SiguienteNumero($autenticacion[0]["idempresa"], $fechadocto, $idsubmenu);                 
-                $countreg = $consecutivo;
+            $consecutivo = $this->SiguienteNumero($autenticacion[0]["idempresa"], $fechadocto, $idsubmenu);                 
+            $countreg = $consecutivo;
 
-                $cont = 0;
+            $cont = 0;
 
-                foreach ($archivos as $key) {  
-                    
-                    if(strlen($countreg) == 1){
-                        $consecutivo = "000".$countreg;
-                    }elseif (strlen($countreg) == 2){
-                        $consecutivo = "00".$countreg;
-                    }elseif (strlen($countreg) == 3){
-                        $consecutivo = "0".$countreg;
-                    }else{
-                        $consecutivo = $countreg;
-                    }
+            foreach ($archivos as $key) {  
+                
+                if(strlen($countreg) == 1){
+                    $consecutivo = "000".$countreg;
+                }elseif (strlen($countreg) == 2){
+                    $consecutivo = "00".$countreg;
+                }elseif (strlen($countreg) == 3){
+                    $consecutivo = "0".$countreg;
+                }else{
+                    $consecutivo = $countreg;
+                }
 
-                    $resultado = $this->SubirArchivosCloud($key->getClientOriginalName(), $key, $request->rfcempresa, $servidor, $u_storage, $p_storage, $menu, $submenu, $fechadocto, $consecutivo);
+                $resultado = $this->SubirArchivosCloud($key->getClientOriginalName(), $key, $request->rfcempresa, $servidor, $u_storage, $p_storage, $menu, $submenu, $fechadocto, $consecutivo);
 
-                    if($resultado["archivo"]["error"] == 0){
+                if($resultado["archivo"]["error"] == 0){
 
-                        $target_path = $resultado["archivo"]["target"];
-                        $link = $this->GetLinkCloud($target_path, $servidor, $u_storage, $p_storage);
+                    $target_path = $resultado["archivo"]["target"];
+                    $link = $this->GetLinkCloud($target_path, $servidor, $u_storage, $p_storage);
 
-                        if($link != ""){
-                            $array2["archivos"][$cont] =  array(
-                                "archivo" => $key->getClientOriginalName(),
-                                "codigo" => $resultado["archivo"]["codigo"],
-                                "link" => $link,
-                                "status" => 0,
-                                "detalle" => "¡Cargado Correctamente!"
-                            );
-                            $countreg = $countreg + 1;
-                        }else{
-                            $array2["archivos"][$cont] =  array(
-                                "archivo" => $key->getClientOriginalName(),
-                                "codigo" => $resultado["archivo"]["codigo"],
-                                "link" => $link,
-                                "status" => 2,
-                                "detalle" => "¡Link no generado, error al subir!"
-                            );                    
-                        }                    
-
+                    if($link != ""){
+                        $array2["archivos"][$cont] =  array(
+                            "archivo" => $key->getClientOriginalName(),
+                            "codigo" => $resultado["archivo"]["codigo"],
+                            "link" => $link,
+                            "status" => 0,
+                            "detalle" => "¡Cargado Correctamente!"
+                        );
+                        $countreg = $countreg + 1;
                     }else{
                         $array2["archivos"][$cont] =  array(
                             "archivo" => $key->getClientOriginalName(),
-                            "codigo" => "",
-                            "link" => "",
-                            "status" => 1,
-                            "detalle" => "¡No se pudo subir el archivo!"
-                        );
-                    }
+                            "codigo" => $resultado["archivo"]["codigo"],
+                            "link" => $link,
+                            "status" => 2,
+                            "detalle" => "¡Link no generado, error al subir!"
+                        );                    
+                    }                    
 
-                    $cont = $cont + 1;
+                }else{
+                    $array2["archivos"][$cont] =  array(
+                        "archivo" => $key->getClientOriginalName(),
+                        "codigo" => "",
+                        "link" => "",
+                        "status" => 1,
+                        "detalle" => "¡No se pudo subir el archivo!"
+                    );
                 }
 
-                $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
-                $CarpSubM = $submenu;
-                $CarpSubM = substr(strtoupper($CarpSubM), 0, 3);
-                $string = explode("-", $fechadocto);
-                $contador = 0;
-                $now = date('Y-m-d h:i:s A');      
-            //VERIFICA SI NO EXISTE EL ARCHIVO
-                $ArchivosV = (new ConsumoController)->VerificaArchivos($autenticacion[0]["idempresa"], $array2["archivos"], $fechadocto, $idmenu, $idsubmenu, $carpIni, $autenticacion[0]["userstorage"], $autenticacion[0]["passstorage"]);
-            //REGISTRAR EN BASE DE DATOS LOS ARCHIVOS CARGADOS CORRECTAMENTE    
-                $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
-                if(!empty($suc)){
+                $cont = $cont + 1;
+            }
 
-                    ConnectDatabase($autenticacion[0]["idempresa"]);
+            $carpIni = 'CRM/'.$autenticacion[0]["rfc"].'/Entrada';
+            $CarpSubM = $submenu;
+            $CarpSubM = substr(strtoupper($CarpSubM), 0, 3);
+            $string = explode("-", $fechadocto);
+            $contador = 0;
+            $now = date('Y-m-d h:i:s A');      
+        //VERIFICA SI NO EXISTE EL ARCHIVO
+            $ArchivosV = (new ConsumoController)->VerificaArchivos($autenticacion[0]["idempresa"], $array2["archivos"], $fechadocto, $idmenu, $idsubmenu, $carpIni, $autenticacion[0]["userstorage"], $autenticacion[0]["passstorage"]);
+        //REGISTRAR EN BASE DE DATOS LOS ARCHIVOS CARGADOS CORRECTAMENTE    
+            $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
+            if(!empty($suc)){
 
-                    $codigoalm = substr($string[0], 2).$string[1].$string[2].$idUsuario.$CarpSubM.$sucursal;    
+                ConnectDatabase($autenticacion[0]["idempresa"]);
 
-                    $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
+                $codigoalm = substr($string[0], 2).$string[1].$string[2].$idUsuario.$CarpSubM.$sucursal;    
 
-                    $n = 0;
-                    if(empty($reg)){
-                        $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'idmodulo' => $idsubmenu, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]);
-                        while (isset($ArchivosV["archivos"][$contador])) {
-                            $nomDoc = $ArchivosV["archivos"][$contador]["archivo"];
-                            $codigodocumento = $ArchivosV["archivos"][$contador]["codigo"];
-                            $link = $ArchivosV["archivos"][$contador]["link"];
-                            if($ArchivosV["archivos"][$contador]["status"] == 0){
-                            
-                                $ArchivosV["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
-                                $ArchivosV["archivos"][$contador]["idalmacen"] = $idalm;
-                                $n = $n + 1;
-                            }
-                            $contador++;            
-                        } 
-                        if($n > 0){
-                            DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $n]);
-                        }else{
-                            DB::table('mc_almdigital')->where("id", $idalm)->delete();
+                $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
+
+                $n = 0;
+                if(empty($reg)){
+                    $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'idmodulo' => $idsubmenu, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]);
+                    while (isset($ArchivosV["archivos"][$contador])) {
+                        $nomDoc = $ArchivosV["archivos"][$contador]["archivo"];
+                        $codigodocumento = $ArchivosV["archivos"][$contador]["codigo"];
+                        $link = $ArchivosV["archivos"][$contador]["link"];
+                        if($ArchivosV["archivos"][$contador]["status"] == 0){
+                        
+                            $ArchivosV["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
+                            $ArchivosV["archivos"][$contador]["idalmacen"] = $idalm;
+                            $n = $n + 1;
                         }
+                        $contador++;            
+                    } 
+                    if($n > 0){
+                        DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $n]);
                     }else{
-                        $cont = 0;
-                        while (isset($ArchivosV["archivos"][$contador])) {
-                            $nomDoc = $ArchivosV["archivos"][$contador]["archivo"]; 
-                            $codigodocumento = $ArchivosV["archivos"][$contador]["codigo"];
-                            $link = $ArchivosV["archivos"][$contador]["link"];                        
-                            if($ArchivosV["archivos"][$contador]["status"] == 0){                           
-                               $ArchivosV["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'idsucursal' => $reg[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
-                               $cont = $cont + 1;
-                               $ArchivosV["archivos"][$contador]["idalmacen"] = $reg[0]->id; 
-                            }
-                            $contador++;
-                        }
-                        if($observaciones == ""){
-                            $observaciones = $reg[0]->observaciones;
-                        }
-                        $idalm = $reg[0]->id;
-                        $totalcargados = DB::select("SELECT COUNT(id) As tc FROM mc_almdigital_det WHERE idalmdigital = $idalm");
-                        $totalregistros = $reg[0]->totalregistros + $cont;                
-                        DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
+                        DB::table('mc_almdigital')->where("id", $idalm)->delete();
                     }
-                    $array["archivos"] = $ArchivosV["archivos"];
                 }else{
-                    $array["error"] = 21; //ERROR EN LA SUCURSAL, NO REGISTRADA
-                }    
+                    $cont = 0;
+                    while (isset($ArchivosV["archivos"][$contador])) {
+                        $nomDoc = $ArchivosV["archivos"][$contador]["archivo"]; 
+                        $codigodocumento = $ArchivosV["archivos"][$contador]["codigo"];
+                        $link = $ArchivosV["archivos"][$contador]["link"];                        
+                        if($ArchivosV["archivos"][$contador]["status"] == 0){                           
+                           $ArchivosV["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'idsucursal' => $reg[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
+                           $cont = $cont + 1;
+                           $ArchivosV["archivos"][$contador]["idalmacen"] = $reg[0]->id; 
+                        }
+                        $contador++;
+                    }
+                    if($observaciones == ""){
+                        $observaciones = $reg[0]->observaciones;
+                    }
+                    $idalm = $reg[0]->id;
+                    $totalcargados = DB::select("SELECT COUNT(id) As tc FROM mc_almdigital_det WHERE idalmdigital = $idalm");
+                    $totalregistros = $reg[0]->totalregistros + $cont;                
+                    DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
+                }
+                $array["archivos"] = $ArchivosV["archivos"];
             }else{
-                $array["error"] = $autenticacion[0]["error"]; //ERROR DE AUTENTICACION
+                $array["error"] = 21; //ERROR EN LA SUCURSAL, NO REGISTRADA
             }    
         }else{
-            $array["error"] = 12; //NO TRAE ARCHIVOS
-        }
+            $array["error"] = $autenticacion[0]["error"]; //ERROR DE AUTENTICACION
+        }    
+
         return json_encode($array, JSON_UNESCAPED_UNICODE);     
     }
 

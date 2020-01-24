@@ -33,7 +33,7 @@ class AppController extends Controller
    
                 $permisos = DB::select("SELECT s.*,c.tiempo_dias FROM mc_usersubmenu s 
                                             LEFT JOIN mc_config_timeapp c ON s.idsubmenu=c.idsubmenu 
-                                                WHERE (idmenu = 5 or idmenu= 10) AND idusuario=$idusuario");
+                                                WHERE (s.idmenu = 5 or s.idmenu= 10) AND s.idusuario=$idusuario");
 
                 $empresas[$i]->permisos = $permisos;
                 $array["empresas"][$i] = $empresas[$i];

@@ -1411,6 +1411,25 @@ class GeneralesController extends Controller
         return $consecutivo;
     }
 
+    function DatosDeInicio(Request $request){
+        $Menus = DB::connection("General")->select("SELECT men.*,modu.nombre_modulo FROM mc1004 men INNER JOIN mc1003 modu ON men.idmodulo=modu.idmodulo WHERE men.Status = '1'");
+        $SubMenus = DB::connection("General")->select("SELECT sub.*,men.nombre_menu FROM mc1005 sub INNER JOIN mc1004 men ON sub.idmenu=men.idmenu WHERE sub.Status = '1'");
+        $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, RFC, usuario_storage, password_storage FROM mc1000 WHERE idempresa='$request->idempresa'"); 
+        $DatosUsuario = DB::connection("General")->select("SELECT nombre, apellidop, apellidom, correo, tipo FROM mc1001 WHERE idusuario='$request->idusuario'");
+        $ServidorStorage = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+
+        $array = array(
+            "Menus" => $Menus,
+            "SubMenus" => $SubMenus,
+            "Usuario" => $DatosUsuario,
+            "Empresa" => $DatosEmpresa,
+            "ServidorStorage" => $ServidorStorage,
+        );   
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+
+    }    
+
 
 
 }

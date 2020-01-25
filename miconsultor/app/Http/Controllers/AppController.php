@@ -41,10 +41,7 @@ class AppController extends Controller
             }
 
         }
-        $respuesta = array(
-            "datos" => $array,
-        );
-        return json_encode($respuesta, JSON_UNESCAPED_UNICODE);
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     public function ValidaUsuario($Usuario , $Password)

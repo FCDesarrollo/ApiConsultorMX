@@ -18,7 +18,7 @@ Route::get('/', function () {
 ///Pruebas
 Route::get('Pruebas', 'UsuariosController@Pruebas');
 
-//Route::get('ListaSucursales/{idempresa}', 'EmpresasController@ListaSucursales');
+// Route::get('ListaSucursales/{idempresa}', 'EmpresasController@ListaSucursales');
 
 //Empresas
 Route::get('ListaEmpresas', 'EmpresasController@ListaEmpresas');
@@ -171,6 +171,10 @@ Route::post('EliminaDocumentoAll', 'ConsumoController@EliminaDocumentoAll');
 Route::get('ArchivosCorreccionLinks', 'ConsumoController@ArchivosCorreccionLinks');
 
 
+// PARA EL PROCESO DE COMPRAS
+Route::post('ReqCompras','ConsumoController@ReqCompras');
+
+
 //10/09/2019 PARA LEER LA BITACORA
 Route::post('archivosBitacora', 'FcPremiumController@archivosBitacora');
 
@@ -204,3 +208,23 @@ Route::post('datosRubrosSubMenu', 'AdministradorController@datosRubrosSubMenu');
 Route::post('documentosdigitales', 'AdministradorController@documentosdigitales');
 Route::post('usuarionube', 'AdministradorController@usuarionube');
 Route::post('Plantillas', 'AdministradorController@Plantillas');
+
+
+
+
+
+
+
+
+
+
+
+
+// AUTORIZACION Y COMPRAS
+Route::get('getRequerimiento', 'ComprasController@getRequerimiento');
+Route::get('DatosReq', 'ComprasController@DatosReq');
+Route::get('ArchivosRequerimientos', 'ComprasController@ArchivosRequerimientos');
+Route::post('addRequerimiento', 'ComprasController@addRequerimiento');
+Route::post('eliminarRequerimiento', 'ComprasController@eliminarRequerimiento');
+// Route::post('EditarRequerimiento', 'ComprasController@EditarRequerimiento');
+

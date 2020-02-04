@@ -10,19 +10,15 @@ class FcPremiumController extends Controller
     function enviarModulos(Request $request){
         $rfcempresa = $request->rfc;
         $nombrecliente = $request->razon;
-        
-       
         $now = date('Y-m-d');
         $empresa = DB::connection("General")->select("SELECT idcliente FROM fcclientes WHERE rfc='$rfcempresa'");    
-        if (empty($empresa)){
-           
+        if (empty($empresa)){   
             $idcliente = DB::connection("General")->table('fcclientes')->insertGetId(
                 ['nombre_cliente' => $nombrecliente,'rfc' => $rfcempresa,
                 'fecha' => $now,'status' =>"1" ]);  
         }else{
             $idcliente = $empresa[0]->idcliente;
         }
- 
         $modulos = DB::connection("General")->select("SELECT  m.idmodulo,m.nombre_modulo,MAX(v.nombre_version) as mVer FROM fcmodulos m 
         INNER JOIN fcmodversion v ON m.idmodulo = v.idmodulo GROUP BY m.idmodulo");
         foreach($modulos as $t){
@@ -33,7 +29,6 @@ class FcPremiumController extends Controller
                     'idversion' => "0", 'permiso' => "0" ]);
             }
         }
-        
         $datos = array(
             "modulo" => $modulos,
         ); 
@@ -42,11 +37,9 @@ class FcPremiumController extends Controller
     }
 
     function versionesModulos(Request $request){
-
         $idmodulo = $request->idmodulo;
-
         $versiones = DB::connection("General")->select("SELECT idversion,nombre_version FROM fcmodversion 
-                                        WHERE idmodulo='$idmodulo' and status=1");    
+        WHERE idmodulo='$idmodulo' and status=1");    
         $datos = array(
             "version" => $versiones,
         ); 

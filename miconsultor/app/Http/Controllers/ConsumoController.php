@@ -13,13 +13,11 @@ class ConsumoController extends Controller
         //mandando como parametro el valor 0 en cada uno.
 
         $conexion[0]['error'] = 0;
-        
         $idempresa = DB::connection("General")->select("SELECT idempresa,rutaempresa,usuario_storage,password_storage,RFC FROM mc1000 WHERE RFC = '$RFCEmpresa'");
         
         if(!empty($idempresa)){
 
             $Pwd = $Password; //password_hash($Password, PASSWORD_BCRYPT); //md5($Password);
-
             $conexion[0]['idempresa'] = $idempresa[0]->idempresa;
             $conexion[0]['rfc'] = $idempresa[0]->RFC;
             $conexion[0]['userstorage'] = $idempresa[0]->usuario_storage;
@@ -83,18 +81,6 @@ class ConsumoController extends Controller
         return $conexion;
     }
 
-   
-
-
-
-
-
-
-
-
-
-
-    
     public function LoteConsumo(Request $request){ 
         
         $RFCEmpresa = $request->rfcempresa;
@@ -126,9 +112,7 @@ class ConsumoController extends Controller
                     $doctos[$i]->usuario = $datosuser[0]->nombre;
                 }                
             }
-
             $movtos = DB::select("SELECT m.* FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote AND d.id = m.iddocto AND d.fecha >= '$FecI' AND d.fecha <= '$FecF' AND l.tipo = $TipoDocumento");
-
             if(empty($movtos)){
                 $movtos[0]["id"] = NULL;
             }
@@ -137,9 +121,7 @@ class ConsumoController extends Controller
             $array["movimientos"] = $movtos;
 
         }
-        
-        //echo $array[0]['error'];
-
+        // echo $array[0]['error'];
         //return json_encode($array);
         return $array;
 
@@ -179,6 +161,9 @@ class ConsumoController extends Controller
         return $array;
         
     }    
+
+
+
 
     public function LoteCargadoExt($RFCEmpresa, $Usuario, $Pwd, $TipoDocto, $movimientos){        
         
@@ -792,6 +777,9 @@ class ConsumoController extends Controller
         return $validaciones;
     }
 
+
+
+
     function LoteCatalogos(Request $request){
         $RFCEmpresa = $request->rfcempresa;
         $Usuario = $request->usuario;
@@ -930,6 +918,9 @@ class ConsumoController extends Controller
 
 
 
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////---------------------->ALMACEN DIGITAL<-------------------------///////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1011,10 +1002,11 @@ class ConsumoController extends Controller
     
 
         }
-
         return json_encode($array, JSON_UNESCAPED_UNICODE);
-
     }
+
+
+
 
     function AlmacenMarcado(Request $request){
 
@@ -1098,6 +1090,10 @@ class ConsumoController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);   
     }
 
+
+
+    
+
     function DatosAlmacen(Request $request){
         $rfc = $request->rfcempresa;
         $idempresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc ='$rfc'");        
@@ -1146,17 +1142,10 @@ class ConsumoController extends Controller
 
                     $reg[$i]->usuario = $datosuser[0]->nombre;
 
-                    // $claverubro = $reg[$i]->rubro;
-
-                    // $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
-
-                    // $reg[$i]->rubro = $rubro[0]->nombre;
-                    // $reg[$i]->claverubro = $claverubro;
-
                     $idsucursal = $reg[$i]->idsucursal;
 
                     $suc = DB::select("SELECT sucursal FROM mc_catsucursales WHERE idsucursal = $idsucursal");
-
+                    
                     $reg[$i]->sucursal = $suc[0]->sucursal;
 
                 }
@@ -1258,7 +1247,6 @@ class ConsumoController extends Controller
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
-
 
     }
 
@@ -1438,8 +1426,11 @@ class ConsumoController extends Controller
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
         
-        
     }
+
+
+
+
 
     function CambiaRubroDocumento(Request $request)
     {

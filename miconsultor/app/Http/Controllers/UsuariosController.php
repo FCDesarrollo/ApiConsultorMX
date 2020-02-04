@@ -214,9 +214,7 @@ class UsuariosController extends Controller
         }else{
             DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->where("identificador", $request->identificador)->update(["tipo"=>"1"]);
             return $id;
-        }
-
-        
+        }   
     }
 
     public function ObtenerUsuarioNuevo(Request $request)

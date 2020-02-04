@@ -1,9 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 
 
@@ -23,6 +22,9 @@ class EmpresasController extends Controller
 
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
+
+
+
 
     function ListaEmpresas(Request $request)
     {
@@ -92,6 +94,8 @@ class EmpresasController extends Controller
         return $id;
     }
 
+  
+
      public function GuardarEmpresa(Request $request)
         {
             $datos = $request->datos;   
@@ -126,6 +130,7 @@ class EmpresasController extends Controller
                 "registro" => $consulta,
             );            
         }else{
+            // query builder 
             DB::connection("General")->table('mc1010')->where("id", $request->id)->update(["rfc"=>$rfc,"estatus"=>"1"]);
             
             $respuesta = array(

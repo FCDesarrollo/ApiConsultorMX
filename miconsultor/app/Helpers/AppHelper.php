@@ -40,6 +40,7 @@ const SubM_Empresas = 20;
 const SubM_Usuarios = 21;
 const SubM_Perfiles = 22;
 
+
 function ConnectDatabase($idempresa)
 {
     $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa='$idempresa' AND status=1");
@@ -85,6 +86,11 @@ function ConnectDatabaseRFC($rfc)
 
     DB::reconnect('mysql');    
 }
+
+
+
+
+
 
 function ConnectaEmpresaDatabase($empresa){
 

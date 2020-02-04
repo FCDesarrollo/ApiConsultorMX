@@ -18,7 +18,9 @@ Route::get('/', function () {
 ///Pruebas
 Route::get('Pruebas', 'UsuariosController@Pruebas');
 
-// Route::get('ListaSucursales/{idempresa}', 'EmpresasController@ListaSucursales');
+Route::post('AlmacenCargado', 'GeneralesController@AlmacenCargado');
+Route::post('DatosDeInicio', 'GeneralesController@DatosDeInicio');
+//Route::get('ListaSucursales/{idempresa}', 'EmpresasController@ListaSucursales');
 
 //Empresas
 Route::get('ListaEmpresas', 'EmpresasController@ListaEmpresas');
@@ -226,5 +228,6 @@ Route::get('DatosReq', 'ComprasController@DatosReq');
 Route::get('ArchivosRequerimientos', 'ComprasController@ArchivosRequerimientos');
 Route::post('addRequerimiento', 'ComprasController@addRequerimiento');
 Route::post('eliminarRequerimiento', 'ComprasController@eliminarRequerimiento');
-// Route::post('EditarRequerimiento', 'ComprasController@EditarRequerimiento');
 
+//APLICAICON MOVIL
+Route::post('DatosUsuarios', 'AppController@DatosUsuarios');

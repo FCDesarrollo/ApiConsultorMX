@@ -142,7 +142,7 @@ class ComprasController extends Controller
         $documento->tipo_doc = 1;
         $documento->download = '<ESTA PENDIENTE>';
         $documento->save();
-        return 'success';
+        // return 'success';
         // $requerimiento = DB::select("SELECT id_requ FROM mc_reqerimientos WHERE rfc='$rfcempresa");
     }
 

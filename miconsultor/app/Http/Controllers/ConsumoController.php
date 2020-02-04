@@ -1613,7 +1613,7 @@ class ConsumoController extends Controller
             $link = $archivos[$i]["link"];
 
             if($status == 0){
-                $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND idmodulo = $idsubmenu");
+                $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND a.idmodulo = $idsubmenu");
                 if(empty($ele)){
                     $array["error"] = 0;
                     $array["archivos"][$i]["archivo"] = $archivo;
@@ -1637,39 +1637,6 @@ class ConsumoController extends Controller
                 $array["archivos"][$i]["detalle"] = $archivos[$i]["error"];
             }
 
-
-            // if($status == 1){
-            //     $array["archivos"][$i]["archivo"] = $archivo;
-            //     $array["archivos"][$i]["codigo"] = $codigodocumento;
-            //     $array["archivos"][$i]["link"] = "";
-            //     $array["archivos"][$i]["status"] = 1; //no se pudo subir el archivo               
-            //     $array["archivos"][$i]["detalle"] = "¡No se pudo cargar el archivo!";
-            // }else if($status == 2){    
-            //     $array["archivos"][$i]["archivo"] = $archivo;
-            //     $array["archivos"][$i]["codigo"] = $codigodocumento;
-            //     $array["archivos"][$i]["link"] = "";
-            //     $array["archivos"][$i]["status"] = 2; //Archivo Dañado
-            //     $array["archivos"][$i]["detalle"] = "¡Archivo Dañado!";
-            // }else{    
-            //     //$ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND rubro = '$rubro'");
-            //     $ele = DB::select("SELECT det.* FROM mc_almdigital_det AS det INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id WHERE documento = '$archivo' AND a.fechadocto = '$fecha' AND idmodulo = $idsubmenu");
-            //     if(empty($ele)){
-            //         $array["error"] = 0;
-            //         $array["archivos"][$i]["archivo"] = $archivo;
-            //         $array["archivos"][$i]["codigo"] = $codigodocumento;                    
-            //         $array["archivos"][$i]["link"] = $link;
-            //         $array["archivos"][$i]["status"] = 0; //Nuevo  
-            //         $array["archivos"][$i]["detalle"] = "¡Cargado Correctamente!";
-            //     }else{
-            //         //$archivos[$i]["status"] = 1;    
-            //         $array["archivos"][$i]["archivo"] = $archivo;
-            //         $array["archivos"][$i]["codigo"] = $codigodocumento;
-            //         $array["archivos"][$i]["link"] = "";
-            //         $array["archivos"][$i]["status"] = 3; //Duplicado    
-            //         $array["archivos"][$i]["detalle"] = "¡Ya existe!";                    
-            //     }
-                
-            // }
 
             if($array["archivos"][$i]["status"] != 0){
                 $type = explode(".", $archivo);

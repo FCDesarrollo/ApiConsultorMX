@@ -1107,29 +1107,7 @@ class ConsumoController extends Controller
 
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
-            // $rubros = DB::select("SELECT * FROM mc_rubros WHERE idmenu = $idmenu AND idsubmenu = $idsubmenu");
 
-            // if(!empty($rubros)){
-            //     $filtro = "";
-            //     $nr = count($rubros);
-
-            //     if($nr == "1"){
-            //         $claverubro = $rubros[0]->clave;
-            //         $filtro = "rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
-            //     }else{
-            //         for ($j=0; $j < $nr; $j++) { 
-            //             $claverubro = $rubros[$j]->clave;
-                        
-            //             if($j == ($nr -1)){
-            //                 $filtro = $filtro." rubro = '".$claverubro."' ORDER BY fechadocto DESC"; 
-            //             }else{
-            //                 $filtro = $filtro." rubro = '".$claverubro."' OR ";
-            //             }
-
-            //         }
-            //     }
-                
-            //    $reg = DB::select("SELECT * FROM mc_almdigital WHERE ".$filtro);
             $reg = DB::select("SELECT * FROM mc_almdigital WHERE idmodulo = $idsubmenu ORDER BY fechadocto DESC");
 
                 for ($i=0; $i < count($reg); $i++) { 
@@ -1146,13 +1124,6 @@ class ConsumoController extends Controller
 
                     $reg[$i]->usuario = $datosuser[0]->nombre;
 
-                    // $claverubro = $reg[$i]->rubro;
-
-                    // $rubro = DB::select("SELECT nombre FROM mc_rubros WHERE clave = '$claverubro'");
-
-                    // $reg[$i]->rubro = $rubro[0]->nombre;
-                    // $reg[$i]->claverubro = $claverubro;
-
                     $idsucursal = $reg[$i]->idsucursal;
 
                     $suc = DB::select("SELECT sucursal FROM mc_catsucursales WHERE idsucursal = $idsucursal");
@@ -1160,11 +1131,7 @@ class ConsumoController extends Controller
                     $reg[$i]->sucursal = $suc[0]->sucursal;
 
                 }
-            // }else{
-            //     $reg = array(
-            //         "datos" => "",
-            //     );
-            // }
+
         }else{
             $reg = array(
                 "datos" => "",

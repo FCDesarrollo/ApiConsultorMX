@@ -148,7 +148,7 @@ class ComprasController extends Controller
             // return $bit;
             for ($i=0; $i < count($bit); $i++) {
                 // Estado de la bitacora
-                $idestado = $bit[$i]->status;
+                $idestado = $bit[$i]->estatus;
                 $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
                 $bit[$i]->estado = $estado_documentos[0]->nombre_estado;
             }

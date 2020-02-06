@@ -44,7 +44,7 @@ const SubM_Perfiles = 22;
 function ConnectDatabase($idempresa)
 {
     $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa='$idempresa' AND status=1");
-    //return $clientes[0]->database;
+    // return $clientes[0]->database;
 
     Config::set('database.connections.mysql', array(
         'driver' => 'mysql',
@@ -64,11 +64,22 @@ function ConnectDatabase($idempresa)
     DB::reconnect('mysql');    
 }
 
+
+function newConexion($rfc){
+        // Obtenemos la empresa que tenga el rfc que nos llega en la peticion
+        $empresa = DB::connection("General")->table('mc1000')->where('RFC', $rfc)->first(); //DB::purgue() ->si llegara a ser necesario
+        // Jalamos la configuracion de las conexiones de laravel, en este caso la conexion original que se llama mysql
+        $config = \Config::get('database.connections.mysql');
+        // Sobreescribimos el nombre de la base de datos a la cual nos queremos conectar
+        $config['database'] = $empresa->rutaempresa;
+        // Aplicamos el cambio a la session de base de datos
+        config()->set('database.connections.mysql', $config);
+}
+
 function ConnectDatabaseRFC($rfc)
 {
     $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE rfc='$rfc' AND status=1");
     //return $clientes[0]->database;
-
     Config::set('database.connections.mysql', array(
         'driver' => 'mysql',
         'host' => env('DB_HOST', ''),

@@ -134,9 +134,7 @@ class ConsumoController extends Controller
         $Pwd = $request->pwd;        
         $TipoDocumento = $request->tipodocto;
         $registros = $request->registros;
-
         //$a  = isset($request->conexion) ? $request->conexion : 0;
-
         $autenticacion = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd, $TipoDocumento, 2, 6, 17);  
 
         $array["error"] = $autenticacion[0]["error"];

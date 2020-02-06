@@ -178,8 +178,6 @@ class ComprasController extends Controller
 // POST REQUERIMIENTOS
     function addRequerimiento(Request $request){
 
-        //$autenticacion = $this->ValidarConexion($RFCEmpresa, $Usuario, $Pwd, $TipoDocumento, 2, 6, 17);  
-        // descripcion folio concepto serie fecha importe
         $descripcion = $request->descripcion;
         $folio = $request->folio;
         $concepto = $request->concepto;
@@ -189,10 +187,13 @@ class ComprasController extends Controller
         $idempresa = $request->idempresa;
         $rfc = $request->rfc;
         $idsucursal = $request->idsucursal;
-        // Hacemos un query normalmente
+
+        // Hacemos un Helper llamado newConexion
         newConexion($rfc);
+        // Hacemos un query
         $requerimientos = requerimiento::get();
-        return $requerimientos;
+
+        // return $requerimientos;
         // Guardamos un nuevo registro en requerimientos
         $requerimiento = new requerimiento();
         $requerimiento->fecha = $fecha;

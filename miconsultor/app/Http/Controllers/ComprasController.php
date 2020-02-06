@@ -89,20 +89,11 @@ class ComprasController extends Controller
     // GET REQUERIMIENTO NO HISTORIAL
     function getRequerimiento(Request $request){
 
-        
-        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4,$request->idmenu,$request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];     
-        if($autenticacion[0]['error'] == 0){  
 
-
-         }
-        
-        $rfc = $request->rfcempresa;
-        $idempresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc ='$rfc'"); 
-
-
-        if(!empty($idempresa)){
-            ConnectDatabase($idempresa[0]->idempresa); 
+        if($autenticacion[0]['error'] == 0){ 
+            ConnectDatabase($autenticacion[0]["idempresa"]);
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
             $req = DB::select("SELECT * FROM mc_requerimientos ORDER BY fecha DESC");
@@ -116,15 +107,13 @@ class ComprasController extends Controller
                 $idestado = $req[$i]->estado_documento;
                 $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
                 $req[$i]->estado = $estado_documentos[0]->nombre_estado;
-            } 
-        }else {
-            $req = array(
 
-                "datos" => "",
+         }
 
-            );      
+         $array["req"] = $req;
+
         }
-        return json_encode($req, JSON_UNESCAPED_UNICODE);
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
 
@@ -134,31 +123,24 @@ class ComprasController extends Controller
 
 // TRAE EL HISTORIAL DE REQUERIMIENTOS
     function DatosReq(Request $request){
-        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
-        $array["error"] = $autenticacion[0]["error"];     
-        return $autenticacion;
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu,$request->idsubmenu);
+        $array["error"] = $autenticacion[0]["error"];
 
-
-        $rfc = $request->rfcempresa;
-        $idempresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc ='$rfc'"); 
-        if(!empty($idempresa)){
-            ConnectDatabase($idempresa[0]->idempresa); 
+        if($autenticacion[0]['error'] == 0){
+            ConnectDatabase($autenticacion[0]["idempresa"]); 
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
             $bit = DB::select("SELECT * FROM mc_requerimientos_bit"); 
             // return $bit;
             for ($i=0; $i < count($bit); $i++) {
                 // Estado de la bitacora
-                $idestado = $bit[$i]->estatus;
+                $idestado = $bit[$i]->status;
                 $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
                 $bit[$i]->estado = $estado_documentos[0]->nombre_estado;
             }
-        }else {
-            $bit = array(
-                "datos" => "",
-            );      
+            $array["bit"] = $bit;
         }
-        return json_encode($bit, JSON_UNESCAPED_UNICODE);
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
 
@@ -176,27 +158,27 @@ class ComprasController extends Controller
 
 
 // DATA STORAGE
-    function DatosStorage(Request $request){
-        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
-        $array["error"] = $autenticacion[0]["error"];     
-        return $autenticacion;
+    // function DatosStorage(Request $request){
+    //     $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
+    //     $array["error"] = $autenticacion[0]["error"];     
+    //     // return $autenticacion;
+    //     $rfc = $request->rfcempresa;
+    //     $server = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+    //     $storage = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$rfc'");
+    //     $storage[0]->server = $server[0]->servidor_storage;
+    //     return json_encode($storage, JSON_UNESCAPED_UNICODE);
+    // }
 
 
 
-        $rfc = $request->rfcempresa;
-        $server = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
-        $storage = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$rfc'");
-        $storage[0]->server = $server[0]->servidor_storage;
-        return json_encode($storage, JSON_UNESCAPED_UNICODE);
-    }
-
-
-
-
-// POST REQUERIMIENTOS
+    
+    // POST REQUERIMIENTOS
     function addRequerimiento(Request $request){
 
-
+        $autenticacion = $this->ValidarConexion($request->rfc, $request->usuario, $request->pwd, 0, 4, 10, 12);
+        $array["error"] = $autenticacion[0]["error"]; 
+    
+        
         $descripcion = $request->descripcion;
         $folio = $request->folio;
         $concepto = $request->concepto;
@@ -206,48 +188,45 @@ class ComprasController extends Controller
         $idempresa = $request->idempresa;
         $rfc = $request->rfc;
         $idsucursal = $request->idsucursal;
-
-
-
-        $autenticacion = $this->ValidarConexion($request->rfc, $request->usuario, $request->pwd, 0, 4, 10, 12);
-        $array["error"] = $autenticacion[0]["error"];  
-            
-        // Hacemos un Helper llamado newConexion
-        // Hacemos un query
-        $requerimientos = requerimiento::get();
-        // Guardamos un nuevo registro en requerimientos
-        $requerimiento = new requerimiento();
-        $requerimiento->fecha = $fecha;
-        $requerimiento->id_usuario = 1;
-        $requerimiento->descripcion = $descripcion;
-        $requerimiento->importe_estimado = $importe;
-        $requerimiento->estado_documento = 1;
-        $requerimiento->id_concepto = $concepto;
-        $requerimiento->serie = $serie;
-        $requerimiento->folio = $folio;
-        $requerimiento->id_sucursal = $idsucursal;
-        $requerimiento->save(); 
-
-
-        // guardamos un segundo regristro en bitacora
-        $bitacora = new Bitacora();
-        $bitacora->id_usuario = $requerimiento->id_usuario;
-        $bitacora->id_req = $requerimiento->id_req;
-        $bitacora->fecha = $fecha;
-        $bitacora->descripcion = $descripcion;
-        $bitacora->status = 1;
-        $bitacora->save();
         
-        // Subir documento a unidad de storage
-        $documento = new Documento();
-        $documento->documento = 'document.' . $request->documento->extension(); 
-        $documento->id_req = $requerimiento->id_req;
-        $documento->tipo_doc = 1;
-        $documento->download = '<ESTA PENDIENTE>';
-        $documento->save();
-        return 'Si se guardo';
+        
+        if($autenticacion[0]['error'] == 0){
+            // Hacemos un Helper llamado newConexion
+            newConexion($rfc);
+            // Hacemos un query
+            $requerimientos = requerimiento::get();
 
+            // Guardamos un nuevo registro en requerimientos
+            $requerimiento = new requerimiento();
+            $requerimiento->fecha = $fecha;
+            $requerimiento->id_usuario = 1;
+            $requerimiento->descripcion = $descripcion;
+            $requerimiento->importe_estimado = $importe;
+            $requerimiento->estado_documento = 1;
+            $requerimiento->id_concepto = $concepto;
+            $requerimiento->serie = $serie;
+            $requerimiento->folio = $folio;
+            $requerimiento->id_sucursal = $idsucursal;
+            $requerimiento->save(); 
+            // guardamos un segundo regristro en bitacora
+            $bitacora = new Bitacora();
+            $bitacora->id_usuario = $requerimiento->id_usuario;
+            $bitacora->id_req = $requerimiento->id_req;
+            $bitacora->fecha = $fecha;
+            $bitacora->descripcion = $descripcion;
+            $bitacora->status = 1;
+            $bitacora->save();
+            
+            // Subir documento a unidad de storage
+            $documento = new Documento();
+            $documento->documento = 'document.' . $request->documento->extension(); 
+            $documento->id_req = $requerimiento->id_req;
+            $documento->tipo_doc = 1;
+            $documento->download = '<ESTA PENDIENTE>';
+            $documento->save();
+            return 'Si se guardo';
 
+        }
 
     }
 

@@ -19,6 +19,8 @@ class ComprasController extends Controller
         //mandando como parametro el valor 0 en cada uno.
         $conexion[0]['error'] = 0;
         $idempresa = DB::connection("General")->select("SELECT idempresa,rutaempresa,usuario_storage,password_storage,RFC FROM mc1000 WHERE RFC = '$RFCEmpresa'");
+
+
         if(!empty($idempresa)){
 
             $Pwd = $Password; //password_hash($Password, PASSWORD_BCRYPT); //md5($Password);
@@ -46,15 +48,11 @@ class ComprasController extends Controller
                         $permisos = DB::select("SELECT modulo.tipopermiso AS modulo, menu.tipopermiso AS menu, submenu.tipopermiso AS submenu FROM mc_usermod modulo, mc_usermenu menu, mc_usersubmenu submenu WHERE modulo.idusuario = $ID And menu.idusuario = $ID And submenu.idusuario = $ID And modulo.idmodulo = $Modulo AND menu.idmenu = $Menu AND submenu.idsubmenu = $SubMenu;");
 
                         if(!empty($permisos)){
-                            //if($permisos[0]->modulo != 0 And $permisos[0]->menu != 0 And $permisos[0]->submenu != 0){
-
                                 $conexion[0]['permisomodulo'] = $permisos[0]->modulo;
                                 $conexion[0]['permisomenu'] = $permisos[0]->menu;
                                 $conexion[0]['permisosubmenu'] = $permisos[0]->submenu;
-
                                 if($TipoDocumento != 0){
                                     $tipodocto = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = $TipoDocumento");
-
                                     if(!empty($tipodocto)){                            
                                         $conexion[0]['tipodocumento'] = $tipodocto[0]->tipo;
                                     }else{
@@ -90,6 +88,14 @@ class ComprasController extends Controller
 
     // GET REQUERIMIENTO NO HISTORIAL
     function getRequerimiento(Request $request){
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
+        $array["error"] = $autenticacion[0]["error"];     
+        return $autenticacion;
+        if($autenticacion[0]['error'] == 0){  
+
+
+         }
+        
         $rfc = $request->rfcempresa;
         $idempresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc ='$rfc'"); 
         // ME TRAE EL ID DE LA EMPRESA 52
@@ -127,6 +133,11 @@ class ComprasController extends Controller
 
 // TRAE EL HISTORIAL DE REQUERIMIENTOS
     function DatosReq(Request $request){
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
+        $array["error"] = $autenticacion[0]["error"];     
+        return $autenticacion;
+
+
         $rfc = $request->rfcempresa;
         $idempresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc ='$rfc'"); 
         if(!empty($idempresa)){
@@ -165,6 +176,9 @@ class ComprasController extends Controller
 
 // DATA STORAGE
     function DatosStorage(Request $request){
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
+        $array["error"] = $autenticacion[0]["error"];     
+        return $autenticacion;
         $rfc = $request->rfcempresa;
         $server = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
         $storage = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$rfc'");
@@ -177,7 +191,6 @@ class ComprasController extends Controller
 
 // POST REQUERIMIENTOS
     function addRequerimiento(Request $request){
-
         $descripcion = $request->descripcion;
         $folio = $request->folio;
         $concepto = $request->concepto;
@@ -188,12 +201,14 @@ class ComprasController extends Controller
         $rfc = $request->rfc;
         $idsucursal = $request->idsucursal;
 
+
+
+        $autenticacion = $this->ValidarConexion($request->rfc, $request->usuario, $request->pwd, 0, 4, 10, 12);
+        $array["error"] = $autenticacion[0]["error"];  
+            
         // Hacemos un Helper llamado newConexion
-        newConexion($rfc);
         // Hacemos un query
         $requerimientos = requerimiento::get();
-
-        // return $requerimientos;
         // Guardamos un nuevo registro en requerimientos
         $requerimiento = new requerimiento();
         $requerimiento->fecha = $fecha;
@@ -206,6 +221,8 @@ class ComprasController extends Controller
         $requerimiento->folio = $folio;
         $requerimiento->id_sucursal = $idsucursal;
         $requerimiento->save(); 
+
+
         // guardamos un segundo regristro en bitacora
         $bitacora = new Bitacora();
         $bitacora->id_usuario = $requerimiento->id_usuario;
@@ -214,15 +231,18 @@ class ComprasController extends Controller
         $bitacora->descripcion = $descripcion;
         $bitacora->status = 1;
         $bitacora->save();
+        
         // Subir documento a unidad de storage
         $documento = new Documento();
+        $documento->documento = 'document.' . $request->documento->extension(); 
         $documento->id_req = $requerimiento->id_req;
-        $documento->documento = 'Documento.' . $request->documento->extension();
         $documento->tipo_doc = 1;
         $documento->download = '<ESTA PENDIENTE>';
         $documento->save();
         return 'Si se guardo';
-        // $requerimiento = DB::select("SELECT id_requ FROM mc_reqerimientos WHERE rfc='$rfcempresa");
+
+
+
     }
 
 

@@ -88,9 +88,10 @@ class ComprasController extends Controller
 
     // GET REQUERIMIENTO NO HISTORIAL
     function getRequerimiento(Request $request){
+
+        
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
         $array["error"] = $autenticacion[0]["error"];     
-        return $autenticacion;
         if($autenticacion[0]['error'] == 0){  
 
 
@@ -98,8 +99,8 @@ class ComprasController extends Controller
         
         $rfc = $request->rfcempresa;
         $idempresa = DB::connection("General")->select("SELECT idempresa FROM mc1000 WHERE rfc ='$rfc'"); 
-        // ME TRAE EL ID DE LA EMPRESA 52
-        // return $idempresa; 
+
+
         if(!empty($idempresa)){
             ConnectDatabase($idempresa[0]->idempresa); 
             $idmenu = $request->idmenu;
@@ -179,6 +180,9 @@ class ComprasController extends Controller
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10, 12);
         $array["error"] = $autenticacion[0]["error"];     
         return $autenticacion;
+
+
+
         $rfc = $request->rfcempresa;
         $server = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
         $storage = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$rfc'");
@@ -191,6 +195,8 @@ class ComprasController extends Controller
 
 // POST REQUERIMIENTOS
     function addRequerimiento(Request $request){
+
+
         $descripcion = $request->descripcion;
         $folio = $request->folio;
         $concepto = $request->concepto;

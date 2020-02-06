@@ -228,6 +228,8 @@ Route::get('DatosReq', 'ComprasController@DatosReq');
 Route::get('ArchivosRequerimientos', 'ComprasController@ArchivosRequerimientos');
 Route::post('addRequerimiento', 'ComprasController@addRequerimiento');
 Route::post('eliminarRequerimiento', 'ComprasController@eliminarRequerimiento');
+Route::post('updateRequermiento', 'ComprasController@updateRequermiento');
+Route::post('newState', 'ComprasController@newState');
 
 //APLICAICON MOVIL
 Route::post('DatosUsuarios', 'AppController@DatosUsuarios');

@@ -1167,8 +1167,6 @@ class GeneralesController extends Controller
     }
 
     //-----------------//
-
-
     public function AlmacenCargado(Request $request){
         //$datos = $request->datos;
         $archivos = $request->file();
@@ -1322,26 +1320,6 @@ class GeneralesController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);     
     }
 
-    function GetLinkCloud($link, $server, $user, $pass){
-       $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://".$user.":".$pass."@".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");
-        curl_setopt($ch, CURLOPT_VERBOSE, 1);       
-        curl_setopt($ch, CURLOPT_USERPWD, $user.":".$pass);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, "path=CRM/".$link."&shareType=3");
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('OCS-APIRequest:true'));
-        curl_setopt($ch, CURLOPT_HEADER, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        $httpResponse = curl_exec($ch);
-        $httpResponse = explode("\n\r\n", $httpResponse);
-        $body = $httpResponse[1];      
-        $Respuesta= simplexml_load_string($body);        
-        $url = ((string)$Respuesta[0]->data->url);
-        curl_close($ch);
-        return $url;        
-    }
-
     function SubirArchivosCloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password, $menu, $submenu, $fechadocto, $consecutivo){
 
         $mod = substr(strtoupper($submenu), 0, 3);
@@ -1381,8 +1359,27 @@ class GeneralesController extends Controller
         $array["archivo"]["error"] = $error_no;
 
         return $array;
+    }     
 
-    }    
+    function GetLinkCloud($link, $server, $user, $pass){
+       $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "https://".$user.":".$pass."@".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");
+        curl_setopt($ch, CURLOPT_VERBOSE, 1);       
+        curl_setopt($ch, CURLOPT_USERPWD, $user.":".$pass);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "path=CRM/".$link."&shareType=3");
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('OCS-APIRequest:true'));
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        $httpResponse = curl_exec($ch);
+        $httpResponse = explode("\n\r\n", $httpResponse);
+        $body = $httpResponse[1];      
+        $Respuesta= simplexml_load_string($body);        
+        $url = ((string)$Respuesta[0]->data->url);
+        curl_close($ch);
+        return $url;        
+    }   
 
     function SiguienteNumero($idempresa, $fechadocto, $idmodulo){
         ConnectDatabase($idempresa);
@@ -1411,6 +1408,7 @@ class GeneralesController extends Controller
         return $consecutivo;
     }
 
+//FUNCION UTILIZADA AL CARGA EL CRM, PARA MOSTRAR DATOS DE LA EMPRESA Y DEL USUARIO. TAMBIEN SE CONSUMO MENUS Y SUBMENUS QUE SON ALMACENADOS EN UNA VARIABLE GLOBAL EN EL CRM PARA NO VOLVER CONSUMIR CADA QUE SE REQUIERE.
     function DatosDeInicio(Request $request){
         $Menus = DB::connection("General")->select("SELECT men.*,modu.nombre_modulo FROM mc1004 men INNER JOIN mc1003 modu ON men.idmodulo=modu.idmodulo WHERE men.Status = '1'");
         $SubMenus = DB::connection("General")->select("SELECT sub.*,men.nombre_menu FROM mc1005 sub INNER JOIN mc1004 men ON sub.idmenu=men.idmenu WHERE sub.Status = '1'");

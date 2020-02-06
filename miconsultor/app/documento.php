@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class documento extends Model
 {
     //
-    protected $connection = 'empresa06';
+    protected $connection = 'mysql';
     protected $table = 'mc_requerimientos_doc';
     public $timestamps = false;
 }

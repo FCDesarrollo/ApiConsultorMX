@@ -17,13 +17,17 @@ class AppController extends Controller
         $array["error"] = $autenticacion[0]["error"];
 
         if($autenticacion[0]['error'] == 0){
+
             $idusuario = $autenticacion[0]['idusuario'];
             
             $array["usuario"] = $autenticacion[0]["usuario"];
+
             $array["submenus"] = DB::connection("General")->select("SELECT * FROM mc1005 WHERE (idmenu=5 or idmenu=10)");
 
             $empresas = DB::connection("General")->select("SELECT e.* FROM mc1000 e INNER JOIN mc1002 r ON e.idempresa=r.idempresa 
                                                             WHERE idusuario=$idusuario");
+
+                                                            
             for ($i=0; $i < count($empresas); $i++) {
 
                 //$array["empresas"][$i] = $empresas[$i];

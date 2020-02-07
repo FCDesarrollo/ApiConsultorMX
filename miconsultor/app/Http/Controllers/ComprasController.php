@@ -77,7 +77,7 @@ class ComprasController extends Controller
 
 
     // GET REQUERIMIENTO NO HISTORIAL
-    function getRequerimiento(Request $request)
+    function obtenerRequerimiento(Request $request)
     {
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu, $request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
@@ -88,14 +88,26 @@ class ComprasController extends Controller
             $idsubmenu = $request->idsubmenu;
             $iduser = $autenticacion[0]["idusuario"];
             $idconcepto = $request->idconcepto;
-            $permisos = DB::select("SELECT * FROM mc_usuarios_concepto WHERE id_usuario= $iduser And id_concepto = $idconcepto");
-            // si tengo permisos el id que esta logeado sea igual al id concpeto y de id usuario
+            $permisos = DB::select("SELECT * FROM mc_usuarios_concepto WHERE id_usuario= $iduser ");
+            $concepto = DB::select("SELECT * FROM mc_conceptos");
+            $req = DB::select("SELECT * FROM mc_requerimientos");
+            
+// HERE 
             if (!empty($permisos)) {
-
-                $req = DB::select("SELECT * FROM mc_requerimientos WHERE id_concepto = $idconcepto");
-            } else {
-                $req = DB::select("SELECT * FROM mc_requerimientos WHERE id_concepto = $idconcepto And id_usuario= $iduser");
+                $contador = 0;
+                for ($i = 0; $i < count($req); $i++) {
+                    for ($j = 0; $j < count($permisos); $j++) {
+                     //   echo $req[$i]["id_concepto"];
+                        if ($req[$i]->id_concepto == $permisos[$j]->id_concepto) {
+                            $array["requerimientos"][$contador] = $req[$i];
+                            $contador = $contador + 1;
+                            break;
+                        }
+                    }
+                }
+                return json_encode($array, JSON_UNESCAPED_UNICODE);
             }
+//  TO HERE
             if (!empty($req)) {
                 for ($i = 0; $i < count($req); $i++) {
                     // Concepto del Documento
@@ -115,6 +127,9 @@ class ComprasController extends Controller
     }
 
 
+
+
+
     // TRAE EL HISTORIAL DE REQUERIMIENTOS
     function Bitacora(Request $request)
     {
@@ -124,12 +139,21 @@ class ComprasController extends Controller
             ConnectDatabase($autenticacion[0]["idempresa"]);
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
+            $idusuario = $autenticacion[0]['idusuario'];
+
+            // ID BITACORA POR ID DE REQUERIMIENTO
             $idreq = $request->idreq;
-            $bit = DB::select("SELECT * FROM mc_requerimientos_bit where id_req = $idreq");
+            $bit = DB::select("SELECT * FROM mc_requerimientos_bit where id_req = $idreq AND id_usuario = $idusuario");
+            return $bit;
+            $idreq = $request->idreq;
+            $documentos = DB::select("SELECT * FROM mc_requerimientos_doc WHERE id_req = $idreq ");
+            $array["documentos"] = $documentos;
+
             for ($i = 0; $i < count($bit); $i++) {
                 // Estado de la bitacora
                 $idestado = $bit[$i]->status;
                 $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
+                // return $estado_documentos;
                 $bit[$i]->estado = $estado_documentos[0]->nombre_estado;
             }
             $array["bit"] = $bit;
@@ -137,21 +161,6 @@ class ComprasController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-
-
-    // Requerimentos Documentos
-    function ArchivosRequerimientos(Request $request)
-    {
-        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu, $request->idsubmenu);
-        $array["error"] = $autenticacion[0]["error"];
-        if ($autenticacion[0]['error'] == 0) {
-            ConnectDatabase($autenticacion[0]["idempresa"]);
-            $idreq = $request->idreq;
-            $documentos = DB::select("SELECT * FROM mc_requerimientos_doc WHERE id_req = $idreq");
-            $array["documentos"] = $documentos;
-        }
-        return json_encode($array, JSON_UNESCAPED_UNICODE);
-    }
 
     // ELIMINAR REQ
     public function eliminarRequerimiento(Request $request)
@@ -161,7 +170,6 @@ class ComprasController extends Controller
         if ($autenticacion[0]['error'] == 0) {
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
-
             $idreq = $request->idreq;
             ConnectDatabase($autenticacion[0]["idempresa"]);
             DB::table('mc_requerimientos')->where("id_req", $idreq)->delete();
@@ -173,11 +181,20 @@ class ComprasController extends Controller
     }
 
 
+
+
+
     // NUEVO ESTADO
     public function nuevoEstado(Request $request){
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu, $request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
-        return $autenticacion;
+        if ($autenticacion[0]['error'] == 0) {
+            $idmenu = $request->idmenu;
+            $idsubmenu = $request->idsubmenu;
+            $idreq = $request->idreq;
+            ConnectDatabase($autenticacion[0]["idempresa"]);
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
 
@@ -206,15 +223,9 @@ class ComprasController extends Controller
         $rfc = $request->rfc;
         $idsucursal = $request->idsucursal;
         $idusuario = $request->idusuario;
-
-
         $usuarios = DB::connection("General")->select("SELECT idusuario FROM mc1001");
-
         newConexion($rfc);
-
         $requerimientos = requerimiento::get();
-
-
         // Guardamos un nuevo registro en requerimientos
         $requerimiento = new requerimiento();
         $requerimiento->fecha = $fecha;
@@ -242,5 +253,6 @@ class ComprasController extends Controller
         $documento->tipo_doc = 1;
         $documento->download = '<ESTA PENDIENTE>';
         $documento->save();
+        return 'Se guardo';
     }
 }

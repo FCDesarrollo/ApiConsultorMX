@@ -214,7 +214,7 @@ Route::post('Plantillas', 'AdministradorController@Plantillas');
 
 
 // AUTORIZACION Y COMPRAS
-Route::get('getRequerimiento', 'ComprasController@getRequerimiento');
+Route::get('obtenerRequerimiento', 'ComprasController@obtenerRequerimiento');
 Route::get('Bitacora', 'ComprasController@Bitacora');
 Route::get('ArchivosRequerimientos', 'ComprasController@ArchivosRequerimientos');
 Route::post('nuevoRequerimiento', 'ComprasController@nuevoRequerimiento');

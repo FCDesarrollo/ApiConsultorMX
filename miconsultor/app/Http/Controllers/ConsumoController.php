@@ -95,7 +95,7 @@ class ConsumoController extends Controller
         $array["error"] = $autenticacion[0]["error"];
         
         if($autenticacion[0]['error'] == 0){     
-
+            
             ConnectDatabase($autenticacion[0]['idempresa']);
             
             $doctos = DB::select("SELECT l.fechadecarga, l.usuario, d.* FROM mc_lotes l, mc_lotesdocto d WHERE l.id = d.idlote AND fecha >= '$FecI' AND fecha <= '$FecF' AND l.tipo = $TipoDocumento");
@@ -112,6 +112,11 @@ class ConsumoController extends Controller
                     $doctos[$i]->usuario = $datosuser[0]->nombre;
                 }                
             }
+
+
+
+
+
             $movtos = DB::select("SELECT m.* FROM mc_lotes l, mc_lotesdocto d, mc_lotesmovtos m WHERE l.id = d.idlote AND d.id = m.iddocto AND d.fecha >= '$FecI' AND d.fecha <= '$FecF' AND l.tipo = $TipoDocumento");
             if(empty($movtos)){
                 $movtos[0]["id"] = NULL;

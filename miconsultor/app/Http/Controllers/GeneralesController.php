@@ -1166,6 +1166,12 @@ class GeneralesController extends Controller
         
     }
 
+
+
+
+
+
+    
     //-----------------//
     public function AlmacenCargado(Request $request){
         //$datos = $request->datos;
@@ -1407,6 +1413,10 @@ class GeneralesController extends Controller
 
         return $consecutivo;
     }
+
+
+
+
 
 //FUNCION UTILIZADA AL CARGA EL CRM, PARA MOSTRAR DATOS DE LA EMPRESA Y DEL USUARIO. TAMBIEN SE CONSUMO MENUS Y SUBMENUS QUE SON ALMACENADOS EN UNA VARIABLE GLOBAL EN EL CRM PARA NO VOLVER CONSUMIR CADA QUE SE REQUIERE.
     function DatosDeInicio(Request $request){

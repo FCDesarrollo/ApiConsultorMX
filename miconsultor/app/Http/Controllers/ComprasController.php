@@ -19,7 +19,6 @@ class ComprasController extends Controller
         //mandando como parametro el valor 0 en cada uno.
         $conexion[0]['error'] = 0;
         $idempresa = DB::connection("General")->select("SELECT idempresa,rutaempresa,usuario_storage,password_storage,RFC FROM mc1000 WHERE RFC = '$RFCEmpresa'");
-        
         if(!empty($idempresa)){
             $Pwd = $Password; //password_hash($Password, PASSWORD_BCRYPT); //md5($Password);
             $conexion[0]['idempresa'] = $idempresa[0]->idempresa;
@@ -73,54 +72,65 @@ class ComprasController extends Controller
         return $conexion;
     }
     
+
+
+
+
+
     // GET REQUERIMIENTO NO HISTORIAL
     function getRequerimiento(Request $request){
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4,$request->idmenu,$request->idsubmenu);
-        $array["error"] = $autenticacion[0]["error"];     
-        if($autenticacion[0]['error'] == 0){ 
+        $array["error"] = $autenticacion[0]["error"]; 
+        if($autenticacion[0]['error'] == 0){
+         // if($autenticacion[0]['permisosubmenu'] == 3){ 
             ConnectDatabase($autenticacion[0]["idempresa"]);
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
-            $req = DB::select("SELECT * FROM mc_requerimientos ORDER BY fecha DESC");
-            for ($i=0; $i < count($req); $i++) {
-                // Concepto del Documento
-                $idconcepto = $req[$i]->id_concepto;
-                $concepto = DB::select("SELECT * FROM mc_conceptos WHERE id = $idconcepto");
-                $req[$i]->concepto = $concepto[0]->nombre_concepto;
+            $iduser = $autenticacion[0]["idusuario"];
+            $idconcepto = $request->idconcepto;
+            $permisos = DB::select("SELECT * FROM mc_usuarios_concepto WHERE id_usuario= $iduser And id_concepto = $idconcepto");
+            // si tengo permisos el id que esta logeado sea igual al id concpeto y de id usuario
+            if(!empty($permisos)){
 
-                // Estado del documento
-                $idestado = $req[$i]->estado_documento;
-                $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
-                $req[$i]->estado = $estado_documentos[0]->nombre_estado;
-
-         }
-         $array["req"] = $req;
-
+                $req = DB::select("SELECT * FROM mc_requerimientos WHERE id_concepto = $idconcepto");
+                
+            }else{
+                $req = DB::select("SELECT * FROM mc_requerimientos WHERE id_concepto = $idconcepto And id_usuario= $iduser");
+            } 
+            if (!empty($req)) {
+                for ($i=0; $i < count($req); $i++) {
+                    // Concepto del Documento
+                    $idconcepto = $req[$i]->id_concepto;
+                    $concepto = DB::select("SELECT * FROM mc_conceptos WHERE id = $idconcepto");
+                    $req[$i]->concepto = $concepto[0]->nombre_concepto;
+                    // Estado del documento
+                    $idestado = $req[$i]->estado_documento;
+                    $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
+                    $req[$i]->estado = $estado_documentos[0]->nombre_estado;
+                }
+             $array["req"] = $req;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+// }
+}
 
 
 // TRAE EL HISTORIAL DE REQUERIMIENTOS
-    function DatosReq(Request $request){
+    function Bitacora(Request $request){
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu,$request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
         if($autenticacion[0]['error'] == 0){
             ConnectDatabase($autenticacion[0]["idempresa"]); 
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
-            $bit = DB::select("SELECT * FROM mc_requerimientos_bit"); 
-
+            $idreq = $request->idreq;
+            $bit = DB::select("SELECT * FROM mc_requerimientos_bit where id_req = $idreq"); 
             for ($i=0; $i < count($bit); $i++) {
                 // Estado de la bitacora
                 $idestado = $bit[$i]->status;
                 $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
-                $bit[$i]->estado = $estado_documentos[0]->nombre_estado;
-                // TRAEMOS ID REQUERIMIENTO
-                $idreq = $bit[$i]->id_req;
-                $requerimiento = DB::select("SELECT id_req FROM mc_requerimientos WHERE id_req = $idreq");
-                $requerimientos = requerimiento::get();
-
+                $bit[$i]->estado = $estado_documentos[0]->nombre_estado;                
             }
             $array["bit"] = $bit;
         }
@@ -128,20 +138,22 @@ class ComprasController extends Controller
     }
 
 
+
 // Requerimentos Documentos
     function ArchivosRequerimientos(Request $request){
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu,$request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
+
         if ($autenticacion[0]['error'] == 0) {
             ConnectDatabase($autenticacion[0]["idempresa"]);
-            $idbit = DB::select("SELECT * FROM mc_requerimientos_doc");
-            for ($i=0; $i < count($idbit) ; $i++) { 
-                $idreq = $idbit[$i]->id_req;
-                $requerimiento = DB::select("SELECT id_req FROM mc_requerimientos WHERE id_req = $idreq");
-                $requerimientos = requerimiento::get();
-                // return $requerimientos;
-            }
-
+            $idreq = $request->idreq;
+            $documentos = DB::select("SELECT * FROM mc_requerimientos_doc WHERE id_req = $idreq");
+            // for ($i=0; $i < count($documentos) ; $i++) { 
+            //     $idestado = $documentos[$i]->status;
+            //     $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
+            //     $documentos[$i]->estado = $estado_documentos[0]->nombre_estado;
+            // }
+            $array["documentos"] = $documentos;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }    
@@ -150,8 +162,10 @@ class ComprasController extends Controller
 
 
 
+
     // POST REQUERIMIENTOS
     function addRequerimiento(Request $request){
+
         $descripcion = $request->descripcion;
         $folio = $request->folio;
         $concepto = $request->concepto;
@@ -161,19 +175,23 @@ class ComprasController extends Controller
         $idempresa = $request->idempresa;
         $rfc = $request->rfc;
         $idsucursal = $request->idsucursal;
-
+        $idusuario = $request->idusuario;
+        
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu,$request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
         
-        
-        // Hacemos un Helper llamado newConexion
-        // Hacemos un query
+        if($autenticacion[0]['error'] == 0){
+            
+        $usuarios = DB::connection("General")->select("SELECT idusuario FROM mc1001");
+
+        newConexion($rfc);
         $requerimientos = requerimiento::get();
-        
+
+
         // Guardamos un nuevo registro en requerimientos
         $requerimiento = new requerimiento();
         $requerimiento->fecha = $fecha;
-        $requerimiento->id_usuario = 1;
+        $requerimiento->id_usuario = idusuario;
         $requerimiento->descripcion = $descripcion;
         $requerimiento->importe_estimado = $importe;
         $requerimiento->estado_documento = 1;
@@ -182,6 +200,7 @@ class ComprasController extends Controller
         $requerimiento->folio = $folio;
         $requerimiento->id_sucursal = $idsucursal;
         $requerimiento->save(); 
+
         // guardamos un segundo regristro en bitacora
         $bitacora = new Bitacora();
         $bitacora->id_usuario = $requerimiento->id_usuario;
@@ -191,6 +210,7 @@ class ComprasController extends Controller
         $bitacora->status = 1;
         $bitacora->save();
 
+
         // Subir documento a unidad de storage
         $documento = new Documento();
         $documento->documento = 'document.' . $request->documento->extension(); 
@@ -198,17 +218,21 @@ class ComprasController extends Controller
         $documento->tipo_doc = 1;
         $documento->download = '<ESTA PENDIENTE>';
         $documento->save();
-        return 'Si se guardo';
+    }   
+}
 
-    }
 
 
+    // UPDATE
     public function updateRequermiento(Request $request){
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, 10,12);
         $array["error"] = $autenticacion[0]["error"];
     }
 
 
+
+    
+    // NUEVO ESTADO
     public function newState(Request $request){
 
 
@@ -216,12 +240,10 @@ class ComprasController extends Controller
 
 
     // ELIMINAR REQ
-    public function eliminarRequerimiento(Request $request)
-    {       
+    public function eliminarRequerimiento(Request $request){       
         ConnectDatabase($request->idempresa);
         $id = $request->idperfil;
         DB::table('mc_requerimiento')->where("id_req", $id)->update(["status"=>"0"]);
         return response($id, 200);
     }
-
 }

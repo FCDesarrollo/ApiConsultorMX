@@ -24,7 +24,7 @@ Route::post('DatosDeInicio', 'GeneralesController@DatosDeInicio');
 
 //Empresas
 Route::get('ListaEmpresas', 'EmpresasController@ListaEmpresas');
-Route::get('DatosEmpresaAD/{idempresa}', 'EmpresasController@DatosEmpresaAD'); 
+Route::get('DatosEmpresaAD/{idempresa}', 'EmpresasController@DatosEmpresaAD');
 Route::post('EliminarEmpresaAD', 'EmpresasController@EliminarEmpresaAD');
 Route::post('GuardarEmpresaAD', 'EmpresasController@GuardarEmpresaAD');
 Route::get('DatosEmpresa', 'EmpresasController@DatosEmpresa');
@@ -33,15 +33,15 @@ Route::post('ActualizaVigencia', 'EmpresasController@ActualizaVigencia');
 
 ///Usuarios
 Route::post('Login', 'UsuariosController@Login');
-Route::get('DatosUsuario/{idusuario}', 'UsuariosController@DatosUsuario'); 
+Route::get('DatosUsuario/{idusuario}', 'UsuariosController@DatosUsuario');
 Route::post('EliminarUsuario', 'UsuariosController@EliminarUsuario');
 Route::post('Desvincular', 'UsuariosController@Desvincular');
 Route::get('NotificacionesUsuario', 'UsuariosController@NotificacionesUsuario');
 route::post('ModificaNotificacion', 'UsuariosController@ModificaNotificacion');
 route::post('VinculacionUsuarios', 'UsuariosController@VinculacionUsuarios');
 
-Route::get('ListaUsuariosAdmin/{idempresa}', 'UsuariosController@ListaUsuariosAdmin'); 
-Route::get('ListaUsuarios/{idempresa}', 'UsuariosController@ListaUsuarios'); 
+Route::get('ListaUsuariosAdmin/{idempresa}', 'UsuariosController@ListaUsuariosAdmin');
+Route::get('ListaUsuarios/{idempresa}', 'UsuariosController@ListaUsuarios');
 Route::post('GuardaUsuario', 'UsuariosController@GuardaUsuario');
 Route::post('GuardarEmpresa', 'EmpresasController@GuardarEmpresa');
 
@@ -56,11 +56,11 @@ Route::post('RestablecerContraseña', 'UsuariosController@RestablecerContraseña
 
 //MODULOS Y PERFILES
 Route::get('Modulos', 'UsuariosController@Modulos');
-Route::get('DatosModulo/{IDMod}', 'UsuariosController@DatosModulo'); 
+Route::get('DatosModulo/{IDMod}', 'UsuariosController@DatosModulo');
 Route::get('Perfiles', 'GeneralesController@PerfilesGen');
-Route::get('DatosPerfil', 'UsuariosController@DatosPerfil'); 
+Route::get('DatosPerfil', 'UsuariosController@DatosPerfil');
 Route::get('ListaPermisos/{IDPer}', 'UsuariosController@ListaPermisos');
-Route::post('EliminaPermiso', 'UsuariosController@EliminaPermiso'); 
+Route::post('EliminaPermiso', 'UsuariosController@EliminaPermiso');
 Route::post('GuardaPermiso', 'UsuariosController@GuardaPermiso');
 Route::post('GuardaPerfil', 'UsuariosController@GuardaPerfil');
 
@@ -174,7 +174,7 @@ Route::get('ArchivosCorreccionLinks', 'ConsumoController@ArchivosCorreccionLinks
 
 
 // PARA EL PROCESO DE COMPRAS
-Route::post('ReqCompras','ConsumoController@ReqCompras');
+Route::post('ReqCompras', 'ConsumoController@ReqCompras');
 
 
 //10/09/2019 PARA LEER LA BITACORA
@@ -213,23 +213,14 @@ Route::post('Plantillas', 'AdministradorController@Plantillas');
 
 
 
-
-
-
-
-
-
-
-
-
 // AUTORIZACION Y COMPRAS
 Route::get('getRequerimiento', 'ComprasController@getRequerimiento');
 Route::get('Bitacora', 'ComprasController@Bitacora');
 Route::get('ArchivosRequerimientos', 'ComprasController@ArchivosRequerimientos');
-Route::post('addRequerimiento', 'ComprasController@addRequerimiento');
+Route::post('nuevoRequerimiento', 'ComprasController@nuevoRequerimiento');
 Route::post('eliminarRequerimiento', 'ComprasController@eliminarRequerimiento');
-Route::post('updateRequermiento', 'ComprasController@updateRequermiento');
-Route::post('newState', 'ComprasController@newState');
+Route::post('editarRequerimiento', 'ComprasController@editarRequerimiento');
+Route::post('nuevoEstado', 'ComprasController@nuevoEstado');
 
 //APLICAICON MOVIL
 Route::post('DatosUsuarios', 'AppController@DatosUsuarios');

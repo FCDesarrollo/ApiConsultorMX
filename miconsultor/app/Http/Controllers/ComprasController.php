@@ -82,7 +82,6 @@ class ComprasController extends Controller
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu, $request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
         if ($autenticacion[0]['error'] == 0) {
-            // if($autenticacion[0]['permisosubmenu'] == 3){ 
             ConnectDatabase($autenticacion[0]["idempresa"]);
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
@@ -91,13 +90,10 @@ class ComprasController extends Controller
             $permisos = DB::select("SELECT * FROM mc_usuarios_concepto WHERE id_usuario= $iduser ");
             $concepto = DB::select("SELECT * FROM mc_conceptos");
             $req = DB::select("SELECT * FROM mc_requerimientos");
-            
-// HERE 
             if (!empty($permisos)) {
                 $contador = 0;
                 for ($i = 0; $i < count($req); $i++) {
                     for ($j = 0; $j < count($permisos); $j++) {
-                     //   echo $req[$i]["id_concepto"];
                         if ($req[$i]->id_concepto == $permisos[$j]->id_concepto) {
                             $array["requerimientos"][$contador] = $req[$i];
                             $contador = $contador + 1;
@@ -107,14 +103,11 @@ class ComprasController extends Controller
                 }
                 return json_encode($array, JSON_UNESCAPED_UNICODE);
             }
-//  TO HERE
             if (!empty($req)) {
                 for ($i = 0; $i < count($req); $i++) {
-                    // Concepto del Documento
                     $idconcepto = $req[$i]->id_concepto;
                     $concepto = DB::select("SELECT * FROM mc_conceptos WHERE id = $idconcepto");
                     $req[$i]->concepto = $concepto[0]->nombre_concepto;
-                    // Estado del documento
                     $idestado = $req[$i]->estado_documento;
                     $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
                     $req[$i]->estado = $estado_documentos[0]->nombre_estado;
@@ -123,7 +116,6 @@ class ComprasController extends Controller
             }
             return json_encode($array, JSON_UNESCAPED_UNICODE);
         }
-        // }
     }
 
 
@@ -137,26 +129,21 @@ class ComprasController extends Controller
         $array["error"] = $autenticacion[0]["error"];
         if ($autenticacion[0]['error'] == 0) {
             ConnectDatabase($autenticacion[0]["idempresa"]);
-            $idmenu = $request->idmenu;
-            $idsubmenu = $request->idsubmenu;
-            $idusuario = $autenticacion[0]['idusuario'];
-
-            // ID BITACORA POR ID DE REQUERIMIENTO
-            $idreq = $request->idreq;
-            $bit = DB::select("SELECT * FROM mc_requerimientos_bit where id_req = $idreq AND id_usuario = $idusuario");
-            return $bit;
-            $idreq = $request->idreq;
-            $documentos = DB::select("SELECT * FROM mc_requerimientos_doc WHERE id_req = $idreq ");
-            $array["documentos"] = $documentos;
-
-            for ($i = 0; $i < count($bit); $i++) {
-                // Estado de la bitacora
-                $idestado = $bit[$i]->status;
-                $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
-                // return $estado_documentos;
-                $bit[$i]->estado = $estado_documentos[0]->nombre_estado;
+            $iduser = $autenticacion[0]["idusuario"];
+            // $permisos = DB::select("SELECT * FROM mc_usuarios_concepto WHERE id_usuario= $iduser ");
+            // $concepto = DB::select("SELECT * FROM mc_conceptos");
+            $req = DB::select("SELECT * FROM mc_requerimientos");
+            $bit = DB::select("SELECT * FROM mc_requerimientos_bit");
+            $documentos = DB::select("SELECT * FROM mc_requerimientos_doc");
+            for ($r = 0; $r < count($req); $r++) {
+                for ($i = 0; $i < count($bit); $i++) {
+                    $array["documentos"] = $documentos;
+                    $idestado = $bit[$i]->status;
+                    $estado_documentos = DB::connection("General")->select("SELECT nombre_estado FROM mc1015 WHERE id = $idestado");
+                    $bit[$i]->estado = $estado_documentos[0]->nombre_estado;
+                }
             }
-            $array["bit"] = $bit;
+            $array["bitacora"] = $bit;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
@@ -183,16 +170,16 @@ class ComprasController extends Controller
 
 
 
-
     // NUEVO ESTADO
-    public function nuevoEstado(Request $request){
+    public function nuevoEstado(Request $request)
+    {
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu, $request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
-        if ($autenticacion[0]['error'] == 0) {
-            $idmenu = $request->idmenu;
-            $idsubmenu = $request->idsubmenu;
-            $idreq = $request->idreq;
+        if ($autenticacion[0]['error'] == 0) {            
             ConnectDatabase($autenticacion[0]["idempresa"]);
+            
+
+
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
@@ -204,6 +191,8 @@ class ComprasController extends Controller
     {
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu, $request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
+        if ($autenticacion[0]['error'] == 0) {
+        }
     }
 
 
@@ -212,47 +201,113 @@ class ComprasController extends Controller
     // POST REQUERIMIENTOS
     function nuevoRequerimiento(Request $request)
     {
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu, $request->idsubmenu);
+        $array["error"] = $autenticacion[0]["error"];
+        if ($autenticacion[0]['error'] == 0) {
 
-        $descripcion = $request->descripcion;
-        $folio = $request->folio;
-        $concepto = $request->concepto;
-        $serie = $request->serie;
-        $fecha = date("Ymd");
-        $importe = $request->importe;
-        $idempresa = $request->idempresa;
-        $rfc = $request->rfc;
-        $idsucursal = $request->idsucursal;
-        $idusuario = $request->idusuario;
-        $usuarios = DB::connection("General")->select("SELECT idusuario FROM mc1001");
-        newConexion($rfc);
-        $requerimientos = requerimiento::get();
-        // Guardamos un nuevo registro en requerimientos
-        $requerimiento = new requerimiento();
-        $requerimiento->fecha = $fecha;
-        $requerimiento->id_usuario = 1;
-        $requerimiento->descripcion = $descripcion;
-        $requerimiento->importe_estimado = $importe;
-        $requerimiento->estado_documento = 1;
-        $requerimiento->id_concepto = $concepto;
-        $requerimiento->serie = $serie;
-        $requerimiento->folio = $folio;
-        $requerimiento->id_sucursal = $idsucursal;
-        $requerimiento->save();
-        // guardamos un segundo regristro en bitacora
-        $bitacora = new Bitacora();
-        $bitacora->id_usuario = $requerimiento->id_usuario;
-        $bitacora->id_req = $requerimiento->id_req;
-        $bitacora->fecha = $fecha;
-        $bitacora->descripcion = $descripcion;
-        $bitacora->status = 1;
-        $bitacora->save();
-        // Subir documento a unidad de storage
-        $documento = new Documento();
-        $documento->documento = 'document.' . $request->documento->extension();
-        $documento->id_req = $requerimiento->id_req;
-        $documento->tipo_doc = 1;
-        $documento->download = '<ESTA PENDIENTE>';
-        $documento->save();
-        return 'Se guardo';
+            
+            $archivos = $request->file();
+            $descripcion = $request->descripcion;
+            $folio = $request->folio;
+            $concepto = $request->concepto;
+            $serie = $request->serie;
+            $fecha = date("Ymd");
+            $importe = $request->importe;
+            $idempresa = $request->idempresa;
+            $rfc = $request->rfc;
+            $idsucursal = $request->idsucursal;
+            $idusuario = $autenticacion[0]['idusuario'];
+            $status = 1;
+
+            
+            // ConnectDatabase($autenticacion[0]["idempresa"]);
+            newConexion($rfc);
+
+            // $requerimientos = requerimiento::get();
+            $requerimiento = new requerimiento();
+            $requerimiento->fecha = $fecha;
+            $requerimiento->id_usuario = $idusuario;
+            $requerimiento->descripcion = $descripcion;
+            $requerimiento->importe_estimado = $importe;
+            $requerimiento->estado_documento = $status;
+            $requerimiento->id_concepto = $concepto;
+            $requerimiento->serie = $serie;
+            $requerimiento->folio = $folio;
+            $requerimiento->id_sucursal = $idsucursal;
+            $requerimiento->save();
+
+
+            $bitacora = new Bitacora();
+            $bitacora->id_usuario = $requerimiento->id_usuario;
+            $bitacora->id_req = $requerimiento->id_req;
+            $bitacora->fecha = $fecha;
+            $bitacora->descripcion = $descripcion;
+            $bitacora->status = $requerimiento->estado_documento;
+            $bitacora->save();
+
+
+            $documento = new Documento();
+            $documento->documento = 'document.' . $request->documento->extension();
+            $documento->id_req = $requerimiento->id_req;
+            $documento->tipo_doc = 1;
+            $documento->download = '<ESTA PENDIENTE>';
+
+            // foreach ($archivos as $key) {
+
+            //     if (strlen($countreg) == 1) {
+            //         $consecutivo = "000" . $countreg;
+            //     } elseif (strlen($countreg) == 2) {
+            //         $consecutivo = "00" . $countreg;
+            //     } elseif (strlen($countreg) == 3) {
+            //         $consecutivo = "0" . $countreg;
+            //     } else {
+            //         $consecutivo = $countreg;
+            //     }
+
+            $documento->save();
+        }
+    }
+
+
+    function SubirArchivosCloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password, $menu, $submenu, $fechadocto, $consecutivo)
+    {
+
+        $mod = substr(strtoupper($submenu), 0, 3);
+        $directorio = $rfcempresa . '/Entrada/' . $menu . '/' . $submenu;
+        $string = explode("-", $fechadocto);
+        $codfec = substr($string[0], 2) . $string[1];
+        $codarchivo = $rfcempresa . "_" . $codfec . "_" . $mod . "_";
+
+        $ch = curl_init();
+        $file = $archivo_name;
+        $filename = $codarchivo . $consecutivo;
+        $source = $ruta_temp; //Obtenemos un nombre temporal del archivo        
+        $type = explode(".", $file);
+        $target_path = $directorio . '/' . $filename . "." . $type[count($type) - 1];
+
+        $gestor = fopen($source, "r");
+        $contenido = fread($gestor, filesize($source));
+
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuario . '/CRM/' . $target_path,
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => $usuario . ':' . $password,
+                CURLOPT_POSTFIELDS => $contenido,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'PUT',
+            )
+        );
+        $resp = curl_exec($ch);
+        $error_no = curl_errno($ch);
+        fclose($gestor);
+        curl_close($ch);
+        $array["archivo"]["target"] = $target_path;
+        $array["archivo"]["codigo"] = $filename;
+        $array["archivo"]["error"] = $error_no;
+
+        return $array;
     }
 }

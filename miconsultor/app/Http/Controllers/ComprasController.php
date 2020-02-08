@@ -87,22 +87,46 @@ class ComprasController extends Controller
             $idsubmenu = $request->idsubmenu;
             $iduser = $autenticacion[0]["idusuario"];
             $idconcepto = $request->idconcepto;
+
+        //    ruquerimento  "select * from mc_reque  id_usuario= $iduser"
+
+        //    conpeto  select idconcepto from mc_concepts = idusuario
+
+        //     for 
+        //         select  * from mc_req idconcepto = id concepto = filtro
+
+            $req = DB::select("SELECT * FROM mc_requerimientos WHERE id_usuario = $iduser");
+            // return $req;
+            
+            $concepto = DB::select("SELECT * FROM mc_conceptos WHERE id_usuario = $iduser");
+            // return $concepto;
             $permisos = DB::select("SELECT * FROM mc_usuarios_concepto WHERE id_usuario= $iduser ");
-            $concepto = DB::select("SELECT * FROM mc_conceptos");
-            $req = DB::select("SELECT * FROM mc_requerimientos");
-            if (!empty($permisos)) {
-                $contador = 0;
-                for ($i = 0; $i < count($req); $i++) {
-                    for ($j = 0; $j < count($permisos); $j++) {
-                        if ($req[$i]->id_concepto == $permisos[$j]->id_concepto) {
-                            $array["requerimientos"][$contador] = $req[$i];
-                            $contador = $contador + 1;
-                            break;
-                        }
-                    }
+            // return $permisos;
+
+            if(!empty($permisos)){
+                for ($i=0; $i < count($permisos); $i++) { 
+                    // Poner varible antes
+                    $req = DB::select("SELECT * FROM mc_requerimientos");
+                    return $req;
+
                 }
-                return json_encode($array, JSON_UNESCAPED_UNICODE);
             }
+
+            // if (!empty($permisos)) {
+            //     $contador = 0;
+            //     for ($i = 0; $i < count($req); $i++) {
+            //         for ($j = 0; $j < count($permisos); $j++) {
+            //             if ($req[$i]->id_concepto == $permisos[$j]->id_concepto) {
+            //                 $array["requerimientos"][$contador] = $req[$i];
+            //                 $contador = $contador + 1;
+            //                 break;
+            //             }
+            //         }
+            //     }
+            //     return json_encode($array, JSON_UNESCAPED_UNICODE);
+            // }
+
+            
             if (!empty($req)) {
                 for ($i = 0; $i < count($req); $i++) {
                     $idconcepto = $req[$i]->id_concepto;
@@ -123,8 +147,7 @@ class ComprasController extends Controller
 
 
     // TRAE EL HISTORIAL DE REQUERIMIENTOS
-    function Bitacora(Request $request)
-    {
+    function Bitacora(Request $request){
         $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 4, $request->idmenu, $request->idsubmenu);
         $array["error"] = $autenticacion[0]["error"];
         if ($autenticacion[0]['error'] == 0) {
@@ -177,7 +200,7 @@ class ComprasController extends Controller
         $array["error"] = $autenticacion[0]["error"];
         if ($autenticacion[0]['error'] == 0) {            
             ConnectDatabase($autenticacion[0]["idempresa"]);
-            
+
 
 
         }
@@ -254,15 +277,15 @@ class ComprasController extends Controller
 
             // foreach ($archivos as $key) {
 
-            //     if (strlen($countreg) == 1) {
-            //         $consecutivo = "000" . $countreg;
-            //     } elseif (strlen($countreg) == 2) {
-            //         $consecutivo = "00" . $countreg;
-            //     } elseif (strlen($countreg) == 3) {
-            //         $consecutivo = "0" . $countreg;
-            //     } else {
-            //         $consecutivo = $countreg;
-            //     }
+                // if (strlen($countreg) == 1) {
+                //     $consecutivo = "000" . $countreg;
+                // } elseif (strlen($countreg) == 2) {
+                //     $consecutivo = "00" . $countreg;
+                // } elseif (strlen($countreg) == 3) {
+                //     $consecutivo = "0" . $countreg;
+                // } else {
+                //     $consecutivo = $countreg;
+                // }
 
             $documento->save();
         }

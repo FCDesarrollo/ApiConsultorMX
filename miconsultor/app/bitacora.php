@@ -4,12 +4,10 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class requerimiento_bit extends Model
+class bitacora extends Model
 {
     //
     protected $connection = 'mysql';
-    protected $table = 'mc_requerimientos_bit';
-    protected $primaryKey = 'id_bit';
+    protected $table = 'mc_';
     public $timestamps = false;
-
 }

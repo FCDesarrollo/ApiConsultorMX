@@ -148,8 +148,8 @@ class AdministradorController extends Controller
                     
                     $idusersub = $usuario[0]->idusuario;
                     
-                    $status=  $request->Status;
-                    $iduserentrega = $request->Idusuarioentrega;
+                    $status=  0;
+                    $iduserentrega = 0;
                     $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->Idsubmenu
                                                         AND tipodocumento= '$request->Tipodocumento'
                                                         AND periodo= $periodo

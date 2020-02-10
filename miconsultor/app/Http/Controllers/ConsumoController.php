@@ -1074,7 +1074,7 @@ class ConsumoController extends Controller
     function CatSucursales(Request $request)
     {
 
-        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, Mod_Contabilidad, Menu_AlmacenDigital, SubM_ExpedientesDigitales);
+        $autenticacion = $this->ValidarConexion($request->rfcempresa, $request->usuario, $request->pwd, 0, 0, 0, 0);
 
         $array["error"] = $autenticacion[0]["error"];
 

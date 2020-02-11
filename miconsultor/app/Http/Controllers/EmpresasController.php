@@ -487,6 +487,8 @@ class EmpresasController extends Controller
             $mc1013 = "insert ".$empresaBD.".mc_rubros SELECT * FROM dublockc_MCGenerales.mc1013;";
             DB::statement($mc1013);
             
+            $SucTemp = "insert into mc_catsucursales (sucursal) VALUES ('TEMPORAL')";
+            DB::statement($SucTemp);
             //$mc1014 = "insert ".$empresaBD.".mc_conceptos SELECT * FROM dublockc_MCGenerales.mc1014;";
             //DB::statement($mc1014);
             

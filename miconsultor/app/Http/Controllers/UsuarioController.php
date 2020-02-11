@@ -11,7 +11,7 @@ class UsuarioController extends Controller
     function inicioUsuario(Request $request)
     {
         $usuario = DB::connection("General")->select("SELECT * FROM mc1001 
-                                    WHERE correo='$request->usuario' or cel='$request->usuario' or  AND status=1");
+                                    WHERE correo='$request->usuario' or cel='$request->usuario' AND status=1");
 
         if(!empty($usuario)){
             $hash_BD = $usuario[0]->password;

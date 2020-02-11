@@ -224,3 +224,5 @@ Route::post('nuevoEstado', 'ComprasController@nuevoEstado');
 
 //APLICAICON MOVIL
 Route::post('DatosUsuarios', 'AppController@DatosUsuarios');
+
+Route::get('listaempresas', 'AdministradorController@listaempresas');

@@ -122,3 +122,21 @@ function ConnectaEmpresaDatabase($empresa){
 
     DB::reconnect('mysql');    
 }
+
+function verificaUsuario($user, $pass){
+    $usuario = DB::select("SELECT * FROM mc1001 WHERE correo='$user' or cel='$user' AND status=1");
+    if (!empty($usuario)){
+        $hash_BD = $usuario[0]->password;
+
+        if (password_verify($pass, $hash_BD)) {
+            $datos = array(
+               "usuario" => $usuario,
+            );
+        } else {
+            $datos = "3";
+        } 
+    }else {
+        $datos = "2";
+    }
+    return $datos;
+}

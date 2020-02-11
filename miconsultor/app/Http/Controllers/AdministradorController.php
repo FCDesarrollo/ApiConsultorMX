@@ -44,8 +44,6 @@ class AdministradorController extends Controller
                 $datos = array(
                    "usuario" => $usuario,
                 );
-                //$datos = $usuario;
-              
             } else {
                 $datos = "3";
             } 

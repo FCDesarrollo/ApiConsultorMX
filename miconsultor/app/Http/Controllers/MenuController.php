@@ -17,7 +17,7 @@ class MenuController extends Controller
             $modulos = DB::connection("General")->select("SELECT * FROM mc1003");
             for ($i=0; $i < count($modulos); $i++) {
                 $menus = DB::connection("General")->select("SELECT * FROM mc1004");
-                $modulos->menus = $menus;
+                $modulos[$i]->menus = $menus;
             }
             $array["modulos"][$i] = $modulos[$i];
         }

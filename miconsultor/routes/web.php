@@ -227,8 +227,11 @@ Route::post('DatosUsuarios', 'AppController@DatosUsuarios');
 
 Route::get('listaempresas', 'AdministradorController@listaempresas');
 
+//APIS MENU 2020
+Route::get('menuWeb', 'MenuController@menuWeb');
+
 //APIS USUARIO 2020
 Route::post('inicioUsuario', 'UsuarioController@inicioUsuario');
 
-//APIS EMPRES 2020
+//APIS EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');

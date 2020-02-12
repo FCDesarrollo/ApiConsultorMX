@@ -123,13 +123,30 @@ function ConnectaEmpresaDatabase($empresa){
     DB::reconnect('mysql');    
 }
 
-function verificaUsuario($user, $pass){
+function verificaLogin($user, $pass){
     $datos[0]['error'] = 0;
     $usuario = DB::select("SELECT * FROM mc1001 WHERE correo='$user' or cel='$user' AND status=1");
     if (!empty($usuario)){
         $hash_BD = $usuario[0]->password;
 
         if (password_verify($pass, $hash_BD)) {
+            $datos[0]['usuario'] = $usuario;
+        } else {
+            $datos[0]['error'] = 3;
+        } 
+    }else {
+        $datos[0]['error'] = 2;;
+    }
+    return $datos;
+}
+
+function verificaUsuario($user, $pass){
+    $datos[0]['error'] = 0;
+    $usuario = DB::select("SELECT * FROM mc1001 WHERE correo='$user' or cel='$user' AND status=1");
+    if (!empty($usuario)){
+        $hash_BD = $usuario[0]->password;
+
+        if ($pass == $hash_BD) {
             $datos[0]['usuario'] = $usuario;
         } else {
             $datos[0]['error'] = 3;

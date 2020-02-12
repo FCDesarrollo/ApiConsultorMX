@@ -227,5 +227,8 @@ Route::post('DatosUsuarios', 'AppController@DatosUsuarios');
 
 Route::get('listaempresas', 'AdministradorController@listaempresas');
 
-//APIS 2020
+//APIS USUARIO 2020
 Route::post('inicioUsuario', 'UsuarioController@inicioUsuario');
+
+//APIS EMPRES 2020
+Route::get('listaEmpresasUsuario', 'Empresa@listaEmpresasUsuario');

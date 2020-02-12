@@ -231,4 +231,4 @@ Route::get('listaempresas', 'AdministradorController@listaempresas');
 Route::post('inicioUsuario', 'UsuarioController@inicioUsuario');
 
 //APIS EMPRES 2020
-Route::get('listaEmpresasUsuario', 'Empresa@listaEmpresasUsuario');
+Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');

@@ -1205,7 +1205,7 @@ class GeneralesController extends Controller
     {
         //$datos = $request->datos;
 
-        if(isset($request->file())){
+//        if(isset($request->file())){
 
         
             $archivos = $request->file();
@@ -1360,9 +1360,9 @@ class GeneralesController extends Controller
             } else {
                 $array["error"] = $autenticacion[0]["error"]; //ERROR DE AUTENTICACION
             }
-        } else {
-            $array["error"] = 12; //SIN ARCHIVOS EN EL REQUEST
-        }
+//        } else {
+//            $array["error"] = 12; //SIN ARCHIVOS EN EL REQUEST
+//        }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

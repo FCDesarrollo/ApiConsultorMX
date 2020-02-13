@@ -16,8 +16,14 @@ class MenuController extends Controller
         if ($valida[0]['error'] == 0){
             $modulos = DB::connection("General")->select("SELECT * FROM mc1003");
             for ($i=0; $i < count($modulos); $i++) {
-                $menus = DB::connection("General")->select("SELECT * FROM mc1004");
+                $menus = DB::connection("General")->select("SELECT * FROM mc1004 
+                                            WHERE idmodulo=$modulos[$i]->idmodulo");
                 $modulos[$i]->menus = $menus;
+                for ($x=0; $x < count($menus); $x++) {
+                    $submenus = DB::connection("General")->select("SELECT * FROM mc1005 
+                                    WHERE idmenu=$menus[$x]->idmenu");
+                    $menus[$x]->submenus = $submenus;
+                }
                 $array["modulos"][$i] = $modulos[$i];
             }
             

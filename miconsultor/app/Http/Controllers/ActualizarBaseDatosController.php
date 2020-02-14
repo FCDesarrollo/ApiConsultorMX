@@ -9,12 +9,13 @@ class ActualizarBaseDatosController extends Controller
 {
     public function actualizaPerfilesGeneral(Request $request)
     {
+        
         $valida = verificaUsuario($request->usuario, $request->pwd);
 
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] == 0){
-
+            
             $perfiles = DB::connection("General")->select("SELECT idperfil FROM mc1006" );
             
             for ($i=0; $i < count($perfiles); $i++) {

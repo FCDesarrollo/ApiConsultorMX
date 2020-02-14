@@ -232,6 +232,7 @@ Route::get('menuWeb', 'MenuController@menuWeb');
 
 //USUARIO 2020
 Route::post('inicioUsuario', 'UsuarioController@inicioUsuario');
+Route::get('permisosUsuario', 'UsuarioController@permisosUsuario');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');

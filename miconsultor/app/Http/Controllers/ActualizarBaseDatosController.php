@@ -87,7 +87,7 @@ class ActualizarBaseDatosController extends Controller
 
     public function actualizaPermisosUsuario(Request $request)
     {
-        set_time_limit(0);
+        set_time_limit(300);
         $valida = verificaUsuario($request->usuario, $request->pwd);
 
         $array["error"] = $valida[0]["error"];
@@ -144,6 +144,66 @@ class ActualizarBaseDatosController extends Controller
                         }
                     }
                 }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function creaTablasRequerimientos(Request $request)
+    {
+        set_time_limit(300);
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $empresas = DB::connection("General")->select("SELECT rutaempresa FROM mc1000" );
+            for ($i=0; $i < count($empresas); $i++) { 
+                $empresaBD = $empresas[$i]->rutaempresa;        
+                ConnectaEmpresaDatabase($empresaBD);
+                
+                $mc_conceptos = "create table if not exists mc_conceptos (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    nombre_concepto varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                    descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                    fecha date DEFAULT NULL,
+                    status int(11) DEFAULT NULL,
+                    PRIMARY KEY (id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                    DB::statement($mc_conceptos);
+
+                $mc_requerimientos = "create table if not exists mc_requerimientos (
+                    idReq int(11) NOT NULL AUTO_INCREMENT,
+                    fecha date DEFAULT NULL,
+                    id_usuario int(11) DEFAULT NULL,
+                    id_departamento int(11) DEFAULT NULL,
+                    descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                    importe_estimado double DEFAULT NULL,
+                    estado_documento int(11) DEFAULT NULL,
+                    id_concepto int(11) DEFAULT NULL,
+                    serie varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                    folio varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                    PRIMARY KEY (idReq)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                    DB::statement($mc_requerimientos);
+    
+                  $mc_requerimientos_bit = "create table if not exists mc_requerimientos_bit (
+                    id_bit int(11) NOT NULL,
+                    id_req int(11) DEFAULT NULL,
+                    fecha date DEFAULT NULL,
+                    status int(11) DEFAULT NULL,
+                    PRIMARY KEY (id_bit)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                  DB::statement($mc_requerimientos_bit);
+
+                  $mc_requerimientos_doc = "create table if not exists mc_requerimientos_doc (
+                        id_req int(11) DEFAULT NULL,
+                        documento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                        codigo_documento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                        tipo_doc int(11) DEFAULT NULL,
+                        download varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL
+                        ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                  DB::statement($mc_requerimientos_doc);
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

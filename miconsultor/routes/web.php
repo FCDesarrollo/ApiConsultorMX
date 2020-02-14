@@ -238,5 +238,6 @@ Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');
 
 
 //ACTUALIZA PERFILES GENERALES
-Route::put('actualizaPerfilesGeneral', 'ActualizarBaseDatosController@actualizaPerfilesGeneral');
-Route::put('actualizaPerfilesEmpresa', 'ActualizarBaseDatosController@actualizaPerfilesEmpresa');
+Route::put('actualizaPerfilesGeneral', 'ActualizarBaseDatosController@actualizaPerfilesGeneral'); // 14/02/2020
+Route::put('actualizaPerfilesEmpresa', 'ActualizarBaseDatosController@actualizaPerfilesEmpresa'); // 14/02/2020
+Route::put('actualizaPermisosUsuario', 'ActualizarBaseDatosController@actualizaPermisosUsuario'); // 14/02/2020

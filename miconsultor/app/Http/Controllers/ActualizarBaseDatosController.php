@@ -83,4 +83,68 @@ class ActualizarBaseDatosController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function actualizaPermisosUsuario(Request $request)
+    {
+        set_time_limit(0);
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $usuarios = DB::connection("General")->select("SELECT m2.idusuario,m0.empresaBD FROM mc1002 m2 
+                                                INNER JOIN mc1000 m0 ON m2.idempresa=m0.idempresa" );
+            for ($i=0; $i <count($usuarios) ; $i++) { 
+                $bdd = $usuarios[$i]->empresaBD;
+                $idusuario = $usuarios[$i]->idusuario;
+                ConnectaEmpresaDatabase($bdd); 
+                if ($bdd != "") {   
+                    $userperfil = DB::select('select idperfil from mc_userprofile where idusuario = ?', [$idusuario]);
+                    if (!empty($userperfil)) {
+                        $idperfil = $userperfil[0]->idperfil;
+                        $modper = DB::select('select idmodulo,tipopermiso from mc_modpermis where idperfil = ?', [$idperfil]);
+                        for ($x=0; $x < count($modper); $x++) { 
+                            $idmodulo = $modper[$x]->idmodulo;
+                            $usemod = DB::select('select id from mc_usermod where idusuario = ? AND idperfil = ? 
+                                                    AND idmodulo = ? ', [$idusuario, $idperfil, $idmodulo]);
+                            if (empty($usemod)) {
+                                $tipopermiso = $modper[$x]->tipopermiso;
+                                DB::insert('insert into mc_usermod (idusuario, idperfil, idmodulo,tipopermiso) values 
+                                                (?, ?, ? , ?)', [$idusuario, $idperfil, $idmodulo, $tipopermiso]);     
+                            }
+
+                            $menuper = DB::select('select idmenu,tipopermiso from mc_menupermis where 
+                                                    idperfil = ? AND idmodulo = ?', [$idperfil, $idmodulo]);
+                            for ($z=0; $z < count($menuper); $z++) {
+                                $idmenu = $menuper[$z]->idmenu; 
+                                $usermenu = DB::select('select id from mc_usermenu where idusuario = ? AND idperfil = ? 
+                                                            AND idmodulo = ? AND idmenu = ?', [$idusuario, $idperfil, $idmodulo, $idmenu]);
+                                if (empty($usermenu)) {
+                                    $tipopermiso = $menuper[$z]->tipopermiso;
+                                    DB::insert('insert into mc_usermenu (idusuario, idperfil, idmodulo, idmenu, tipopermiso) 
+                                            values (?, ?, ?, ?, ?)', [$idusuario, $idperfil, $idmodulo,$idmenu, $tipopermiso]);
+                                }
+
+                                $submenuper = DB::select('select idsubmenu,tipopermiso,notificaciones from mc_submenupermis 
+                                                            where idperfil = ? AND idmenu = ? ', [$idperfil, $idmenu]);
+                                for ($r=0; $r < count($submenuper); $r++) { 
+                                    $idsubmenu = $submenuper[$r]->idsubmenu;
+                                    $usersubmenu = DB::select('select id from mc_usersubmenu where idusuario = ? AND idperfil = ? 
+                                                        AND idmenu = ? AND idsubmenu = ?', [$idusuario, $idperfil, $idmenu, $idsubmenu]);
+                                    if (empty($usersubmenu)) {
+                                        $tipopermiso = $submenuper[$r]->tipopermiso;
+                                        $notificacion = $submenuper[$r]->notificaciones;
+                                        DB::insert('insert into mc_usersubmenu (idusuario, idperfil, idmenu, idsubmenu, tipopermiso, notificaciones)
+                                                                values (?, ?, ?, ?, ?, ?)', [$idusuario, $idperfil, $idmenu, $idsubmenu,$tipopermiso,$notificacion]);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

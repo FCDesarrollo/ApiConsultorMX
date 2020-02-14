@@ -54,9 +54,8 @@ class ActualizarBaseDatosController extends Controller
                     }
                 }
             }
-            
-            return json_encode($array, JSON_UNESCAPED_UNICODE);
         }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     public function actualizaPerfilesEmpresa(Request $request)

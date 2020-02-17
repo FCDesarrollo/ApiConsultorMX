@@ -10,7 +10,7 @@
     <p>Estimado usuario, su codigo de confirmación ha sido generado correctamente.</p>
     {{-- <p>Estos son los datos del usuario que ha realizado la denuncia:</p> --}}
     <ul>
-        <li>Codgio de confirmacion: {{ $datosUser["identificador"] }}</li>
+        <li>Código de confirmación: {{ $datosUser["identificador"] }}</li>
         {{-- <li>Teléfono: {{ $datosUser->cel }}</li>
         <li>DNI: {{ $datosUser->usernombre }}</li> --}}
     </ul>

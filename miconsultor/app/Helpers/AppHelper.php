@@ -185,7 +185,7 @@ function verificaLogin($user, $pass){
 
 function verificaUsuario($user, $pass){
     $datos[0]['error'] = 0;
-    $usuario = DB::select("SELECT * FROM mc1001 WHERE correo='$user' or cel='$user' AND status=1");
+    $usuario = DB::select("SELECT * FROM mc1001 WHERE (correo='$user' or cel='$user') AND status=1");
     if (!empty($usuario)){
         $hash_BD = $usuario[0]->password;
 

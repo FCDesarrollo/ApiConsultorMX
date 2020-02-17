@@ -115,4 +115,30 @@ class UsuarioController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function verificaCodigo(Request $request)
+    {
+        $user = $request->usuario;
+        $codigo = $request->codigo;
+        $array["error"] = 0;
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 
+                            WHERE (correo='$user' or cel='$user') AND status=1");
+        if (!empty($usuario)) {
+            $verificacion = DB::connection("General")->select("SELECT * FROM mc1001 
+                            WHERE (correo='$user' or cel='$user') AND status=1 AND tipo=0 and identificador='$codigo'");
+            if (!empty($verificacion)){
+                $idusuario= $verificacion[0]->idusuario;
+                $verificacion[0]->tipo= 1;
+                DB::update('update mc1001 set tipo = 1 where idusuario = ?', [$idusuario]);
+                $array["usuario"] = $verificacion[0];
+            }else{
+                $array["error"]  = 6;
+            }
+        }else{
+            $array["error"]  = 2;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+
+    }
 }

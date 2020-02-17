@@ -233,6 +233,7 @@ Route::get('menuWeb', 'MenuController@menuWeb');
 //USUARIO 2020
 Route::post('inicioUsuario', 'UsuarioController@inicioUsuario');
 Route::get('permisosUsuario', 'UsuarioController@permisosUsuario');
+Route::post('registrarUsuario', 'UsuarioController@registrarUsuario');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');
@@ -243,3 +244,7 @@ Route::put('actualizaPerfilesGeneral', 'ActualizarBaseDatosController@actualizaP
 Route::put('actualizaPerfilesEmpresa', 'ActualizarBaseDatosController@actualizaPerfilesEmpresa'); // 14/02/2020
 Route::put('actualizaPermisosUsuario', 'ActualizarBaseDatosController@actualizaPermisosUsuario'); // 14/02/2020
 Route::put('creaTablasRequerimientos', 'ActualizarBaseDatosController@creaTablasRequerimientos'); // 14/02/2020
+
+//AUTORIZACION Y GASTOS 2020
+Route::post('nuevoRequerimiento', 'AutorizacionyGastosController@nuevoRequerimiento');
+Route::get('listaRequerimientos', 'AutorizacionyGastosController@listaRequerimientos');

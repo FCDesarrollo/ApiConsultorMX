@@ -98,6 +98,49 @@ function ConnectDatabaseRFC($rfc)
     DB::reconnect('mysql');    
 }
 
+function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password, $menu, $submenu, $fechadocto, $consecutivo)
+    {
+
+        $mod = substr(strtoupper($submenu), 0, 3);
+        $directorio = $rfcempresa . '/Entrada/' . $menu . '/' . $submenu;
+        $string = explode("-", $fechadocto);
+        $codfec = substr($string[0], 2) . $string[1];
+        $codarchivo = $rfcempresa . "_" . $codfec . "_" . $mod . "_";
+
+        $ch = curl_init();
+        $file = $archivo_name;
+        $filename = $codarchivo . $consecutivo;
+        $source = $ruta_temp; //Obtenemos un nombre temporal del archivo        
+        $type = explode(".", $file);
+        $target_path = $directorio . '/' . $filename . "." . $type[count($type) - 1];
+
+        $gestor = fopen($source, "r");
+        $contenido = fread($gestor, filesize($source));
+
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuario . '/CRM/' . $target_path,
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => $usuario . ':' . $password,
+                CURLOPT_POSTFIELDS => $contenido,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'PUT',
+            )
+        );
+        $resp = curl_exec($ch);
+        $error_no = curl_errno($ch);
+        fclose($gestor);
+        curl_close($ch);
+
+        $array["archivo"]["target"] = $target_path;
+        $array["archivo"]["codigo"] = $filename;
+        $array["archivo"]["error"] = $error_no;
+
+        return $array;
+    }
+
 
 
 
@@ -156,3 +199,17 @@ function verificaUsuario($user, $pass){
     }
     return $datos;
 }
+
+ function validaNuevoUsuario($correo, $cel)
+    {        
+        $datos[0]['error'] = 0;
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$correo'");
+        if (!empty($usuario)) {
+            $datos[0]['error'] = -2;
+        }
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE cel='$cel'");
+        if (!empty($usuario)) {
+            $datos[0]['error'] = -1;
+        }     
+        return $datos;
+    }

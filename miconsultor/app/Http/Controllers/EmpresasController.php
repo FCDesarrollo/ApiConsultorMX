@@ -448,6 +448,7 @@ class EmpresasController extends Controller
 
             $mc_requerimientos = "create table if not exists mc_requerimientos (
                 idReq int(11) NOT NULL AUTO_INCREMENT,
+                id_sucursal int(11) DEFAULT NULL,
                 fecha date DEFAULT NULL,
                 id_usuario int(11) DEFAULT NULL,
                 id_departamento int(11) DEFAULT NULL,

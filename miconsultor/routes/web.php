@@ -235,6 +235,7 @@ Route::post('inicioUsuario', 'UsuarioController@inicioUsuario');
 Route::get('permisosUsuario', 'UsuarioController@permisosUsuario');
 Route::post('registrarUsuario', 'UsuarioController@registrarUsuario');
 Route::post('verificaCodigo', 'UsuarioController@verificaCodigo');
+Route::post('reenviaCodigo', 'UsuarioController@reenviaCodigo');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');

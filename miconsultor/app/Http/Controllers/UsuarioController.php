@@ -141,4 +141,27 @@ class UsuarioController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
 
     }
+
+    public function reenviaCodigo(Request $request)
+    {
+        $user = $request->usuario;
+        $data = $request;
+        $array["error"] = 0;
+        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 
+                            WHERE (correo='$user' or cel='$user') AND status=1");
+        if (!empty($usuario)) {
+            $correo = $usuario[0]->correo;
+            if ($usuario[0]->tipo != 0) {
+                $array["error"] = 7;
+            }else{
+                $identificador = $request->identificador;
+                $idusuario = $usuario[0]->idusuario;
+                Mail::to($correo)->send(new MensajesValidacion($data));
+                DB::update('update mc1001 set identificador = ? where idusuario = ?', [$identificador, $idusuario]);
+            }
+        }else{
+            $array["error"] = 2;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

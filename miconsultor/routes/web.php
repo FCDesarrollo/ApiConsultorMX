@@ -250,3 +250,6 @@ Route::put('creaTablasRequerimientos', 'ActualizarBaseDatosController@creaTablas
 //AUTORIZACION Y GASTOS 2020
 Route::post('nuevoRequerimiento', 'AutorizacionyGastosController@nuevoRequerimiento');
 Route::get('listaRequerimientos', 'AutorizacionyGastosController@listaRequerimientos');
+
+//ALMACEN DIGITAL OPERACIONES 2020
+Route::get('listaAlmacenDigital', 'AlmacenDigitalOperacionesController@listaAlmacenDigital');

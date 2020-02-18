@@ -200,16 +200,30 @@ function verificaUsuario($user, $pass){
     return $datos;
 }
 
- function validaNuevoUsuario($correo, $cel)
-    {        
-        $datos[0]['error'] = 0;
-        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$correo'");
-        if (!empty($usuario)) {
-            $datos[0]['error'] = -2;
-        }
-        $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE cel='$cel'");
-        if (!empty($usuario)) {
-            $datos[0]['error'] = -1;
-        }     
-        return $datos;
+ function validaNuevoUsuario($correo, $cel){        
+    $datos[0]['error'] = 0;
+    $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo='$correo'");
+    if (!empty($usuario)) {
+        $datos[0]['error'] = -2;
     }
+    $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE cel='$cel'");
+    if (!empty($usuario)) {
+        $datos[0]['error'] = -1;
+    }     
+    return $datos;
+}
+
+ function VerificaEmpresa($rfc, $idusuario){
+    $datos[0]['error'] = 0;
+    $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE RFC='$rfc'");
+    if (!empty($empresa)) {
+        $idempresa = $empresa[0]->idempresa;
+        $asociacion = DB::select('select * from mc1002 where idusuario = ? AND idempresa= ?', [$idusuario, $idempresa]);
+        if (empty($asociacion)) {
+            $datos[0]['error'] = 8;
+        }
+    }else{
+        $datos[0]['error'] = 1;
+    }
+    return $datos;
+}

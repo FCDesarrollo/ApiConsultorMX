@@ -253,3 +253,4 @@ Route::get('listaRequerimientos', 'AutorizacionyGastosController@listaRequerimie
 
 //ALMACEN DIGITAL OPERACIONES 2020
 Route::get('listaAlmacenDigital', 'AlmacenDigitalOperacionesController@listaAlmacenDigital');
+Route::get('archivosAlmacenDigital', 'AlmacenDigitalOperacionesController@archivosAlmacenDigital');

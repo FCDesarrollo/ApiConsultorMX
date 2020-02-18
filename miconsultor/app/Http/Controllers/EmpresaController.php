@@ -17,10 +17,18 @@ class EmpresaController extends Controller
             $usuario = $valida[0]['usuario'];
             $iduser = $usuario[0]->idusuario;
             $array["usuario"] = $valida[0]['usuario'];
-            $empresa = DB::connection("General")->select("SELECT mc1000.* FROM mc1002 m02 
+            $empresas = DB::connection("General")->select("SELECT mc1000.* FROM mc1002 m02 
                                                     INNER JOIN mc1000 on m02.idempresa=mc1000.idempresa 
                                                     WHERE m02.idusuario=$iduser AND mc1000.status=1");
-            $array["empresas"] = $empresa;
+            for ($i=0; $i < count($empresas); $i++) { 
+                $empresaBD = $empresas[$i]->rutaempresa;        
+                ConnectaEmpresaDatabase($empresaBD);
+
+                $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles 
+                                where idusuario = ?', [$iduser]);
+                $empresas[$i]->perfil = $perfil[0]->nombre;
+            }
+            $array["empresas"] = $empresas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

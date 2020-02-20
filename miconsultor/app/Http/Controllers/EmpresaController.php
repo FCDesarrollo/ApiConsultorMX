@@ -27,7 +27,12 @@ class EmpresaController extends Controller
                 $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles 
                                 where idusuario = ?', [$iduser]);
                 $empresas[$i]->perfil = $perfil[0]->nombre;
+
+                $sucursales = DB::select('select * from mc_catsucursales');
+
+                $empresas[$i]->sucursales = $sucursales;
             }
+            
             $array["empresas"] = $empresas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

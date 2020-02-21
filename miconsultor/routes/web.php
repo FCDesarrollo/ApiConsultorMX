@@ -255,3 +255,4 @@ Route::get('listaRequerimientos', 'AutorizacionyGastosController@listaRequerimie
 Route::get('listaAlmacenDigital', 'AlmacenDigitalOperacionesController@listaAlmacenDigital');
 Route::get('archivosAlmacenDigital', 'AlmacenDigitalOperacionesController@archivosAlmacenDigital');
 Route::post('cargaArchivosAlmacenDigital', 'AlmacenDigitalOperacionesController@cargaArchivosAlmacenDigital');
+Route::post('eliminaArchivosDigital', 'AlmacenDigitalOperacionesController@eliminaArchivosDigital');

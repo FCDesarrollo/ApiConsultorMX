@@ -337,11 +337,11 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $carpetamenu = GetNomCarpetaMenu($idmenu);
         $carpetasubmenu = GetNomCarpetaSubMenu($idsubmenu);
         if ($carpetamodulo == "") {
-            $datos[0]['error'] = 0;
+            $datos[0]['error'] = 15;
         }elseif($carpetamenu == ""){
-            $datos[0]['error'] = 0;
+            $datos[0]['error'] = 16;
         }elseif ($carpetasubmenu == "") {
-            $datos[0]['error'] = 0;
+            $datos[0]['error'] = 17;
         }
         $datos[0]['carpetamodulo'] = $carpetamodulo;
         $datos[0]['carpetamenu'] = $carpetamenu;
@@ -440,4 +440,5 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $regresa = curl_exec($ch);
         //print_r($regresa);   
         curl_close($ch);
+        return $regresa;
     }

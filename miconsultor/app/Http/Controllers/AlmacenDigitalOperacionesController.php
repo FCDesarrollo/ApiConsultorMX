@@ -117,85 +117,104 @@ class AlmacenDigitalOperacionesController extends Controller
                     $array["error"] = $validaCarpetas[0]["error"];
                     
                     if ($validaCarpetas[0]['error'] == 0){
-                        $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
-                        $carpetamenu = $validaCarpetas[0]['carpetamenu'];
-                        $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+                        $sucursal = $request->sucursal;
+                        $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
+                        if (!empty($suc)) {
+                            $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                            $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                            $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
 
-                        $fechadocto = $request->fechadocto;
-                        $archivos = $request->file();
-                        $numarchivos = count($archivos);
+                            $fechadocto = $request->fechadocto;
+                            $archivos = $request->file();
+                            $numarchivos = count($archivos);
 
-                        $rfc = $request->rfc;
-                        $u_storage = $request->usuario_storage;
-                        $p_storage = $request->password_storage;
+                            $rfc = $request->rfc;
+                            $u_storage = $request->usuario_storage;
+                            $p_storage = $request->password_storage;
 
-                        $consecutivo = getNumeroConsecutivo($fechadocto, $idsubmenu);
-                        $countreg = $consecutivo;
+                            $consecutivo = getNumeroConsecutivo($fechadocto, $idsubmenu);
+                            $countreg = $consecutivo;
 
-                        $cont = 0;
+                            $cont = 0;
 
-                        foreach ($archivos as $key) {
-                            if (strlen($countreg) == 1) {
-                                $consecutivo = "000" . $countreg;
-                            } elseif (strlen($countreg) == 2) {
-                                $consecutivo = "00" . $countreg;
-                            } elseif (strlen($countreg) == 3) {
-                                $consecutivo = "0" . $countreg;
-                            } else {
-                                $consecutivo = $countreg;
-                            }
+                            foreach ($archivos as $key) {
+                                if (strlen($countreg) == 1) {
+                                    $consecutivo = "000" . $countreg;
+                                } elseif (strlen($countreg) == 2) {
+                                    $consecutivo = "00" . $countreg;
+                                } elseif (strlen($countreg) == 3) {
+                                    $consecutivo = "0" . $countreg;
+                                } else {
+                                    $consecutivo = $countreg;
+                                }
 
-                            $resultado = subirArchivoNextcloud($key->getClientOriginalName(), $key, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $fechadocto, $consecutivo);
-                            if ($resultado["archivo"]["error"] == 0) {
-                                $target_path = $resultado["archivo"]["target"];
-                                $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                                $archivo = $key->getClientOriginalName();
 
-                                if ($link != "") {
+                                $existe = DB::select("SELECT det.* FROM mc_almdigital_det AS det 
+                                        INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id 
+                                          WHERE documento = '$archivo' AND a.fechadocto = '$fechadocto' AND a.idmodulo = $idsubmenu");
+                                if (empty($existe)) {
+                                    $resultado = subirArchivoNextcloud($archivo, $key, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $fechadocto, $consecutivo);
+                                    
+                                }else{
                                     $array2["archivos"][$cont] =  array(
-                                        "archivo" => $key->getClientOriginalName(),
+                                        "archivo" => $archivo,
                                         "codigo" => $resultado["archivo"]["codigo"],
-                                        "link" => $link,
-                                        "status" => 0,
-                                        "detalle" => "¡Cargado Correctamente!"
+                                        "link" => "",
+                                        "status" => 4,
+                                        "detalle" => "¡Ya existe!"
                                     );
                                     $countreg = $countreg + 1;
+                                }
+
+                                $resultado = subirArchivoNextcloud($archivo, $key, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $fechadocto, $consecutivo);
+                                if ($resultado["archivo"]["error"] == 0) {
+                                    $target_path = $resultado["archivo"]["target"];
+                                    $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+
+                                    if ($link != "") {
+                                        $array2["archivos"][$cont] =  array(
+                                            "archivo" => $key->getClientOriginalName(),
+                                            "codigo" => $resultado["archivo"]["codigo"],
+                                            "link" => $link,
+                                            "status" => 0,
+                                            "detalle" => "¡Cargado Correctamente!"
+                                        );
+                                        $countreg = $countreg + 1;
+                                    } else {
+                                        $array2["archivos"][$cont] =  array(
+                                            "archivo" => $key->getClientOriginalName(),
+                                            "codigo" => $resultado["archivo"]["codigo"],
+                                            "link" => $link,
+                                            "status" => 2,
+                                            "detalle" => "¡Link no generado, error al subir!"
+                                        );
+                                    }
                                 } else {
                                     $array2["archivos"][$cont] =  array(
                                         "archivo" => $key->getClientOriginalName(),
-                                        "codigo" => $resultado["archivo"]["codigo"],
-                                        "link" => $link,
-                                        "status" => 2,
-                                        "detalle" => "¡Link no generado, error al subir!"
+                                        "codigo" => "",
+                                        "link" => "",
+                                        "status" => 1,
+                                        "detalle" => "¡No se pudo subir el archivo!"
                                     );
                                 }
-                            } else {
-                                $array2["archivos"][$cont] =  array(
-                                    "archivo" => $key->getClientOriginalName(),
-                                    "codigo" => "",
-                                    "link" => "",
-                                    "status" => 1,
-                                    "detalle" => "¡No se pudo subir el archivo!"
-                                );
+                                $cont = $cont + 1;
                             }
-                            $cont = $cont + 1;
-                        }
 
-                        $sucursal = $request->sucursal;
-                        $observaciones = $request->observaciones;
+                            $observaciones = $request->observaciones;
 
-                        $ruta = $rfc . '/'. $carpetamodulo . '/' . $carpetamenu . '/'. $carpetasubmenu;
+                            $ruta = $rfc . '/'. $carpetamodulo . '/' . $carpetamenu . '/'. $carpetasubmenu;
+                            
+                            $LetrasCarpeta = $carpetasubmenu;
+                            $LetrasCarpeta = substr(strtoupper($LetrasCarpeta), 0, 3);
+
+                            $string = explode("-", $fechadocto);
+                            $contador = 0;
+                            $now = date('Y-m-d h:i:s A');
+                            //VERIFICA SI NO EXISTE EL ARCHIVO
+                            $ArchivosV = getExistenArchivos($array2["archivos"], $fechadocto, $idsubmenu, $ruta, $servidor, $u_storage, $p_storage);
                         
-                        $LetrasCarpeta = $carpetasubmenu;
-                        $LetrasCarpeta = substr(strtoupper($LetrasCarpeta), 0, 3);
-
-                        $string = explode("-", $fechadocto);
-                        $contador = 0;
-                        $now = date('Y-m-d h:i:s A');
-                        //VERIFICA SI NO EXISTE EL ARCHIVO
-                        $ArchivosV = getExistenArchivos($array2["archivos"], $fechadocto, $idsubmenu, $ruta, $servidor, $u_storage, $p_storage);
-                        //REGISTRAR EN BASE DE DATOS LOS ARCHIVOS CARGADOS CORRECTAMENTE    
-                        $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
-                        if (!empty($suc)) {
                             $codigoalm = substr($string[0], 2) . $string[1] . $string[2] . $idusuario . $LetrasCarpeta . $sucursal;
 
                             $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
@@ -251,6 +270,83 @@ class AlmacenDigitalOperacionesController extends Controller
             }
         }
 
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function eliminaArchivosDigital(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 3) {
+                $array["error"] = 4;
+            }else{
+                $idmodulo = $request->idmodulo;
+                $idmenu = $request->idmenu;
+                $idsubmenu = $request->idsubmenu;
+                $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $idsubmenu);
+                $array["error"] = $validaCarpetas[0]["error"];
+                
+                if ($validaCarpetas[0]['error'] == 0){
+                    $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                    $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                    $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+                    
+                    $rfc= $request->rfc;
+                    $datos = $request->archivos;
+
+                    $servidor = getServidorNextcloud();
+                    $u_storage = $request->usuario_storage;
+                    $p_storage = $request->password_storage;
+
+                    $ruta = $rfc . '/'. $carpetamodulo . '/' . $carpetamenu . '/'. $carpetasubmenu;
+
+                    for ($i = 0; $i < count($datos); $i++) {
+                        $idarchivo = $datos[$i]["idarchivo"];
+    
+                        $archivo = DB::select("SELECT idalmdigital, codigodocumento, documento, estatus FROM mc_almdigital_det WHERE id = $idarchivo");
+    
+                        $idalmacen = $archivo[0]->idalmdigital;
+                        $type = explode(".", $archivo[0]->documento);
+                        $nombrearchivo = $ruta . "/" . $archivo[0]->codigodocumento . "." . $type[1];
+    
+                        if ($archivo[0]->estatus == 0) {
+                            $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
+
+                            if (empty($resp)) {
+                                $array["idalmacen"] = $idalmacen;
+    
+                                DB::table('mc_almdigital_det')->where("id", $idarchivo)->delete();
+                                $totalr = DB::select("SELECT totalregistros FROM mc_almdigital WHERE id = $idalmacen");
+                                $totalc = DB::select("SELECT count(id) as tc FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
+                                if ($totalc[0]->tc > 0) {
+                                    $totalregistros = $totalr[0]->totalregistros - 1;
+                                    DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalc[0]->tc]);
+                                } else {
+                                    DB::table('mc_almdigital')->where("id", $idalmacen)->delete();
+                                    $array["idalmacen"] = 0;
+                                }
+    
+                                $array["archivos"][$i]["status"] = 0;
+                                $array["archivos"][$i]["detalle"] = "¡Archivo Eliminado Correctamente!";
+                                $array["archivos"][$i]["archivo"] = $archivo[0]->documento;
+                            } else {
+                                $array["archivos"][$i]["status"] = 1;
+                                $array["archivos"][$i]["detalle"] = "¡No se pudo eliminar el archivo!";
+                                $array["archivos"][$i]["archivo"] = $archivo[0]->documento;
+                                $array["archivos"][$i]["curlError"] = $resp;
+                            }
+                        } else {
+                            $array["archivos"][$i]["status"] = 2;
+                            $array["archivos"][$i]["detalle"] = "¡No se puede eliminar un archivo que ya ha sido procesado!";
+                            $array["archivos"][$i]["archivo"] = $archivo[0]->documento;
+                        }
+                    }
+                }
+            }
+        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

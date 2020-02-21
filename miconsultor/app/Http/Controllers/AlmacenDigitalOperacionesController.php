@@ -120,6 +120,7 @@ class AlmacenDigitalOperacionesController extends Controller
                         $sucursal = $request->sucursal;
                         $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
                         if (!empty($suc)) {
+                            $idsucursal = $suc[0]->idsucursal;
                             $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
                             $carpetamenu = $validaCarpetas[0]['carpetamenu'];
                             $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
@@ -135,8 +136,32 @@ class AlmacenDigitalOperacionesController extends Controller
                             $consecutivo = getNumeroConsecutivo($fechadocto, $idsubmenu);
                             $countreg = $consecutivo;
 
-                            $cont = 0;
+                           
+                            $observaciones = $request->observaciones;
+                            $LetrasCarpeta = $carpetasubmenu;
+                            $LetrasCarpeta = substr(strtoupper($LetrasCarpeta), 0, 3);
+                            $string = explode("-", $fechadocto);
+                            $contador = 0;
+                            $now = date('Y-m-d h:i:s A');
+                            $codigoalm = substr($string[0], 2) . $string[1] . $string[2] . $idusuario . $LetrasCarpeta . $sucursal;
 
+                            $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
+                            if (empty($reg)) {
+                                $existe = 0;
+                                $idalmacen = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 
+                                        'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 
+                                        'idusuario' => $idusuario, 'idmodulo' => $idsubmenu, 
+                                        'idsucursal' => $idsucursal, 'observaciones' => $observaciones]);
+                            }else{
+                                $idalmacen = $reg[0]->id;
+                                if ($observaciones == "") {
+                                    $observaciones = $reg[0]->observaciones;
+                                }
+                                $existe = 1;
+                            }
+
+                            $cont = 0;
+                            $n = 0;
                             foreach ($archivos as $key) {
                                 if (strlen($countreg) == 1) {
                                     $consecutivo = "000" . $countreg;
@@ -150,118 +175,79 @@ class AlmacenDigitalOperacionesController extends Controller
 
                                 $archivo = $key->getClientOriginalName();
 
+                                $mod = substr(strtoupper($carpetasubmenu), 0, 3);
+        
+                                $string = explode("-", $fechadocto);
+                                $codfec = substr($string[0], 2) . $string[1];
+                                $codigoarchivo = $rfc . "_" . $codfec . "_" . $mod . "_";
+
                                 $existe = DB::select("SELECT det.* FROM mc_almdigital_det AS det 
                                         INNER JOIN mc_almdigital AS a ON det.idalmdigital = a.id 
                                           WHERE documento = '$archivo' AND a.fechadocto = '$fechadocto' AND a.idmodulo = $idsubmenu");
                                 if (empty($existe)) {
-                                    $resultado = subirArchivoNextcloud($archivo, $key, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $fechadocto, $consecutivo);
-                                    
+                                    $resultado = subirArchivoNextcloud($archivo, $key, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $codigoarchivo, $consecutivo);
+                                    if ($resultado["archivo"]["error"] == 0) {
+                                        $codigodocumento = $codigoarchivo . $consecutivo;
+                                        $type = explode(".", $archivo);
+                                        $directorio = $rfc . '/'. $carpetamodulo .'/' . $carpetamenu . '/' . $carpetasubmenu;
+                                        $target_path = $directorio . '/' . $codigodocumento . "." . $type[count($type) - 1];   
+                                        $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                                        
+                                        $codigodocumento = $codigoarchivo . $consecutivo;
+                                        $idarchivo= 0;
+                                       
+                                        if ($link != "") {
+                                            $idarchivo = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalmacen,
+                                             'idsucursal' => $idsucursal, 'documento' => $archivo, 'codigodocumento' => $codigodocumento, 'download' => $link]);
+                                            $n= $n +1;
+                                        }
+                                        
+                                        $array2["archivos"][$cont] =  array(
+                                            "archivo" => $key->getClientOriginalName(),
+                                            "codigo" => $resultado["archivo"]["codigo"],
+                                            "link" => $link,
+                                            "status" => ($link != "" ? 0 : 2),
+                                            "detalle" => ($link != "" ? "¡Cargado Correctamente!" : "¡Link no generado, error al subir!"),
+                                            "idarchivo" => $idarchivo,
+                                            "idalmacen" => $idalmacen 
+                                        );
+                                        $countreg = $countreg + ($link != "" ? 1 : 0);
+                                    }else{
+                                        $array2["archivos"][$cont] =  array(
+                                            "archivo" => $key->getClientOriginalName(),
+                                            "codigo" => "",
+                                            "link" => "",
+                                            "status" => 1,
+                                            "detalle" => "¡No se pudo subir el archivo!"
+                                        );
+                                    }
                                 }else{
                                     $array2["archivos"][$cont] =  array(
                                         "archivo" => $archivo,
-                                        "codigo" => $resultado["archivo"]["codigo"],
+                                        "codigo" => $codigoarchivo . $consecutivo,
                                         "link" => "",
                                         "status" => 4,
                                         "detalle" => "¡Ya existe!"
                                     );
                                     $countreg = $countreg + 1;
                                 }
-
-                                $resultado = subirArchivoNextcloud($archivo, $key, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $fechadocto, $consecutivo);
-                                if ($resultado["archivo"]["error"] == 0) {
-                                    $target_path = $resultado["archivo"]["target"];
-                                    $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
-
-                                    if ($link != "") {
-                                        $array2["archivos"][$cont] =  array(
-                                            "archivo" => $key->getClientOriginalName(),
-                                            "codigo" => $resultado["archivo"]["codigo"],
-                                            "link" => $link,
-                                            "status" => 0,
-                                            "detalle" => "¡Cargado Correctamente!"
-                                        );
-                                        $countreg = $countreg + 1;
-                                    } else {
-                                        $array2["archivos"][$cont] =  array(
-                                            "archivo" => $key->getClientOriginalName(),
-                                            "codigo" => $resultado["archivo"]["codigo"],
-                                            "link" => $link,
-                                            "status" => 2,
-                                            "detalle" => "¡Link no generado, error al subir!"
-                                        );
-                                    }
-                                } else {
-                                    $array2["archivos"][$cont] =  array(
-                                        "archivo" => $key->getClientOriginalName(),
-                                        "codigo" => "",
-                                        "link" => "",
-                                        "status" => 1,
-                                        "detalle" => "¡No se pudo subir el archivo!"
-                                    );
-                                }
                                 $cont = $cont + 1;
                             }
-
-                            $observaciones = $request->observaciones;
-
-                            $ruta = $rfc . '/'. $carpetamodulo . '/' . $carpetamenu . '/'. $carpetasubmenu;
                             
-                            $LetrasCarpeta = $carpetasubmenu;
-                            $LetrasCarpeta = substr(strtoupper($LetrasCarpeta), 0, 3);
-
-                            $string = explode("-", $fechadocto);
-                            $contador = 0;
-                            $now = date('Y-m-d h:i:s A');
-                            //VERIFICA SI NO EXISTE EL ARCHIVO
-                            $ArchivosV = getExistenArchivos($array2["archivos"], $fechadocto, $idsubmenu, $ruta, $servidor, $u_storage, $p_storage);
-                        
-                            $codigoalm = substr($string[0], 2) . $string[1] . $string[2] . $idusuario . $LetrasCarpeta . $sucursal;
-
-                            $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
-
-                            $n = 0;
-                            if (empty($reg)) {
-                                $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idusuario, 'idmodulo' => $idsubmenu, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]);
-                                while (isset($ArchivosV["archivos"][$contador])) {
-                                    $nomDoc = $ArchivosV["archivos"][$contador]["archivo"];
-                                    $codigodocumento = $ArchivosV["archivos"][$contador]["codigo"];
-                                    $link = $ArchivosV["archivos"][$contador]["link"];
-                                    if ($ArchivosV["archivos"][$contador]["status"] == 0) {
-
-                                        $ArchivosV["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $idalm, 'idsucursal' => $suc[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
-                                        $ArchivosV["archivos"][$contador]["idalmacen"] = $idalm;
-                                        $n = $n + 1;
-                                    }
-                                    $contador++;
+                            if ($n > 0) {
+                               if ($existe = 0) {
+                                    DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $numarchivos, 'totalcargados' => $n]);
+                               }else{
+                                    $totalcargados = DB::select("SELECT COUNT(id) As tc FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
+                                    $totalregistros = $reg[0]->totalregistros + $n;
+                                    DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
+                               }
+                            }else{
+                                if ($existe = 0) {
+                                    DB::table('mc_almdigital')->where("id", $idalmacen)->delete();
                                 }
-                                if ($n > 0) {
-                                    DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $numarchivos, 'totalcargados' => $n]);
-                                } else {
-                                    DB::table('mc_almdigital')->where("id", $idalm)->delete();
-                                }
-                            } else {
-                                $cont = 0;
-                                while (isset($ArchivosV["archivos"][$contador])) {
-                                    $nomDoc = $ArchivosV["archivos"][$contador]["archivo"];
-                                    $codigodocumento = $ArchivosV["archivos"][$contador]["codigo"];
-                                    $link = $ArchivosV["archivos"][$contador]["link"];
-                                    if ($ArchivosV["archivos"][$contador]["status"] == 0) {
-                                        $ArchivosV["archivos"][$contador]["idarchivo"] = DB::table('mc_almdigital_det')->insertGetId(['idalmdigital' => $reg[0]->id, 'idsucursal' => $reg[0]->idsucursal, 'documento' => $nomDoc, 'codigodocumento' => $codigodocumento, 'download' => $link]);
-                                        $cont = $cont + 1;
-                                        $ArchivosV["archivos"][$contador]["idalmacen"] = $reg[0]->id;
-                                    }
-                                    $contador++;
-                                }
-                                if ($observaciones == "") {
-                                    $observaciones = $reg[0]->observaciones;
-                                }
-                                $idalm = $reg[0]->id;
-                                $totalcargados = DB::select("SELECT COUNT(id) As tc FROM mc_almdigital_det WHERE idalmdigital = $idalm");
-                                $totalregistros = $reg[0]->totalregistros + $cont;
-                                DB::table('mc_almdigital')->where("id", $idalm)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
                             }
-
-                            $array["archivos"] = $ArchivosV["archivos"];
+                            $array["archivos"] = $array2["archivos"];
                         }else {
                             $array["error"] = 21;
                         }

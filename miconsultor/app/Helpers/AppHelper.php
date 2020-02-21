@@ -131,15 +131,12 @@ function GetNomCarpetaSubMenu($idsubmenu)
     return $carpeta;
 }
 
-function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password,$carpetamodulo, $carpetamenu, $carpetasubmenu, $fechadocto, $consecutivo)
+function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password,$carpetamodulo, $carpetamenu, $carpetasubmenu, $codarchivo, $consecutivo)
     {
 
-        $mod = substr(strtoupper($carpetasubmenu), 0, 3);
-        $directorio = $rfcempresa . '/'. $carpetamodulo .'/' . $carpetamenu . '/' . $carpetasubmenu;
-        $string = explode("-", $fechadocto);
-        $codfec = substr($string[0], 2) . $string[1];
-        $codarchivo = $rfcempresa . "_" . $codfec . "_" . $mod . "_";
         
+        $directorio = $rfcempresa . '/'. $carpetamodulo .'/' . $carpetamenu . '/' . $carpetasubmenu;
+
         $ch = curl_init();
         $file = $archivo_name;
         $filename = $codarchivo . $consecutivo;

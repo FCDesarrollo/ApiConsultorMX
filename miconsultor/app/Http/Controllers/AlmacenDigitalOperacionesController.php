@@ -157,6 +157,7 @@ class AlmacenDigitalOperacionesController extends Controller
                                 if ($observaciones == "") {
                                     $observaciones = $reg[0]->observaciones;
                                 }
+                                $totalregistros = $reg[0]->totalregistros;
                                 $existe = 1;
                             }
 
@@ -239,7 +240,7 @@ class AlmacenDigitalOperacionesController extends Controller
                                     DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $numarchivos, 'totalcargados' => $n]);
                                }else{
                                     $totalcargados = DB::select("SELECT COUNT(id) As tc FROM mc_almdigital_det WHERE idalmdigital = $idalmacen");
-                                    $totalregistros = $reg[0]->totalregistros + $n;
+                                    $totalregistros = $totalregistros + $n;
                                     DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalcargados[0]->tc, 'observaciones' => $observaciones]);
                                }
                             }else{

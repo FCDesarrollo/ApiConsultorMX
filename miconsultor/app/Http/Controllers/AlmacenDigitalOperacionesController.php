@@ -148,6 +148,7 @@ class AlmacenDigitalOperacionesController extends Controller
                             $reg = DB::select("SELECT * FROM mc_almdigital WHERE codigoalm = '$codigoalm'");
                             if (empty($reg)) {
                                 $existe = 0;
+                                $totalregistros = 0;
                                 $idalmacen = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 
                                         'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 
                                         'idusuario' => $idusuario, 'idmodulo' => $idsubmenu, 

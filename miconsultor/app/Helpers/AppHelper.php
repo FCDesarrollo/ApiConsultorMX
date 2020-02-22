@@ -145,22 +145,27 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $target_path = $directorio . '/' . $filename . "." . $type[count($type) - 1];
 
         $gestor = fopen($source, "r");
-        $contenido = fread($gestor, filesize($source));
 
-        curl_setopt_array(
-            $ch,
-            array(
-                CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuario . '/CRM/' . $target_path,
-                CURLOPT_VERBOSE => 1,
-                CURLOPT_USERPWD => $usuario . ':' . $password,
-                CURLOPT_POSTFIELDS => $contenido,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_BINARYTRANSFER => true,
-                CURLOPT_CUSTOMREQUEST => 'PUT',
-            )
-        );
-        $resp = curl_exec($ch);
-        $error_no = curl_errno($ch);
+        if (filesize($source) > 0){
+            $contenido = fread($gestor, filesize($source));
+
+            curl_setopt_array(
+                $ch,
+                array(
+                    CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuario . '/CRM/' . $target_path,
+                    CURLOPT_VERBOSE => 1,
+                    CURLOPT_USERPWD => $usuario . ':' . $password,
+                    CURLOPT_POSTFIELDS => $contenido,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_BINARYTRANSFER => true,
+                    CURLOPT_CUSTOMREQUEST => 'PUT',
+                )
+            );
+            $resp = curl_exec($ch);
+            $error_no = curl_errno($ch);
+        }else{
+            $error_no = 3;
+        }
         fclose($gestor);
         curl_close($ch);
 

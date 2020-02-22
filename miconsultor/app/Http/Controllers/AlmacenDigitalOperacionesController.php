@@ -219,7 +219,7 @@ class AlmacenDigitalOperacionesController extends Controller
                                             "archivo" => $key->getClientOriginalName(),
                                             "codigo" => "",
                                             "link" => "",
-                                            "status" => 1,
+                                            "status" => ($resultado["archivo"]["error"] == 3 ? 3 : 1),
                                             "detalle" => "¡No se pudo subir el archivo!"
                                         );
                                     }

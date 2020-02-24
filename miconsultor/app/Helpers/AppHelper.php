@@ -40,7 +40,6 @@ const SubM_Empresas = 20;
 const SubM_Usuarios = 21;
 const SubM_Perfiles = 22;
 
-
 function ConnectDatabase($idempresa)
 {
     $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa='$idempresa' AND status=1");
@@ -443,4 +442,48 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         //print_r($regresa);   
         curl_close($ch);
         return $regresa;
+    }
+
+    function conectaFTP()
+    {
+        try {
+            $ftp_server = "ftp.inroute.mx";
+            $conn_id = ftp_connect($ftp_server);
+            // login con usuario y contraseña
+            $ftp_user_name = "validacer@certificados.inroute.mx";
+            $ftp_user_pass = "valida@2020";
+            $login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+                
+        } catch (\Throwable $th) {
+            $conn_id = '';
+            return 0;
+        }
+        return $conn_id;
+    }
+
+    function CallAPI($method, $url, $data = false)
+    {
+        $curl = curl_init();
+        switch ($method)
+        {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_PUT, 1);
+                break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+        $result = curl_exec($curl);
+        curl_close($curl);
+        return $result;
+
     }

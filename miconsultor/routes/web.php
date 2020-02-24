@@ -239,6 +239,8 @@ Route::post('reenviaCodigo', 'UsuarioController@reenviaCodigo');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');
+Route::post('validaEmpresa', 'EmpresaController@validaEmpresa');
+Route::get('enviaCorreoEmpresa', 'EmpresaController@enviaCorreoEmpresa');
 
 
 //ACTUALIZA PERFILES GENERALES

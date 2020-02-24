@@ -30,6 +30,6 @@ class MensajesValidacion extends Mailable
      */
     public function build()
     {
-        return $this->subject('Confirma tu Cuenta')->view('mails.correovalidacion');
+        return $this->subject($this->datosUser["subject"])->view('mails.correovalidacion');
     }
 }

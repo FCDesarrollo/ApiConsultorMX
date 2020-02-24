@@ -64,6 +64,7 @@ class UsuarioController extends Controller
    
             if ($valida[0]['error'] == 0){
                 $data = $request->input();
+                $data["subject"] = "Confirma tu cuenta";
                 $correo = $data['correo'];
                 Mail::to($correo)->send(new MensajesValidacion($data));
                

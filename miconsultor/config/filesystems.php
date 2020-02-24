@@ -62,6 +62,12 @@ return [
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
         ],
+        'ftp' => [
+            'driver'   => 'ftp',
+            'host'     => 'ftp.inroutee.mx',
+            'username' => 'validacer@certificados.inroute.mx',
+            'password' => 'valida@2020',
+        ],
 
     ],
 

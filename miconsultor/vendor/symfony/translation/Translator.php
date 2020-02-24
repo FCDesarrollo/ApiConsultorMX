@@ -34,7 +34,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
     /**
      * @var MessageCatalogueInterface[]
      */
-    protected $catalogues = array();
+    protected $catalogues = [];
 
     /**
      * @var string
@@ -44,17 +44,17 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
     /**
      * @var array
      */
-    private $fallbackLocales = array();
+    private $fallbackLocales = [];
 
     /**
      * @var LoaderInterface[]
      */
-    private $loaders = array();
+    private $loaders = [];
 
     /**
      * @var array
      */
-    private $resources = array();
+    private $resources = [];
 
     /**
      * @var MessageFormatterInterface
@@ -71,6 +71,8 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
      */
     private $debug;
 
+    private $cacheVary;
+
     /**
      * @var ConfigCacheFactoryInterface|null
      */
@@ -86,7 +88,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
     /**
      * @throws InvalidArgumentException If a locale contains invalid characters
      */
-    public function __construct(?string $locale, MessageFormatterInterface $formatter = null, string $cacheDir = null, bool $debug = false)
+    public function __construct(?string $locale, MessageFormatterInterface $formatter = null, string $cacheDir = null, bool $debug = false, array $cacheVary = [])
     {
         $this->setLocale($locale);
 
@@ -97,6 +99,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
         $this->formatter = $formatter;
         $this->cacheDir = $cacheDir;
         $this->debug = $debug;
+        $this->cacheVary = $cacheVary;
         $this->hasIntlFormatter = $formatter instanceof IntlFormatterInterface;
     }
 
@@ -134,10 +137,10 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
 
         $this->assertValidLocale($locale);
 
-        $this->resources[$locale][] = array($format, $resource, $domain);
+        $this->resources[$locale][] = [$format, $resource, $domain];
 
         if (\in_array($locale, $this->fallbackLocales)) {
-            $this->catalogues = array();
+            $this->catalogues = [];
         } else {
             unset($this->catalogues[$locale]);
         }
@@ -170,13 +173,13 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
     public function setFallbackLocales(array $locales)
     {
         // needed as the fallback locales are linked to the already loaded catalogues
-        $this->catalogues = array();
+        $this->catalogues = [];
 
         foreach ($locales as $locale) {
             $this->assertValidLocale($locale);
         }
 
-        $this->fallbackLocales = $locales;
+        $this->fallbackLocales = $this->cacheVary['fallback_locales'] = $locales;
     }
 
     /**
@@ -194,7 +197,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
     /**
      * {@inheritdoc}
      */
-    public function trans($id, array $parameters = array(), $domain = null, $locale = null)
+    public function trans($id, array $parameters = [], $domain = null, $locale = null)
     {
         if (null === $domain) {
             $domain = 'messages';
@@ -224,7 +227,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
      *
      * @deprecated since Symfony 4.2, use the trans() method instead with a %count% parameter
      */
-    public function transChoice($id, $number, array $parameters = array(), $domain = null, $locale = null)
+    public function transChoice($id, $number, array $parameters = [], $domain = null, $locale = null)
     {
         @trigger_error(sprintf('The "%s()" method is deprecated since Symfony 4.2, use the trans() one instead with a "%%count%%" parameter.', __METHOD__), E_USER_DEPRECATED);
 
@@ -249,7 +252,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
         }
 
         if ($this->hasIntlFormatter && $catalogue->defines($id, $domain.MessageCatalogue::INTL_DOMAIN_SUFFIX)) {
-            return $this->formatter->formatIntl($catalogue->get($id, $domain), $locale, array('%count%' => $number) + $parameters);
+            return $this->formatter->formatIntl($catalogue->get($id, $domain), $locale, ['%count%' => $number] + $parameters);
         }
 
         return $this->formatter->choiceFormat($catalogue->get($id, $domain), $number, $locale, $parameters);
@@ -392,10 +395,13 @@ EOF
 
     private function getCatalogueCachePath($locale)
     {
-        return $this->cacheDir.'/catalogue.'.$locale.'.'.strtr(substr(base64_encode(hash('sha256', serialize($this->fallbackLocales), true)), 0, 7), '/', '_').'.php';
+        return $this->cacheDir.'/catalogue.'.$locale.'.'.strtr(substr(base64_encode(hash('sha256', serialize($this->cacheVary), true)), 0, 7), '/', '_').'.php';
     }
 
-    private function doLoadCatalogue($locale): void
+    /**
+     * @internal
+     */
+    protected function doLoadCatalogue($locale): void
     {
         $this->catalogues[$locale] = new MessageCatalogue($locale);
 
@@ -430,10 +436,10 @@ EOF
     protected function computeFallbackLocales($locale)
     {
         if (null === $this->parentLocales) {
-            $parentLocales = \json_decode(\file_get_contents(__DIR__.'/Resources/data/parents.json'), true);
+            $parentLocales = json_decode(file_get_contents(__DIR__.'/Resources/data/parents.json'), true);
         }
 
-        $locales = array();
+        $locales = [];
         foreach ($this->fallbackLocales as $fallback) {
             if ($fallback === $locale) {
                 continue;
@@ -445,10 +451,17 @@ EOF
         while ($locale) {
             $parent = $parentLocales[$locale] ?? null;
 
-            if (!$parent && false !== strrchr($locale, '_')) {
-                $locale = substr($locale, 0, -\strlen(strrchr($locale, '_')));
-            } elseif ('root' !== $parent) {
-                $locale = $parent;
+            if ($parent) {
+                $locale = 'root' !== $parent ? $parent : null;
+            } elseif (\function_exists('locale_parse')) {
+                $localeSubTags = locale_parse($locale);
+                $locale = null;
+                if (1 < \count($localeSubTags)) {
+                    array_pop($localeSubTags);
+                    $locale = locale_compose($localeSubTags) ?: null;
+                }
+            } elseif ($i = strrpos($locale, '_') ?: strrpos($locale, '-')) {
+                $locale = substr($locale, 0, $i);
             } else {
                 $locale = null;
             }
@@ -490,7 +503,7 @@ EOF
 
     private function getAllMessages(MessageCatalogueInterface $catalogue): array
     {
-        $allMessages = array();
+        $allMessages = [];
 
         foreach ($catalogue->all() as $domain => $messages) {
             if ($intlMessages = $catalogue->all($domain.MessageCatalogue::INTL_DOMAIN_SUFFIX)) {

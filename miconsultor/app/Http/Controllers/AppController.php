@@ -22,7 +22,7 @@ class AppController extends Controller
             
             $array["usuario"] = $autenticacion[0]["usuario"];
 
-            $array["submenus"] = DB::connection("General")->select("SELECT * FROM mc1005 WHERE (idmenu=5 or idmenu=10)");
+            $array["submenus"] = DB::connection("General")->select("SELECT * FROM mc1005 WHERE (idmenu=5 or idmenu=10 or idmenu=11)");
 
             $empresas = DB::connection("General")->select("SELECT e.* FROM mc1000 e INNER JOIN mc1002 r ON e.idempresa=r.idempresa 
                                                             WHERE idusuario=$idusuario");
@@ -37,7 +37,7 @@ class AppController extends Controller
    
                 $permisos = DB::select("SELECT s.*,c.tiempo_dias FROM mc_usersubmenu s 
                                             LEFT JOIN mc_config_timeapp c ON s.idsubmenu=c.idsubmenu 
-                                                WHERE (s.idmenu = 5 or s.idmenu= 10) AND s.idusuario=$idusuario");
+                                                WHERE (s.idmenu = 5 or s.idmenu= 10 or s.idmenu=11) AND s.idusuario=$idusuario");
 
                 $empresas[$i]->permisos = $permisos;
                 $array["empresas"][$i] = $empresas[$i];

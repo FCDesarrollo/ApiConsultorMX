@@ -241,6 +241,7 @@ Route::post('reenviaCodigo', 'UsuarioController@reenviaCodigo');
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');
 Route::post('validaEmpresa', 'EmpresaController@validaEmpresa');
 Route::get('enviaCorreoEmpresa', 'EmpresaController@enviaCorreoEmpresa');
+Route::post('registraEmpresa', 'EmpresaController@registraEmpresa');
 
 
 //ACTUALIZA PERFILES GENERALES

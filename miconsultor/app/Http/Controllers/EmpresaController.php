@@ -174,8 +174,7 @@ class EmpresaController extends Controller
     public function enviaCorreoEmpresa(Request $request)
     {
         $valida = verificaUsuario($request->usuario, $request->pwd);
-          
-
+        
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] == 0){
@@ -187,5 +186,48 @@ class EmpresaController extends Controller
             $array["codigo"] = $codigo;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function registraEmpresa(Request $request)
+    {
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+          
+
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $rfc = $request->rfc;
+            $validabdd = $this->GetBddDisponible();
+            $array["error"] = $validabdd[0]["error"];
+
+            if ($valida[0]['error'] == 0){
+                $idasigna = $validabdd[0]["base"][0]->id;
+                
+                //DB::connection("General")->table('mc1010')->where("id", $idasigna)->update(["rfc"=>$rfc,"estatus"=>"1"]);
+                $empresa = $request->nombreempresa;
+                $bdd = $validabdd[0]["base"][0]->nombre;
+                $fecha = date(Y-m-d);
+                
+                $idempresa = DB::connection("General")->table('mc1000')->insertGetId([]);
+
+            }
+
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function GetBddDisponible()
+    {
+        $array[0]["error"] = 0;
+        $consulta = DB::connection("General")->select("SELECT * FROM mc1010 WHERE rfc='' AND estatus=0");    
+        
+        if (!empty($consulta)) {
+            $array[0]["base"] = $consulta;
+            
+        }else{
+            $array[0]["error"] = 42; //SIN BASES DE DATOS DISPONIBLES
+        }
+      
+        return $array;
     }
 }

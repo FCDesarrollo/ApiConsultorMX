@@ -106,7 +106,7 @@ class EmpresaController extends Controller
             $array[0]["error"]= 36; //No se logro obtener la fecha de vigencia del certificado
         }elseif ($datos['KeyPemR']['result'] == 0) {
             $array[0]["error"] = 37;//Contraseña incorrecta
-        }elseif ($datos['KeyPemR']['result'] == 0) {
+        }elseif ($datos['ArregloCertificado']['result'] == 0) {
             $array[0]["error"] = 38;//No se logro validar el certificado
         }
         $fechavencido = date("d/m/Y", strtotime($datos['Arreglofecha']['fecha']));
@@ -207,8 +207,18 @@ class EmpresaController extends Controller
                 $empresa = $request->nombreempresa;
                 $bdd = $validabdd[0]["base"][0]->nombre;
                 $fecha = date(Y-m-d);
-                
-                $idempresa = DB::connection("General")->table('mc1000')->insertGetId([]);
+                $password = $request->password; 
+                $password = password_hash($password, PASSWORD_BCRYPT);
+                $correo = $request->correo;
+                $vigencia = $request->fechavencimiento;
+                $userstorage = $rfc;
+                $passwordstorage = $request->password;
+
+                $idempresa = DB::connection("General")->table('mc1000')->insertGetId(["nombreempresa" => $empresa,
+                                        "rutaempresa" => $bdd, "RFC" => $rfc,"fecharegistro" => $fecha,
+                                        "status" => 1, "password" => $password,"correo" => $correo,
+                                        "empresaBD" => $bdd,"vigencia" => $vigencia,
+                                        "usuario_storage" => $userstorage, "password_storage" => $passwordstorage]);
 
             }
 

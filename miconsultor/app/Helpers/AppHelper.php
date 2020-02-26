@@ -331,6 +331,16 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $servidor;
     }
 
+    function getParametros()
+    {
+        $servidor ="";
+        $result = DB::connection("General")->select("SELECT * FROM mc0000");
+        if (!empty($result)) {
+            $servidor = $result;
+        }
+        return $servidor;
+    }
+
     function getExisteCarpeta($idmodulo, $idmenu, $idsubmenu)
     {
         $datos[0]['error'] = 0;

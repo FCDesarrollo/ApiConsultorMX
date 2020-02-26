@@ -204,7 +204,7 @@ class EmpresaController extends Controller
             $validabdd = $this->GetBddDisponible();
             $array["error"] = $validabdd[0]["error"];
             
-            if ($valida[0]['error'] == 0){
+            if ($validabdd[0]['error'] == 0){
                 $idasigna = $validabdd[0]["base"][0]->id;
                 
                 $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfc]);
@@ -279,17 +279,17 @@ class EmpresaController extends Controller
         $array[0]["error"] = 0;
         $num = DB::connection("General")->select("SELECT count(*) FROM mc1010 WHERE rfc='' AND estatus=0");
 
-        if ($num ==0) {
+        if ($num == 0) {
             $array[0]["error"] = 42;
         }else{
             $consulta = DB::connection("General")->select("SELECT * FROM mc1010 WHERE rfc='' AND estatus=0");    
         
-        if (!empty($consulta)) {
-            $array[0]["base"] = $consulta;
-            
-        }else{
-            $array[0]["error"] = 42; //SIN BASES DE DATOS DISPONIBLES
-        }
+            if (!empty($consulta)) {
+                $array[0]["base"] = $consulta;
+                
+            }else{
+                $array[0]["error"] = 42; //SIN BASES DE DATOS DISPONIBLES
+            }
         }
         
       

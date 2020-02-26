@@ -203,7 +203,7 @@ class EmpresaController extends Controller
 
             $validabdd = $this->GetBddDisponible();
             $array["error"] = $validabdd[0]["error"];
-
+            
             if ($valida[0]['error'] == 0){
                 $idasigna = $validabdd[0]["base"][0]->id;
                 
@@ -277,7 +277,12 @@ class EmpresaController extends Controller
     public function GetBddDisponible()
     {
         $array[0]["error"] = 0;
-        $consulta = DB::connection("General")->select("SELECT * FROM mc1010 WHERE rfc='' AND estatus=0");    
+        $num = DB::connection("General")->select("SELECT count(*) FROM mc1010 WHERE rfc='' AND estatus=0");
+
+        if ($num ==0) {
+            $array[0]["error"] = 42;
+        }else{
+            $consulta = DB::connection("General")->select("SELECT * FROM mc1010 WHERE rfc='' AND estatus=0");    
         
         if (!empty($consulta)) {
             $array[0]["base"] = $consulta;
@@ -285,6 +290,8 @@ class EmpresaController extends Controller
         }else{
             $array[0]["error"] = 42; //SIN BASES DE DATOS DISPONIBLES
         }
+        }
+        
       
         return $array;
     }

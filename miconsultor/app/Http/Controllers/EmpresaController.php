@@ -47,10 +47,10 @@ class EmpresaController extends Controller
     {
         $valida = verificaUsuario($request->usuario, $request->pwd);
           
-
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] == 0){
+            $idusuario =  $valida[0]['usuario'][0]->idusuario;
             $conexionFTP = conectaFTP();
             if ($conexionFTP != '') {
                 
@@ -70,12 +70,60 @@ class EmpresaController extends Controller
                 $datosEmpresa = $resDatos[0]["datos"];
                 $rfc = $datosEmpresa["rfc"];
                 
-                $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfc]);
-                if (!empty($empresa)) {
-                    $array["error"] = 41; //RFCEXISTE
-                }else {
-                    $array["datos"] = $datosEmpresa;
+                if (isset($request->valida)) { //PARA VINCULAR
+                    $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfc]);
+                    if (!empty($empresa)) {
+                        $idempresa = $empresa[0]->idempresa;
+                        $bdd = $empresa[0]->rutaempresa;
+                        $fecha = date('Y-m-d');
+
+                        $agregado = DB::connection("General")->select('select * from mc1003 where 
+                                            idusuario = ? AND idempresa= ?', [$idusuario, $idempresa]);
+
+                        if (!empty($agregado)) {
+                            $array["datos"] = 47; //ya esta vinculado
+                        }else{
+                            //INSERTA LA RELACION USUARIO Y EMPRESA
+                            DB::connection("General")->insert('insert into mc1002 (idusuario, 
+                            idempresa, estatus, fecha_vinculacion, idusuario_vinculador)
+                            values (?, ?, ?, ?, ?)', [$idusuario, $idempresa, 1, $fecha, 0]);
+                    
+                            ConnectaEmpresaDatabase($bdd);
+
+                            DB::insert('insert into mc_userprofile (idusuario, idperfil) values (?, ?)', [$idusuario, 1]);
+                
+                            $mc1007 = DB::connection("General")->select("SELECT * FROM mc1007 WHERE idperfil = 1");
+                            for ($i=0; $i < count($mc1007); $i++) { 
+                                DB::table('mc_usermod')->insertGetId(["idusuario" => $idusuario, "idperfil" => 1, 
+                                    "idmodulo" => $mc1007[$i]->idmodulo, "tipopermiso" => $mc1007[$i]->tipopermiso]);
+                            }
+                
+                            $mc1008 = DB::connection("General")->select("SELECT * FROM mc1008 WHERE idperfil = 1");
+                            for ($i=0; $i < count($mc1008); $i++) { 
+                                DB::table('mc_usermenu')->insertGetId(["idusuario" => $idusuario, "idperfil" => 1, 
+                                    "idmodulo" => $mc1008[$i]->idmodulo, "idmenu" => $mc1008[$i]->idmenu, "tipopermiso" => $mc1008[$i]->tipopermiso]);
+                            }
+                
+                            $mc1009 = DB::connection("General")->select("SELECT * FROM mc1009 WHERE idperfil = 1");
+                            for ($i=0; $i < count($mc1009); $i++) { 
+                                DB::table('mc_usersubmenu')->insertGetId(["idusuario" => $idusuario, "idperfil" => 1, "idmenu" => $mc1009[$i]->idmenu, 
+                                    "idsubmenu" => $mc1009[$i]->idsubmenu, "tipopermiso" => $mc1009[$i]->tipopermiso]);
+                            } 
+                        }
+                    }else {
+                        $array["datos"] = 1; 
+                    }
+                }else{
+                    $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfc]);
+                    if (!empty($empresa)) {
+                        $array["error"] = 41; //RFCEXISTE
+                    }else {
+                        $array["datos"] = $datosEmpresa;
+                    }
                 }
+                
+
+
                 
                 
             }else{
@@ -774,5 +822,10 @@ class EmpresaController extends Controller
             $error = 45;
         }
         return $error;
+    }
+
+    public function vincularEmpresa(Request $request)
+    {
+       
     }
 }

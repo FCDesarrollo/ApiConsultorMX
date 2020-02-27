@@ -56,7 +56,7 @@ class EmpresaController extends Controller
                 
                 $archivocer = $request->file('certificado');
                 $archivokey = $request->file('key');
-
+               
                 $passwordcer = $request->passwordcertificado;
 
                 $resSubirArchivos = $this->subeCertificados($conexionFTP, $archivocer, $archivokey);

@@ -165,4 +165,19 @@ class UsuarioController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function listaUsuariosEmpresa(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
+            $idempresa = $empresa[0]->idempresa;
+            $usuarios = DB::connection("General")->select('select u.* from mc1002 v INNER JOIN mc1001 u ON 
+                                    v.idusuario=u.idusuario where idempresa = ?', [$idempresa]);
+            $array["usuarios"] = $usuarios;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

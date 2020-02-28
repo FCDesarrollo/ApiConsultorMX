@@ -237,6 +237,10 @@ Route::post('registrarUsuario', 'UsuarioController@registrarUsuario');
 Route::post('verificaCodigo', 'UsuarioController@verificaCodigo');
 Route::post('reenviaCodigo', 'UsuarioController@reenviaCodigo');
 Route::get('listaUsuariosEmpresa', 'UsuarioController@listaUsuariosEmpresa');
+Route::put('modificaPermisoModulo', 'UsuarioController@modificaPermisoModulo');
+Route::put('modificaPermisoMenu', 'UsuarioController@modificaPermisoMenu');
+Route::put('modificaPermisoSubmenu', 'UsuarioController@modificaPermisoSubmenu');
+Route::get('permisosUsuarioGeneral', 'UsuarioController@permisosUsuarioGeneral');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');

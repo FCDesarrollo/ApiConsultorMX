@@ -180,4 +180,96 @@ class UsuarioController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+
+    public function modificaPermisoModulo(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso == 1) {
+                $array["error"] = 4;
+            }else{
+                $valorPermiso = $request->permiso;
+                $idusuariomod = $request->idusuario;
+                $idmodulo = $request->idmodulo;
+                DB::update('update mc_usermod set tipopermiso = ? where idusuario = ? and idmodulo= ?', 
+                            [$valorPermiso, $idusuariomod, $idmodulo]);
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function modificaPermisoMenu(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso == 1) {
+                $array["error"] = 4;
+            }else{
+                $valorPermiso = $request->permiso;
+                $idusuariomod = $request->idusuario;
+                $idmenu = $request->idmenu;
+                DB::update('update mc_usermenu set tipopermiso = ? where idusuario = ? and idmenu= ?', 
+                            [$valorPermiso, $idusuariomod, $idmenu]);
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function modificaPermisoSubmenu(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso == 1) {
+                $array["error"] = 4;
+            }else{
+                $valorPermiso = $request->permiso;
+                $idusuariomod = $request->idusuario;
+                $idsubmenuM = $request->modidsubmenu;
+                DB::update('update mc_usersubmenu set tipopermiso = ? where idusuario = ? and idsubmenu= ?', 
+                            [$valorPermiso, $idusuariomod, $idsubmenuM]);
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function permisosUsuarioGeneral(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso == 1) {
+                $array["error"] = 4;
+            }else{
+                $idusuariomod = $request->idusuario;
+                $modpermiso = DB::select('select idmodulo,tipopermiso,nombre AS nombreperfil from mc_usermod muser 
+			                        INNER JOIN mc_profiles mp ON muser.idperfil = mp.idperfil where idusuario = ?', [$idusuariomod]);
+                for ($i=0; $i < count($modpermiso); $i++) {
+                    $idmodulo = $modpermiso[$i]->idmodulo; 
+                    $menupermiso = DB::select('select idmenu,tipopermiso from mc_usermenu 
+                                    where idusuario = ? AND idmodulo= ?', [$idusuariomod, $idmodulo]);
+                    for ($x=0; $x < count($menupermiso); $x++) { 
+                        $idmenu = $menupermiso[$x]->idmenu;
+                        $submenupermiso = DB::select('select idsubmenu,tipopermiso,notificaciones from mc_usersubmenu 
+                                            where idusuario = ? AND idmenu = ?', [$idusuariomod, $idmenu]);
+                        $menupermiso[$x]->permisossubmenus = $submenupermiso;
+                    }
+                    $modpermiso[$i]->permisosmenu = $menupermiso;
+                    $array["permisomodulos"][$i] = $modpermiso[$i];
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

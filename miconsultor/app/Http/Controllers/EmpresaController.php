@@ -77,11 +77,11 @@ class EmpresaController extends Controller
                         $bdd = $empresa[0]->rutaempresa;
                         $fecha = date('Y-m-d');
 
-                        $agregado = DB::connection("General")->select('select * from mc1003 where 
+                        $agregado = DB::connection("General")->select('select * from mc1002 where 
                                             idusuario = ? AND idempresa= ?', [$idusuario, $idempresa]);
 
                         if (!empty($agregado)) {
-                            $array["datos"] = 47; //ya esta vinculado
+                            $array["error"] = 47; //ya esta vinculado
                         }else{
                             //INSERTA LA RELACION USUARIO Y EMPRESA
                             DB::connection("General")->insert('insert into mc1002 (idusuario, 

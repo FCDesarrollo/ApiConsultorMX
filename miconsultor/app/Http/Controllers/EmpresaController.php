@@ -824,4 +824,16 @@ class EmpresaController extends Controller
         return $error;
     }
 
+    public function datosEmpresa(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $rfc = $request->rfc;
+            $empresa = DB::select('select * from mc1000 where rfc = ?', [$rfc]);
+            $array[0]['empresa'] = $empresa;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

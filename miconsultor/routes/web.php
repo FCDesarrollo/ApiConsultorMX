@@ -240,7 +240,7 @@ Route::get('listaUsuariosEmpresa', 'UsuarioController@listaUsuariosEmpresa');
 Route::put('modificaPermisoModulo', 'UsuarioController@modificaPermisoModulo');
 Route::put('modificaPermisoMenu', 'UsuarioController@modificaPermisoMenu');
 Route::put('modificaPermisoSubmenu', 'UsuarioController@modificaPermisoSubmenu');
-Route::get('permisoGeneral', 'UsuarioController@permisoGeneral');
+Route::get('permisosUsuarioGeneral', 'UsuarioController@permisosUsuarioGeneral');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');

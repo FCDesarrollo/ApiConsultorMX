@@ -241,6 +241,8 @@ Route::put('modificaPermisoModulo', 'UsuarioController@modificaPermisoModulo');
 Route::put('modificaPermisoMenu', 'UsuarioController@modificaPermisoMenu');
 Route::put('modificaPermisoSubmenu', 'UsuarioController@modificaPermisoSubmenu');
 Route::get('permisosUsuarioGeneral', 'UsuarioController@permisosUsuarioGeneral');
+Route::put('desvinculaUsuario', 'UsuarioController@desvinculaUsuario');
+Route::delete('eliminaUsuarioEmpresa', 'UsuarioController@eliminaUsuarioEmpresa');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');

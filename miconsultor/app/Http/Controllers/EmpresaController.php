@@ -824,8 +824,4 @@ class EmpresaController extends Controller
         return $error;
     }
 
-    public function vincularEmpresa(Request $request)
-    {
-       
-    }
 }

@@ -272,4 +272,59 @@ class UsuarioController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function desvinculaUsuario(Request $request)
+    {
+
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso != 3) {
+                $array["error"] = 4;
+            }else{
+                $rfc = $request->rfc;
+                $idusuariomod = $request->idusuario;
+                $estatus = $request->estatus;
+                $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfc]);
+                if (!empty($empresa)) {
+                    $idempresa = $empresa[0]->idempresa;
+                    DB::connection("General")->update('update mc1002 set estatus = ? where idusuario = ? and idempresa = ?', [$estatus, $idusuariomod, $idempresa]);
+                }else{
+                    $array["error"] = 1;
+                }
+                
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function eliminaUsuarioEmpresa(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso != 3) {
+                $array["error"] = 4;
+            }else{
+                $rfc = $request->rfc;
+                $idusuariomod = $request->idusuario;
+                $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfc]);
+                if (!empty($empresa)) {
+                    $idempresa = $empresa[0]->idempresa;
+                    DB::connection("General")->table('mc1002')->where("idusuario", $idusuariomod)->where("idempresa", $idempresa)->delete();
+                    DB::table('mc_usermod')->where("idusuario", $idusuariomod)->delete();
+                    DB::table('mc_usermenu')->where("idusuario", $idusuariomod)->delete();
+                    DB::table('mc_usersubmenu')->where("idusuario", $idusuariomod)->delete();
+                }else{
+                    $array["error"] = 1;
+                }
+                
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

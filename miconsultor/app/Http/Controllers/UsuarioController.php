@@ -242,7 +242,7 @@ class UsuarioController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function permisosUsuarioGeneral(Request $request)
+    public function permisoGeneral(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];

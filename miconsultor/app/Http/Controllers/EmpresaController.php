@@ -654,7 +654,7 @@ class EmpresaController extends Controller
                 DB::statement($mc_requerimientos);
 
               $mc_requerimientos_bit = "create table if not exists mc_requerimientos_bit (
-                id_bit int(11) NOT NULL,
+                id_bit int(11) NOT NULL AUTO_INCREMENT,
                 id_req int(11) DEFAULT NULL,
                 fecha date DEFAULT NULL,
                 status int(11) DEFAULT NULL,
@@ -689,6 +689,9 @@ class EmpresaController extends Controller
             DB::statement($mc1013);
             
             $SucTemp = "insert into mc_catsucursales (sucursal) VALUES ('TEMPORAL')";
+            DB::statement($SucTemp);
+
+            $conceptos = "insert ".$empresaBD.".mc_conceptos SELECT * FROM dublockc_MCGenerales.mc1014;";
             DB::statement($SucTemp);
             //$mc1014 = "insert ".$empresaBD.".mc_conceptos SELECT * FROM dublockc_MCGenerales.mc1014;";
             //DB::statement($mc1014);

@@ -260,6 +260,7 @@ Route::put('creaTablasRequerimientos', 'ActualizarBaseDatosController@creaTablas
 
 //AUTORIZACION Y GASTOS 2020
 Route::get('cargaConceptos', 'AutorizacionyGastosController@cargaConceptos');
+Route::get('cargaEstatus', 'AutorizacionyGastosController@cargaEstatus');
 Route::post('nuevoRequerimiento', 'AutorizacionyGastosController@nuevoRequerimiento');
 Route::get('listaRequerimientos', 'AutorizacionyGastosController@listaRequerimientos');
 

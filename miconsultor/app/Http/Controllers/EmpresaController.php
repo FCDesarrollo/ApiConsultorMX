@@ -641,6 +641,7 @@ class EmpresaController extends Controller
                 id_sucursal int(11) DEFAULT NULL,
                 fecha date DEFAULT NULL,
                 id_usuario int(11) DEFAULT NULL,
+                fecha_req date DEFAULT NULL,
                 id_departamento int(11) DEFAULT NULL,
                 descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 importe_estimado double DEFAULT NULL,

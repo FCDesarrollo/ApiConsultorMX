@@ -4,59 +4,44 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Requerimiento;
-use App\requerimiento_bit as Bitacora;
-use App\Usuario;
+
 
 class AutorizacionyGastosController extends Controller
 {
-    public function nuevoRequerimiento(Request $request)
+    public function cargaConceptos(Request $request)
     {
-        $rfc = $request->rfc;
-        $valida = verificaUsuario($request->usuario, $request->pwd);
-
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] == 0){
-            $usuario = $valida[0]['usuario'];
-            
+           $conceptos = DB::select('select * from mc_conceptos where status = ?', [1]);
+           $array["conceptos"] = $conceptos;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 
-            $rfc = $request->rfc;
-            ConnectDatabaseRFC($rfc);
+    public function nuevoRequerimiento(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
 
-            $idsucursal = $request->idsucursal;
-            $fecha = $request->fecha;
-            $idusuario = $usuario[0]->idusuario;
-            $descripcion = $request->descripcion;
-            $importe = $request->importe;
-            $status = 1;
-            $idconcepto = $request->idconcepto;
-            $serie = $request->serie;
-            $folio = $request->folio;
-            
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $idsucursal = $request->idsucursal;
+                $fecha = $request->fecha;
+                $idusuario = $valida[0]['usuario'][0]->idusuario;
+                $fechareq = $request->fecharequerimiento;
+                $descripcion = $request->descripcion;
+                $importe = $request->importe;
+                $estado = 1;
 
-            $requerimiento = new requerimiento();
-            $requerimiento->fecha = $fecha;
-            $requerimiento->id_usuario = $idusuario;
-            $requerimiento->descripcion = $descripcion;
-            $requerimiento->importe_estimado = $importe;
-            $requerimiento->estado_documento = $status;
-            $requerimiento->id_concepto = $idconcepto;
-            $requerimiento->serie = $serie;
-            $requerimiento->folio = $folio;
-            $requerimiento->id_sucursal = $idsucursal;
-            $requerimiento->save();
-
-            $bitacora = new Bitacora();
-            $bitacora->id_usuario = $requerimiento->id_usuario;
-            $bitacora->id_req = $requerimiento->id_req;
-            $bitacora->fecha = $fecha;
-            $bitacora->descripcion = $descripcion;
-            $bitacora->estatus = $requerimiento->estado_documento;
-            $bitacora->save();
-
-
-
+                $idconcepto = $request->idconcepto;
+                $serie = $request->serie;
+                $folio = $request->folio;
+            }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

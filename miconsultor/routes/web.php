@@ -259,6 +259,7 @@ Route::put('actualizaPermisosUsuario', 'ActualizarBaseDatosController@actualizaP
 Route::put('creaTablasRequerimientos', 'ActualizarBaseDatosController@creaTablasRequerimientos'); // 14/02/2020
 
 //AUTORIZACION Y GASTOS 2020
+Route::get('cargaConceptos', 'AutorizacionyGastosController@cargaConceptos');
 Route::post('nuevoRequerimiento', 'AutorizacionyGastosController@nuevoRequerimiento');
 Route::get('listaRequerimientos', 'AutorizacionyGastosController@listaRequerimientos');
 

@@ -310,4 +310,30 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function permisosAutorizaciones(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
+                $idempresa = $empresa[0]->idempresa;
+                $usuarios = DB::connection("General")->select('select u.* from mc1002 v INNER JOIN mc1001 u ON 
+                                        v.idusuario=u.idusuario where idempresa = ?', [$idempresa]);
+                for ($i=0; $i < count($usuarios) ; $i++) { 
+                    $idusuario = $usuarios[$i]->idusuario;
+                    $conceptos = DB::select('select c.* from mc_usuarios_concepto u 
+                        inner join mc_conceptos c on u.id_concepto=c.id where id_usuario = ?', [$idusuario]);
+                    $usuarios[$i]->conceptos =  $conceptos;    
+                }
+                $array["usuarios"] = $usuarios;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
 }

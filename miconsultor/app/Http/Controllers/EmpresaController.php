@@ -649,6 +649,7 @@ class EmpresaController extends Controller
                 id_concepto int(11) DEFAULT NULL,
                 serie varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 folio varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                estatus int(11) DEFAULT NULL,
                 PRIMARY KEY (idReq)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
                 DB::statement($mc_requerimientos);

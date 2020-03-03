@@ -133,7 +133,7 @@ function GetNomCarpetaSubMenu($idsubmenu)
 function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password,$carpetamodulo, $carpetamenu, $carpetasubmenu, $codarchivo, $consecutivo)
     {
 
-        
+        set_time_limit(0);
         $directorio = $rfcempresa . '/'. $carpetamodulo .'/' . $carpetamenu . '/' . $carpetasubmenu;
 
         $ch = curl_init();
@@ -176,6 +176,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
     }
 
     function GetLinkArchivo($link, $server, $user, $pass){
+        set_time_limit(0);
         $ch = curl_init();
      //curl_setopt($ch, CURLOPT_URL, "https://".$user.":".$pass."@".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");
          curl_setopt($ch, CURLOPT_URL, "https://".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");

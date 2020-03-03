@@ -264,6 +264,7 @@ Route::get('cargaEstatus', 'AutorizacionyGastosController@cargaEstatus');
 Route::post('nuevoRequerimiento', 'AutorizacionyGastosController@nuevoRequerimiento');
 Route::get('listaRequerimientos', 'AutorizacionyGastosController@listaRequerimientos');
 Route::get('datosRequerimiento', 'AutorizacionyGastosController@datosRequerimiento');
+Route::put('agregaEstatus', 'AutorizacionyGastosController@agregaEstatus');
 
 //ALMACEN DIGITAL OPERACIONES 2020
 Route::get('listaAlmacenDigital', 'AlmacenDigitalOperacionesController@listaAlmacenDigital');

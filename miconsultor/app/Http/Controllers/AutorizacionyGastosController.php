@@ -35,6 +35,7 @@ class AutorizacionyGastosController extends Controller
 
     public function nuevoRequerimiento(Request $request)
     {
+        set_time_limit(0);
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
@@ -59,7 +60,7 @@ class AutorizacionyGastosController extends Controller
                 $idreq = DB::table('mc_requerimientos')->insertGetId(['id_sucursal' => $idsucursal, 'fecha' => $fecha, 
                                 'id_usuario' => $idusuario, 'fecha_req' => $fechareq, 'id_departamento' => $idsubmenu,
                                 'descripcion' => $descripcion, 'importe_estimado' => $importe, 'estado_documento' => $estado,
-                                'id_concepto' => $idconcepto, 'serie' => $serie, 'folio' => $folio]);
+                                'id_concepto' => $idconcepto, 'serie' => $serie, 'folio' => $folio, 'estatus' => 1]);
                 if ($idreq !=0) {
                     DB::insert('insert into mc_requerimientos_bit (id_usuario, id_req, fecha, status)values(?, ?, ?, ?)',
                              [$idusuario, $idreq, $fecha, $estado]);
@@ -93,7 +94,10 @@ class AutorizacionyGastosController extends Controller
                             $n = 0;
                             foreach($archivos as $key => $file){
                                     //return $key;
-                                    if ($key == 'principal') {
+                                    $posp = strpos($key, 'principal');
+                                    $poss = strpos($key, 'secundario');
+                                    
+                                    if ($posp >=0) {
                                         $tipo =1;
                                         if (strlen($countreg) == 1) {
                                             $consecutivo = "000" . $countreg;
@@ -104,7 +108,7 @@ class AutorizacionyGastosController extends Controller
                                         } else {
                                             $consecutivo = $countreg;
                                         }
-                                    }elseif ($key == 'secundario') {
+                                    }elseif ($poss >= 0) {
                                         $tipo =2;
                                         if (strlen($countreg2) == 1) {
                                             $consecutivo = "000" . $countreg2;
@@ -131,6 +135,7 @@ class AutorizacionyGastosController extends Controller
                                             WHERE documento = '$archivo' AND r.fecha_req = '$fechareq' AND r.id_concepto = $idconcepto");
                                     if (empty($existe)) {
                                         $resultado = subirArchivoNextcloud($archivo, $file, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $codigoarchivo, $consecutivo);
+                                        //return $resultado;
                                         if ($resultado["archivo"]["error"] == 0) {
                                             $codigodocumento = $codigoarchivo . $consecutivo;
                                             $type = explode(".", $archivo);
@@ -153,9 +158,9 @@ class AutorizacionyGastosController extends Controller
                                                 "detalle" => ($link != "" ? "¡Cargado Correctamente!" : "¡Link no generado, error al subir!"),
                                                 "idarchivo" => $idarchivo
                                             );
-                                            if ($key == 'principal') {
+                                            if ($posp >=0) {
                                                 $countreg = $countreg + ($link != "" ? 1 : 0);
-                                            }elseif ($key == 'secundario') {
+                                            }elseif ($poss >= 0) {
                                                 $countreg2 = $countreg2 + ($link != "" ? 1 : 0);
                                             }
                                         }else{
@@ -175,9 +180,9 @@ class AutorizacionyGastosController extends Controller
                                             "status" => 4,
                                             "detalle" => "¡Ya existe!"
                                         );
-                                        if ($key == 'principal') {
+                                        if ($posp >=0) {
                                             $countreg = $countreg + 1;
-                                        }elseif ($key == 'secundario') {
+                                        }elseif ($poss >= 0) {
                                             $countreg2 = $countreg2 + 1;
                                         }
                                     }
@@ -278,6 +283,28 @@ class AutorizacionyGastosController extends Controller
                                where id_req = ?', [$idrequerimiento]);
                 
                 $array[0]["requerimiento"] = $requerimiento;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function agregaEstatus(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $idusuario = $valida[0]['usuario'][0]->idusuario;
+                $idrequerimiento = $request->idrequerimiento;
+                $fecha = $request->fecha;
+                $estatus = $request->estatus;
+                DB::insert('insert into mc_requerimientos_bit (id_usuario,id_req, fecha, status) values 
+                    (?, ?, ?, ?)', [$idusuario, $idrequerimiento, $fecha, $estatus]);
+                DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $idrequerimiento]);
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

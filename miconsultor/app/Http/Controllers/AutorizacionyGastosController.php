@@ -336,4 +336,22 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function guardaPermisoAutorizacion(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $idusuario = $request->idusuario;
+                $idconcepto = $request->idconcepto;
+                DB::insert('insert into mc_usuarios_concepto (id_usuario, id_concepto) values (?, ?)',
+                                 [$idusuario, $idconcepto]);
+            }
+        }
+    }
+
 }

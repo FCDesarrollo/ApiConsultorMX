@@ -265,6 +265,7 @@ Route::post('nuevoRequerimiento', 'AutorizacionyGastosController@nuevoRequerimie
 Route::get('listaRequerimientos', 'AutorizacionyGastosController@listaRequerimientos');
 Route::get('datosRequerimiento', 'AutorizacionyGastosController@datosRequerimiento');
 Route::put('agregaEstatus', 'AutorizacionyGastosController@agregaEstatus');
+Route::delete('eliminaEstatus', 'AutorizacionyGastosController@eliminaEstatus');
 Route::get('permisosAutorizaciones', 'AutorizacionyGastosController@permisosAutorizaciones');
 Route::put('guardaPermisoAutorizacion', 'AutorizacionyGastosController@guardaPermisoAutorizacion');
 

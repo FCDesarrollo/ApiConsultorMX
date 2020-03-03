@@ -310,6 +310,25 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function eliminaEstatus(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $idbit = $request->idbitacora;
+                $idrequerimiento = $request->idrequerimiento;
+                $estatus = $request->estatus;
+                DB::delete('delete mc_requerimientos_bit where if_req = ? and id_bit = ?', [$idrequerimiento, $idbit]);
+                DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $idrequerimiento]);
+            }
+        }
+    }
+
     public function permisosAutorizaciones(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
@@ -352,6 +371,11 @@ class AutorizacionyGastosController extends Controller
                                  [$idusuario, $idconcepto]);
             }
         }
+    }
+
+    public function editarRequerimiento(Request $request)
+    {
+        # code...
     }
 
 }

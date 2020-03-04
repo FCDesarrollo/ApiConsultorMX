@@ -327,6 +327,7 @@ class AutorizacionyGastosController extends Controller
                 DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $idrequerimiento]);
             }
         }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     public function permisosAutorizaciones(Request $request)
@@ -371,6 +372,7 @@ class AutorizacionyGastosController extends Controller
                                  [$idusuario, $idconcepto]);
             }
         }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     public function editarRequerimiento(Request $request)

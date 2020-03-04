@@ -323,7 +323,7 @@ class AutorizacionyGastosController extends Controller
                 $idbit = $request->idbitacora;
                 $idrequerimiento = $request->idrequerimiento;
                 $estatus = $request->estatus;
-                DB::delete('delete mc_requerimientos_bit where if_req = ? and id_bit = ?', [$idrequerimiento, $idbit]);
+                DB::delete('delete from mc_requerimientos_bit where id_req = ? and id_bit = ?', [$idrequerimiento, $idbit]);
                 DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $idrequerimiento]);
             }
         }
@@ -375,9 +375,170 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public  function eliminaPermisoAutorizacion(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 3) {
+                $array["error"] = 4;
+            }else{
+                $idusuario = $request->idusuario;
+                $idconcepto = $request->idconcepto;
+                DB::delete('delete from mc_usuarios_concepto where id_usuario = ? and id_concepto=?', [$idusuario, $idconcepto]);
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     public function editarRequerimiento(Request $request)
     {
-        # code...
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $idreq = $request->idrequerimiento;
+                $requerimiento = DB::select('select id_concepto,fecha_req from mc_requerimientos where idReq = ?', [$idreq]);
+                if (empty($requerimiento)) {
+                    $array["error"] = 4;
+                }else{
+                    $fechareq = $requerimiento[0]->fecha_req;
+                    $idconcepto = $requerimiento[0]->id_concepto;
+                    $idmodulo = 4;
+                    $idmenu = $request->idmenu;
+                    $idsubmenu = $request->idsubmenu;
+                    $idusuario = $valida[0]['usuario'][0]->idusuario;
+                            
+                    $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $idsubmenu);
+                    $array["error"] = $validaCarpetas[0]["error"];
+                    if ($validaCarpetas[0]['error'] == 0){
+                        $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                        $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                        $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+
+                        $servidor = getServidorNextcloud();
+                        $archivos = $request->file();
+                        $fecha = $request->fecha;
+
+                        $rfc = $request->rfc;
+                        $u_storage = $request->usuario_storage;
+                        $p_storage = $request->password_storage;
+
+                        $consecutivo = $this->getConsecutioRequ($fecha , $idconcepto, 1);
+                        $countreg = $consecutivo;
+                        $consecutivo = $this->getConsecutioRequ($fecha , $idconcepto, 2);
+                        $countreg2 = $consecutivo;
+
+                        $cont = 0;
+                        $n = 0;
+                        foreach($archivos as $key => $file){
+                            //return $key;
+                            $posp = strpos($key, 'principal');
+                            $poss = strpos($key, 'secundario');
+                            
+                            if ($posp >=0) {
+                                $tipo =1;
+                                if (strlen($countreg) == 1) {
+                                    $consecutivo = "000" . $countreg;
+                                } elseif (strlen($countreg) == 2) {
+                                    $consecutivo = "00" . $countreg;
+                                } elseif (strlen($countreg) == 3) {
+                                    $consecutivo = "0" . $countreg;
+                                } else {
+                                    $consecutivo = $countreg;
+                                }
+                            }elseif ($poss >= 0) {
+                                $tipo =2;
+                                if (strlen($countreg2) == 1) {
+                                    $consecutivo = "000" . $countreg2;
+                                } elseif (strlen($countreg2) == 2) {
+                                    $consecutivo = "00" . $countreg2;
+                                } elseif (strlen($countreg2) == 3) {
+                                    $consecutivo = "0" . $countreg2;
+                                } else {
+                                    $consecutivo = $countreg2;
+                                }
+                            }
+
+                            $archivo = $file->getClientOriginalName();
+                            //return $archivo;
+
+                            $mod = substr(strtoupper($carpetasubmenu), 0, 3);
+
+                            $string = explode("-", $fecha);
+                            $codfec = substr($string[0], 2) . $string[1];
+                            $codigoarchivo = $rfc . "_" . $codfec . "_" . $mod . "_";
+
+                            $existe = DB::select("SELECT doc.* FROM mc_requerimientos_doc AS doc 
+                                    INNER JOIN mc_requerimientos AS r ON doc.id_req = r.idReq 
+                                    WHERE documento = '$archivo' AND r.fecha_req = '$fechareq' AND r.id_concepto = $idconcepto");
+                            if (empty($existe)) {
+                                $resultado = subirArchivoNextcloud($archivo, $file, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $codigoarchivo, $consecutivo);
+                                //return $resultado;
+                                if ($resultado["archivo"]["error"] == 0) {
+                                    $codigodocumento = $codigoarchivo . $consecutivo;
+                                    $type = explode(".", $archivo);
+                                    $directorio = $rfc . '/'. $carpetamodulo .'/' . $carpetamenu . '/' . $carpetasubmenu;
+                                    $target_path = $directorio . '/' . $codigodocumento . "." . $type[count($type) - 1];   
+                                    $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+
+                                    $idarchivo= 0;
+                                    if ($link != "") {
+                                        $idarchivo = DB::table('mc_requerimientos_doc')->insertGetId(['id_usuario' => $idusuario, 'id_req' => $idreq,
+                                        'documento' => $archivo, 'codigo_documento' => $codigodocumento,'tipo_doc' => $tipo, 'download' => $link]);
+                                        $n= $n +1;
+                                    }
+                                    
+                                    $array2["archivos"][$cont] =  array(
+                                        "archivo" => $file->getClientOriginalName(),
+                                        "codigo" => $resultado["archivo"]["codigo"],
+                                        "link" => $link,
+                                        "status" => ($link != "" ? 0 : 2),
+                                        "detalle" => ($link != "" ? "¡Cargado Correctamente!" : "¡Link no generado, error al subir!"),
+                                        "idarchivo" => $idarchivo
+                                    );
+                                    if ($posp >=0) {
+                                        $countreg = $countreg + ($link != "" ? 1 : 0);
+                                    }elseif ($poss >= 0) {
+                                        $countreg2 = $countreg2 + ($link != "" ? 1 : 0);
+                                    }
+                                }else{
+                                    $array2["archivos"][$cont] =  array(
+                                        "archivo" => $file->getClientOriginalName(),
+                                        "codigo" => "",
+                                        "link" => "",
+                                        "status" => ($resultado["archivo"]["error"] == 3 ? 3 : 1),
+                                        "detalle" => "¡No se pudo subir el archivo!"
+                                    );
+                                }
+                            }else{
+                                $array2["archivos"][$cont] =  array(
+                                    "archivo" => $archivo,
+                                    "codigo" => $codigoarchivo . $consecutivo,
+                                    "link" => "",
+                                    "status" => 4,
+                                    "detalle" => "¡Ya existe!"
+                                );
+                                if ($posp >=0) {
+                                    $countreg = $countreg + 1;
+                                }elseif ($poss >= 0) {
+                                    $countreg2 = $countreg2 + 1;
+                                }
+                            }
+                            $cont = $cont + 1;
+                        }
+                    $array["archivos"] = $array2["archivos"];
+                    }
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
 }

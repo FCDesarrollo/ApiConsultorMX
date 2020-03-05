@@ -1873,4 +1873,59 @@ class ConsumoController extends Controller
 
         return $array;
     }
+
+    public function ingresarExpedienteByMod(Request $request)
+    {
+        $idexp = 0;
+
+        $rfc = $request->rfc;
+        $idusuario = $request->idusuario;
+        $usuario = $request->usuario;
+        $pwd = $request->pwd;
+        $idmodulo = $request->idmodulo;
+        $idcuenta = $request->idcuenta;
+        $fechadocto = = $request->fechadocto;
+        $periodo = date("m", $fechadocto)+1;
+        $ejercicio = date("Y", $fechadocto);
+        $tipo_doc = $request->tipo_doc;
+        $descripcion = $request->descripcion;
+        $num1 = $request->numero1;
+        $num2 = $request->numero2;
+        $num3 = $request->numero3;
+        $tex1 = $request->texto1;
+        $tex2 = $request->texto2;
+        $tex3 = $request->texto3;
+        $iddigital = $request->iddigital;
+        $version = $request->version;
+        $ruta = $request->ruta;
+
+
+        ConnectDatabaseRFC($rfc);
+
+        $idexp = DB::table('mc_modulos_exp')->insertGetId(['idusuario' => $now, 'idcuenta' => $fechadocto, 'periodo' => $codigoalm, 'ejercicio' => $idUsuario, 'tipo_doc' => $idsubmenu, 'ruta' => $suc[0]->idsucursal, 'fecha_reg' => $observaciones, 'fecha' => $observaciones, 'descripcion' => $observaciones, 'numero1' => $observaciones, 'numero2' => $observaciones, 'numero3' => $observaciones, 'texto1' => $observaciones, 'texto2' => $observaciones, 'texto3' => $observaciones, 'iddigital' => $observaciones, 'version' => $observaciones]);
+
+/*
+    $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+    
+    DB::table('mc_almdigital_det')->where("id", $idarchivo)->delete();
+    
+    $totalr = DB::select("SELECT totalregistros FROM mc_almdigital WHERE id = $idalmacen");    
+    
+    DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalc[0]->tc]);    
+    
+    $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'idmodulo' => $idsubmenu, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]);    
+*/        
+
+
+        // $archivos = $request->file();
+
+        // foreach ($archivos as $key) {
+        //     $ruta = $key->getClientOriginalName(); //Nombre original del archivo
+
+        // }
+
+        return json_encode($idexp, JSON_UNESCAPED_UNICODE);
+
+    }    
+
 }

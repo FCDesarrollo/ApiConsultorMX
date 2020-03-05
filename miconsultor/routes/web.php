@@ -278,3 +278,6 @@ Route::get('listaAlmacenDigital', 'AlmacenDigitalOperacionesController@listaAlma
 Route::get('archivosAlmacenDigital', 'AlmacenDigitalOperacionesController@archivosAlmacenDigital');
 Route::post('cargaArchivosAlmacenDigital', 'AlmacenDigitalOperacionesController@cargaArchivosAlmacenDigital');
 Route::post('eliminaArchivosDigital', 'AlmacenDigitalOperacionesController@eliminaArchivosDigital');
+
+//API PARA LOS EXPEDIENTES DE LOS MODULOS
+Route::post('ingresarExpedienteByMod', 'ConsumoController@ingresarExpedienteByMod');

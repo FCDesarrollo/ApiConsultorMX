@@ -1884,7 +1884,7 @@ class ConsumoController extends Controller
         $pwd = $request->pwd;
         $idmodulo = $request->idmodulo;
         $idcuenta = $request->idcuenta;
-        $fechadocto = = $request->fechadocto;
+        $fechadocto = $request->fechadocto;
         $periodo = date("m", $fechadocto)+1;
         $ejercicio = date("Y", $fechadocto);
         $tipo_doc = $request->tipo_doc;
@@ -1902,7 +1902,7 @@ class ConsumoController extends Controller
 
         ConnectDatabaseRFC($rfc);
 
-        $idexp = DB::table('mc_modulos_exp')->insertGetId(['idusuario' => $now, 'idcuenta' => $fechadocto, 'periodo' => $codigoalm, 'ejercicio' => $idUsuario, 'tipo_doc' => $idsubmenu, 'ruta' => $suc[0]->idsucursal, 'fecha_reg' => $observaciones, 'fecha' => $observaciones, 'descripcion' => $observaciones, 'numero1' => $observaciones, 'numero2' => $observaciones, 'numero3' => $observaciones, 'texto1' => $observaciones, 'texto2' => $observaciones, 'texto3' => $observaciones, 'iddigital' => $observaciones, 'version' => $observaciones]);
+        $idexp = DB::table('mc_modulos_exp')->insertGetId(['idusuario' => $idusuario, 'idcuenta' => $idcuenta, 'periodo' => $periodo, 'ejercicio' => $ejercicio, 'tipo_doc' => $tipo_doc, 'ruta' => $ruta, 'fecha_reg' => now(), 'fecha' => $fechadocto, 'descripcion' => $descripcion, 'numero1' => $num1, 'numero2' => $num2, 'numero3' => $num3, 'texto1' => $tex1, 'texto2' => $tex2, 'texto3' => $tex3, 'iddigital' => $iddigital, 'version' => $version]);
 
 /*
     $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");

@@ -97,7 +97,7 @@ class AutorizacionyGastosController extends Controller
                                     $posp = strpos($key, 'principal');
                                     $poss = strpos($key, 'secundario');
                                     
-                                    if ($posp >=0) {
+                                    if ($posp !='' and $posp >=0) {
                                         $tipo =1;
                                         if (strlen($countreg) == 1) {
                                             $consecutivo = "000" . $countreg;
@@ -108,7 +108,7 @@ class AutorizacionyGastosController extends Controller
                                         } else {
                                             $consecutivo = $countreg;
                                         }
-                                    }elseif ($poss >= 0) {
+                                    }elseif ($poss !='' and $poss >= 0) {
                                         $tipo =2;
                                         if (strlen($countreg2) == 1) {
                                             $consecutivo = "000" . $countreg2;
@@ -442,8 +442,10 @@ class AutorizacionyGastosController extends Controller
                             $posp = strpos($key, 'principal');
                             $poss = strpos($key, 'secundario');
                             
-                            if ($posp >=0) {
+                            
+                            if ($poss===false and $posp >=0 ) {
                                 $tipo =1;
+                                return $tipo;
                                 if (strlen($countreg) == 1) {
                                     $consecutivo = "000" . $countreg;
                                 } elseif (strlen($countreg) == 2) {
@@ -453,8 +455,9 @@ class AutorizacionyGastosController extends Controller
                                 } else {
                                     $consecutivo = $countreg;
                                 }
-                            }elseif ($poss >= 0) {
+                            }elseif ($posp===false and $poss >= 0) {
                                 $tipo =2;
+                                return $tipo;
                                 if (strlen($countreg2) == 1) {
                                     $consecutivo = "000" . $countreg2;
                                 } elseif (strlen($countreg2) == 2) {
@@ -465,7 +468,7 @@ class AutorizacionyGastosController extends Controller
                                     $consecutivo = $countreg2;
                                 }
                             }
-
+                            return 0;
                             $archivo = $file->getClientOriginalName();
                             //return $archivo;
 
@@ -541,4 +544,24 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function eliminaDocumento(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 3) {
+                $array["error"] = 4;
+            }else{
+                $idreq = $request->idrequerimiento;
+                $requerimiento = DB::select('select id_concepto,fecha_req from mc_requerimientos where idReq = ?', [$idreq]);
+                if (empty($requerimiento)) {
+                    $array["error"] = 4;
+                }else{
+                    
+                }
+            }
+        }
+    }
 }

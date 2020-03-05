@@ -406,7 +406,7 @@ class AutorizacionyGastosController extends Controller
                 $idreq = $request->idrequerimiento;
                 $requerimiento = DB::select('select id_concepto,fecha_req from mc_requerimientos where idReq = ?', [$idreq]);
                 if (empty($requerimiento)) {
-                    $array["error"] = 4;
+                    $array["error"] = 9;
                 }else{
                     $fechareq = $requerimiento[0]->fecha_req;
                     $idconcepto = $requerimiento[0]->id_concepto;
@@ -445,7 +445,7 @@ class AutorizacionyGastosController extends Controller
                             
                             if ($poss===false and $posp >=0 ) {
                                 $tipo =1;
-                                return $tipo;
+                                //return $tipo;
                                 if (strlen($countreg) == 1) {
                                     $consecutivo = "000" . $countreg;
                                 } elseif (strlen($countreg) == 2) {
@@ -457,7 +457,7 @@ class AutorizacionyGastosController extends Controller
                                 }
                             }elseif ($posp===false and $poss >= 0) {
                                 $tipo =2;
-                                return $tipo;
+                                //return $tipo;
                                 if (strlen($countreg2) == 1) {
                                     $consecutivo = "000" . $countreg2;
                                 } elseif (strlen($countreg2) == 2) {
@@ -468,7 +468,7 @@ class AutorizacionyGastosController extends Controller
                                     $consecutivo = $countreg2;
                                 }
                             }
-                            return 0;
+                            //return 0;
                             $archivo = $file->getClientOriginalName();
                             //return $archivo;
 
@@ -557,11 +557,41 @@ class AutorizacionyGastosController extends Controller
                 $idreq = $request->idrequerimiento;
                 $requerimiento = DB::select('select id_concepto,fecha_req from mc_requerimientos where idReq = ?', [$idreq]);
                 if (empty($requerimiento)) {
-                    $array["error"] = 4;
+                    $array["error"] = 9;
                 }else{
-                    
+                    $rfc = $request->rfc;
+                    $idmodulo = 4;
+                    $idmenu = $request->idmenu;
+                    $idsubmenu = $request->idsubmenu;
+                    $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $idsubmenu);
+                    $array["error"] = $validaCarpetas[0]["error"];
+                
+                    if ($validaCarpetas[0]['error'] == 0){
+                        $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                        $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                        $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+
+                        $servidor = getServidorNextcloud();
+                        $u_storage = $request->usuario_storage;
+                        $p_storage = $request->password_storage;
+
+                        $ruta = $rfc . '/'. $carpetamodulo . '/' . $carpetamenu . '/'. $carpetasubmenu;
+
+                        $idarchivo = $request->idarchivo;
+                        $idrequerimiento = $request->idrequerimiento;
+                        $archivo = DB::select("SELECT  codigodocumento, documento FROM mc_requerimientos_doc WHERE id = $idarchivo AND id_req=$idrequerimiento");
+    
+                        $type = explode(".", $archivo[0]->documento);
+                        $nombrearchivo = $ruta . "/" . $archivo[0]->codigodocumento . "." . $type[1];
+                        $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
+
+                        if (empty($resp)) {
+                            DB::table('mc_requerimientos_doc')->where("id", $idarchivo)->where("id_req", $idrequerimiento)->delete();
+                        }
+                    }
                 }
             }
         }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

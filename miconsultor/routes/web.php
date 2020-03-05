@@ -270,6 +270,7 @@ Route::get('permisosAutorizaciones', 'AutorizacionyGastosController@permisosAuto
 Route::put('guardaPermisoAutorizacion', 'AutorizacionyGastosController@guardaPermisoAutorizacion');
 Route::delete('eliminaPermisoAutorizacion', 'AutorizacionyGastosController@eliminaPermisoAutorizacion');
 Route::post('editarRequerimiento', 'AutorizacionyGastosController@editarRequerimiento');
+Route::delete('eliminaDocumento', 'AutorizacionyGastosController@eliminaDocumento');
 
 //ALMACEN DIGITAL OPERACIONES 2020
 Route::get('listaAlmacenDigital', 'AlmacenDigitalOperacionesController@listaAlmacenDigital');

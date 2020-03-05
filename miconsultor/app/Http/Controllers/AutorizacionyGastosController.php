@@ -579,10 +579,10 @@ class AutorizacionyGastosController extends Controller
 
                         $idarchivo = $request->idarchivo;
                         $idrequerimiento = $request->idrequerimiento;
-                        $archivo = DB::select("SELECT  codigodocumento, documento FROM mc_requerimientos_doc WHERE id = $idarchivo AND id_req=$idrequerimiento");
+                        $archivo = DB::select("SELECT  codigo_documento, documento FROM mc_requerimientos_doc WHERE id = $idarchivo AND id_req=$idrequerimiento");
     
                         $type = explode(".", $archivo[0]->documento);
-                        $nombrearchivo = $ruta . "/" . $archivo[0]->codigodocumento . "." . $type[1];
+                        $nombrearchivo = $ruta . "/" . $archivo[0]->codigo_documento . "." . $type[1];
                         $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
 
                         if (empty($resp)) {
@@ -593,5 +593,50 @@ class AutorizacionyGastosController extends Controller
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function eliminaRequerimiento(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 3) {
+                $array["error"] = 4;
+            }else{
+                $idrequerimiento = $request->idrequerimiento;
+
+                $rfc = $request->rfc;
+                $idmodulo = 4;
+                $idmenu = $request->idmenu;
+                $idsubmenu = $request->idsubmenu;
+                $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $idsubmenu);
+                $array["error"] = $validaCarpetas[0]["error"];
+            
+                if ($validaCarpetas[0]['error'] == 0){
+                    $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                    $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                    $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+
+                    $servidor = getServidorNextcloud();
+                    $u_storage = $request->usuario_storage;
+                    $p_storage = $request->password_storage;
+
+                    $ruta = $rfc . '/'. $carpetamodulo . '/' . $carpetamenu . '/'. $carpetasubmenu;
+
+                    $archivos = DB::select("SELECT  codigo_documento, documento FROM mc_requerimientos_doc 
+                                            WHERE id_req=$idrequerimiento");
+                    for ($i=0; $i < count($archivos); $i++) { 
+                        $type = explode(".", $archivos[$i]->documento);
+                        $nombrearchivo = $ruta . "/" . $archivos[$i]->codigo_documento . "." . $type[1];
+                        $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
+                    }
+                }
+                DB::table('mc_requerimientos')->where("idReq", $idrequerimiento)->delete();
+                DB::table('mc_requerimientos_bit')->where("id_req", $idrequerimiento)->delete();
+                DB::table('mc_requerimientos_doc')->where("id_req", $idrequerimiento)->delete();
+            }
+        }
     }
 }

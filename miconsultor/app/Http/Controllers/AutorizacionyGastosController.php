@@ -208,15 +208,17 @@ class AutorizacionyGastosController extends Controller
             $idusuario = $valida[0]['usuario'][0]->idusuario;
             $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
             $bdd = $empresa[0]->rutaempresa;
-            $query ="select r.*,u.nombre,u.apellidop,u.apellidom from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
+            $query ="select r.*,s.sucursal,u.nombre,u.apellidop,u.apellidom from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
+                            inner join $bdd.mc_mc_catsucursales s ON r.id_sucursal=s.idsucursal                     
                                 where id_usuario =$idusuario and id_departamento=$request->idsubmenu";
             $requser = DB::select($query);
             
             $conceptos = DB::select('select id_concepto from mc_usuarios_concepto where id_usuario = ?', [$idusuario]);
             for ($i=0; $i < count($conceptos); $i++) { 
                 $idconcepto = $conceptos[$i]->id_concepto;
-                $query ="select r.*,u.nombre,u.apellidop,u.apellidom from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
-                                where id_concepto =$idconcepto and id_usuario<>$idusuario and id_departamento=$request->idsubmenu";
+                $query ="select r.*,s.sucursal,u.nombre,u.apellidop,u.apellidom from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
+                                inner join $bdd.mc_mc_catsucursales s ON r.id_sucursal=s.idsucursal    
+                            where id_concepto =$idconcepto and id_usuario<>$idusuario and id_departamento=$request->idsubmenu";
                 $reqconceto = DB::select($query);
                 $requerimientos = array_merge($requser, $reqconceto);
                 $requser = $requerimientos;
@@ -416,7 +418,7 @@ class AutorizacionyGastosController extends Controller
                     $idsubmenu = $request->idsubmenu;
                     $idusuario = $valida[0]['usuario'][0]->idusuario;
                     $descripcion = $request->descripcion;
-                    
+
                     DB::update('update mc_requerimientos set descripcion = ? where idReq = ?', [$descripcion, $idreq]);
 
                     $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $idsubmenu);

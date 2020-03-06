@@ -302,7 +302,7 @@ class AutorizacionyGastosController extends Controller
             }else{
                 $idusuario = $valida[0]['usuario'][0]->idusuario;
                 $idrequerimiento = $request->idrequerimiento;
-                $observaciones = $request->obervaciones;
+                $observaciones = $request->observaciones;
                 $fecha = $request->fecha;
                 $estatus = $request->estatus;
                 DB::insert('insert into mc_requerimientos_bit (id_usuario,id_req, fecha,observaciones, status) values 

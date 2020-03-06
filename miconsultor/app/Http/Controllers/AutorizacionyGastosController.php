@@ -97,7 +97,7 @@ class AutorizacionyGastosController extends Controller
                                     $posp = strpos($key, 'principal');
                                     $poss = strpos($key, 'secundario');
                                     
-                                    if ($posp !='' and $posp >=0) {
+                                    if ($poss===false and $posp >=0) {
                                         $tipo =1;
                                         if (strlen($countreg) == 1) {
                                             $consecutivo = "000" . $countreg;
@@ -108,7 +108,7 @@ class AutorizacionyGastosController extends Controller
                                         } else {
                                             $consecutivo = $countreg;
                                         }
-                                    }elseif ($poss !='' and $poss >= 0) {
+                                    }elseif ($posp===false and $poss >= 0) {
                                         $tipo =2;
                                         if (strlen($countreg2) == 1) {
                                             $consecutivo = "000" . $countreg2;
@@ -300,10 +300,11 @@ class AutorizacionyGastosController extends Controller
             }else{
                 $idusuario = $valida[0]['usuario'][0]->idusuario;
                 $idrequerimiento = $request->idrequerimiento;
+                $observaciones = $request->obervaciones;
                 $fecha = $request->fecha;
                 $estatus = $request->estatus;
-                DB::insert('insert into mc_requerimientos_bit (id_usuario,id_req, fecha, status) values 
-                    (?, ?, ?, ?)', [$idusuario, $idrequerimiento, $fecha, $estatus]);
+                DB::insert('insert into mc_requerimientos_bit (id_usuario,id_req, fecha,observaciones, status) values 
+                    (?, ?, ?, ?, ?)', [$idusuario, $idrequerimiento, $fecha,$observaciones, $estatus]);
                 DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $idrequerimiento]);
             }
         }
@@ -414,7 +415,10 @@ class AutorizacionyGastosController extends Controller
                     $idmenu = $request->idmenu;
                     $idsubmenu = $request->idsubmenu;
                     $idusuario = $valida[0]['usuario'][0]->idusuario;
-                            
+                    $descripcion = $request->descripcion;
+                    
+                    DB::update('update mc_requerimientos set descripcion = ? where idReq = ?', [$descripcion, $idreq]);
+
                     $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $idsubmenu);
                     $array["error"] = $validaCarpetas[0]["error"];
                     if ($validaCarpetas[0]['error'] == 0){
@@ -638,5 +642,6 @@ class AutorizacionyGastosController extends Controller
                 DB::table('mc_requerimientos_doc')->where("id_req", $idrequerimiento)->delete();
             }
         }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

@@ -628,6 +628,7 @@ class EmpresaController extends Controller
             
             $mc_conceptos = "create table if not exists mc_conceptos (
                 id int(11) NOT NULL AUTO_INCREMENT,
+                idsubmenu int(11) DEFAULT NULL,
                 nombre_concepto varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 fecha date DEFAULT NULL,

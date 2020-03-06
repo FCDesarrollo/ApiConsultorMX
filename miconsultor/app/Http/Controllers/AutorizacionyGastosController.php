@@ -14,8 +14,9 @@ class AutorizacionyGastosController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] == 0){
-           $conceptos = DB::select('select * from mc_conceptos where status = ?', [1]);
-           $array["conceptos"] = $conceptos;
+            $idsubmenu = $request->idsubmenu;
+            $conceptos = DB::select('select * from mc_conceptos where status = ? and idsubmenu = ?', [1, $idsubmenu]);
+            $array["conceptos"] = $conceptos;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

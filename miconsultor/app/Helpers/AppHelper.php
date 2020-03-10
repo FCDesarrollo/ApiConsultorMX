@@ -516,7 +516,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $usuarios  = $datos[0]["usuarios"];
 
         $idnotificacion = DB::table('mc_notificaciones')->insertGetId(['idusuario' => $idusuario, 'encabezado' => $encabezado,
-                 'mensaje' => $mensaje, 'fecha' => $fecha,'idmodulo' => $idmodulo, 'idmenu' => $idmenu,
+                 'mensaje' => $mensaje,'idmodulo' => $idmodulo, 'idmenu' => $idmenu,
                  'idsubmenu' => $idsubmenu, 'idregistro' => $idregistro]);
         
         for ($i=0; $i < count($usuarios); $i++) { 

@@ -15,7 +15,13 @@ class AutorizacionyGastosController extends Controller
 
         if ($valida[0]['error'] == 0){
             $idsubmenu = $request->idsubmenu;
-            $conceptos = DB::select('select * from mc_conceptos where status = ? and idsubmenu = ?', [1, $idsubmenu]);
+            $todos = $request->all;
+            if ($todos ==1) {
+                $conceptos = DB::select('select * from mc_conceptos where status = ?', [1]);
+            }else{
+                $conceptos = DB::select('select * from mc_conceptos where status = ? and idsubmenu = ?', [1, $idsubmenu]);
+            }
+            
             $array["conceptos"] = $conceptos;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -190,6 +196,29 @@ class AutorizacionyGastosController extends Controller
                                     $cont = $cont + 1;
                             }
                             $array["archivos"] = $array2["archivos"];
+                            
+                            $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
+                            $bdd = $empresa[0]->rutaempresa;
+                            $datosNoti[0]["idusuario"] = $idusuario;
+                            $datosNoti[0]["encabezado"] = $request->encabezado;
+                            $datosNoti[0]["mensaje"] = $request->mensaje;
+                            $datosNoti[0]["fecha"] = $request->fecha;
+                            $datosNoti[0]["idmodulo"] = 4;
+                            $datosNoti[0]["idmenu"] = $idmenu;
+                            $datosNoti[0]["idsubmenu"] = $idsubmenu;
+                            $datosNoti[0]["idregistro"] = $idreq;
+                            $usuarios = DB::select("select c.id_usuario,s.notificaciones,u.correo from $bdd.mc_usuarios_concepto c 
+                                        inner join $bdd.mc_usersubmenu s on c.id_usuario=s.idusuario 
+                                        inner join " .env('DB_DATABASE_GENERAL').".mc1001 u on c.id_usuario=u.idusuario
+                                        where c.id_concepto = ? and s.idsubmenu= ?", [$idconcepto, $idsubmenu]);
+                            if (!empty($usuarios)) {
+                                $datosNoti[0]["usuarios"] = $usuarios;
+                            }
+                            
+                            if ($datosNoti[0]["usuarios"] != "") {
+                                $resp = enviaNotificacion($datosNoti);
+                            }
+                            
                         }
                     }
                 }else{
@@ -344,10 +373,14 @@ class AutorizacionyGastosController extends Controller
             if ($permiso < 2) {
                 $array["error"] = 4;
             }else{
+                $idmenu = $request->idmenu;
                 $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
                 $idempresa = $empresa[0]->idempresa;
-                $usuarios = DB::connection("General")->select('select u.* from mc1002 v INNER JOIN mc1001 u ON 
-                                        v.idusuario=u.idusuario where idempresa = ?', [$idempresa]);
+                $bdd = $empresa[0]->rutaempresa;
+                $usuarios = DB::select("select u.* from ".env('DB_DATABASE_GENERAL').".mc1002 v INNER JOIN ".env('DB_DATABASE_GENERAL').".mc1001 u ON 
+                                        v.idusuario=u.idusuario 
+                                        inner join  $bdd.mc_usermenu m ON u.idusuario=m.idusuario
+                                        where m.tipopermiso>0 and m.idmenu= ? and idempresa = ?", [$idmenu, $idempresa]);
                 for ($i=0; $i < count($usuarios) ; $i++) { 
                     $idusuario = $usuarios[$i]->idusuario;
                     $conceptos = DB::select('select c.* from mc_usuarios_concepto u 
@@ -444,6 +477,7 @@ class AutorizacionyGastosController extends Controller
 
                         $cont = 0;
                         $n = 0;
+                        
                         foreach($archivos as $key => $file){
                             //return $key;
                             $posp = strpos($key, 'principal');
@@ -543,7 +577,31 @@ class AutorizacionyGastosController extends Controller
                             }
                             $cont = $cont + 1;
                         }
-                    $array["archivos"] = $array2["archivos"];
+                        if (isset($array2["archivos"])) {
+                            $array["archivos"] = $array2["archivos"];
+                        }
+                        $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
+                        $bdd = $empresa[0]->rutaempresa;
+                        $datosNoti[0]["idusuario"] = $idusuario;
+                        $datosNoti[0]["encabezado"] = $request->encabezado;
+                        $datosNoti[0]["mensaje"] = $request->mensaje;
+                        $datosNoti[0]["fecha"] = $request->fecha;
+                        $datosNoti[0]["idmodulo"] = 4;
+                        $datosNoti[0]["idmenu"] = $idmenu;
+                        $datosNoti[0]["idsubmenu"] = $idsubmenu;
+                        $datosNoti[0]["idregistro"] = $idreq;
+                        $usuarios = DB::select("select c.id_usuario,s.notificaciones,u.correo from $bdd.mc_usuarios_concepto c 
+                                    inner join $bdd.mc_usersubmenu s on c.id_usuario=s.idusuario 
+                                    inner join " .env('DB_DATABASE_GENERAL').".mc1001 u on c.id_usuario=u.idusuario
+                                    where c.id_concepto = ? and s.idsubmenu= ?", [$idconcepto, $idsubmenu]);
+                        if (!empty($usuarios)) {
+                            $datosNoti[0]["usuarios"] = $usuarios;
+                        }
+                        
+                        if ($datosNoti[0]["usuarios"] != "") {
+                            $resp = enviaNotificacion($datosNoti);
+                        }
+                   
                     }
                 }
             }
@@ -644,6 +702,20 @@ class AutorizacionyGastosController extends Controller
                 DB::table('mc_requerimientos_bit')->where("id_req", $idrequerimiento)->delete();
                 DB::table('mc_requerimientos_doc')->where("id_req", $idrequerimiento)->delete();
             }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function notificacionesCRM(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idusuario = $valida[0]['usuario'][0]->idusuario;
+            $notificaciones = DB::select('select n.*,d.* from mc_notificaciones n inner join mc_notificaciones_det d on n.id=d.idnotificacion
+                 where  n.idusuario = ?', [$idusuario]);
+                 $array["notificacion"]  = $notificaciones;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

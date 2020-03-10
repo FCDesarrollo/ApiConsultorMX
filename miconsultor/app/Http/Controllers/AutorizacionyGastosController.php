@@ -209,6 +209,7 @@ class AutorizacionyGastosController extends Controller
                             $datosNoti[0]["idmenu"] = $idmenu;
                             $datosNoti[0]["idsubmenu"] = $idsubmenu;
                             $datosNoti[0]["idregistro"] = $idreq;
+                            $datosNoti[0]["usuarios"] ="";
                             $usuarios = DB::select("select c.id_usuario,s.notificaciones,u.correo from $bdd.mc_usuarios_concepto c 
                                         inner join $bdd.mc_usersubmenu s on c.id_usuario=s.idusuario 
                                         inner join " .env('DB_DATABASE_GENERAL').".mc1001 u on c.id_usuario=u.idusuario
@@ -219,6 +220,8 @@ class AutorizacionyGastosController extends Controller
                             
                             if ($datosNoti[0]["usuarios"] != "") {
                                 $resp = enviaNotificacion($datosNoti);
+                            }else{
+                                $array["error"] = 10;
                             }
                             
                         }

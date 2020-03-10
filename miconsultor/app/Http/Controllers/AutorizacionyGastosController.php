@@ -201,7 +201,9 @@ class AutorizacionyGastosController extends Controller
                             $bdd = $empresa[0]->rutaempresa;
                             $datosNoti[0]["idusuario"] = $idusuario;
                             $datosNoti[0]["encabezado"] = $request->encabezado;
-                            $datosNoti[0]["mensaje"] = $request->mensaje;
+
+                            $mensaje = str_replace('iddocumento=0','iddocumento='.$idreq, $request->mensaje);
+                            $datosNoti[0]["mensaje"] = $mensaje;
                             $datosNoti[0]["fecha"] = $request->fecha;
                             $datosNoti[0]["idmodulo"] = 4;
                             $datosNoti[0]["idmenu"] = $idmenu;
@@ -335,9 +337,38 @@ class AutorizacionyGastosController extends Controller
                 $observaciones = $request->observaciones;
                 $fecha = $request->fecha;
                 $estatus = $request->estatus;
+
+                $idmenu = $request->idmenu;
+                $idsubmenu = $request->idsubmenu;
+
                 DB::insert('insert into mc_requerimientos_bit (id_usuario,id_req, fecha,observaciones, status) values 
                     (?, ?, ?, ?, ?)', [$idusuario, $idrequerimiento, $fecha,$observaciones, $estatus]);
                 DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $idrequerimiento]);
+                
+                $requerimiento = DB::select('select id_concepto from mc_requerimientos where idReq = ?', [$idrequerimiento]);
+                $idconcepto = $requerimiento[0]->id_concepto;
+                $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
+                $bdd = $empresa[0]->rutaempresa;
+                $datosNoti[0]["idusuario"] = $idusuario;
+                $datosNoti[0]["encabezado"] = $request->encabezado;
+                $datosNoti[0]["mensaje"] = $request->mensaje;
+                $datosNoti[0]["fecha"] = $request->fecha;
+                $datosNoti[0]["idmodulo"] = 4;
+                $datosNoti[0]["idmenu"] = $idmenu;
+                $datosNoti[0]["idsubmenu"] = $idsubmenu;
+                $datosNoti[0]["idregistro"] = $idrequerimiento;
+                $usuarios = DB::select("select c.id_usuario,s.notificaciones,u.correo from $bdd.mc_usuarios_concepto c 
+                            inner join $bdd.mc_usersubmenu s on c.id_usuario=s.idusuario 
+                            inner join " .env('DB_DATABASE_GENERAL').".mc1001 u on c.id_usuario=u.idusuario
+                            where c.id_concepto = ? and s.idsubmenu= ?", [$idconcepto, $idsubmenu]);
+                if (!empty($usuarios)) {
+                    $datosNoti[0]["usuarios"] = $usuarios;
+                }
+                
+                if ($datosNoti[0]["usuarios"] != "") {
+                    $resp = enviaNotificacion($datosNoti);
+                }
+            
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

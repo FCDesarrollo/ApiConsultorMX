@@ -296,9 +296,10 @@ class AutorizacionyGastosController extends Controller
 
     public function datosRequerimiento(Request $request)
     {
+        
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
-
+        
         if ($valida[0]['error'] == 0){
             $permiso = $valida[0]['permiso'];
             if ($permiso < 2) {
@@ -309,17 +310,21 @@ class AutorizacionyGastosController extends Controller
                 $idrequerimiento = $request->idrequerimiento;
                 $requerimiento = DB::select('select * from mc_requerimientos where idReq = ?', [$idrequerimiento]);
                 
-                $requerimiento[0]->historial = DB::select('select b.*,u.nombre,u.apellidop,u.apellidom
-                             from '.$bdd.'.mc_requerimientos_bit b 
-                             INNER JOIN ' .env("DB_DATABASE_GENERAL").'.mc1001 u ON b.id_usuario=u.idusuario 
-                              where id_req = ?', [$idrequerimiento]);
-
-                $requerimiento[0]->documentos = DB::select('select d.*,u.nombre,u.apellidop,u.apellidom
-                              from '.$bdd.'.mc_requerimientos_doc d 
-                              INNER JOIN ' .env("DB_DATABASE_GENERAL").'.mc1001 u ON d.id_usuario=u.idusuario 
-                               where id_req = ?', [$idrequerimiento]);
+                if (!empty($requerimiento)) {
+                    $requerimiento[0]->historial = DB::select('select b.*,u.nombre,u.apellidop,u.apellidom
+                    from '.$bdd.'.mc_requerimientos_bit b 
+                    INNER JOIN ' .env("DB_DATABASE_GENERAL").'.mc1001 u ON b.id_usuario=u.idusuario 
+                     where id_req = ?', [$idrequerimiento]);
+                    //return $requerimiento;
+                    $requerimiento[0]->documentos = DB::select('select d.*,u.nombre,u.apellidop,u.apellidom
+                                    from '.$bdd.'.mc_requerimientos_doc d 
+                                    INNER JOIN ' .env("DB_DATABASE_GENERAL").'.mc1001 u ON d.id_usuario=u.idusuario 
+                                    where id_req = ?', [$idrequerimiento]);
+                    
+                                    $requerimiento[0]->prueba ="prueba"; 
+                    $array["requerimiento"] = $requerimiento;
+                }
                 
-                $array[0]["requerimiento"] = $requerimiento;
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -740,17 +745,5 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function notificacionesCRM(Request $request)
-    {
-        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
-        $array["error"] = $valida[0]["error"];
-
-        if ($valida[0]['error'] == 0){
-            $idusuario = $valida[0]['usuario'][0]->idusuario;
-            $notificaciones = DB::select('select n.*,d.* from mc_notificaciones n inner join mc_notificaciones_det d on n.id=d.idnotificacion
-                 where  n.idusuario = ?', [$idusuario]);
-                 $array["notificacion"]  = $notificaciones;
-        }
-        return json_encode($array, JSON_UNESCAPED_UNICODE);
-    }
+    
 }

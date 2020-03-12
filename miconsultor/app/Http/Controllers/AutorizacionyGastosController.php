@@ -216,6 +216,7 @@ class AutorizacionyGastosController extends Controller
                                         where c.id_concepto = ? and s.idsubmenu= ?", [$idconcepto, $idsubmenu]);
                             if (!empty($usuarios)) {
                                 $datosNoti[0]["usuarios"] = $usuarios;
+                                
                             }
                             
                             if ($datosNoti[0]["usuarios"] != "") {

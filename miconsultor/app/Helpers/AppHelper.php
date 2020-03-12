@@ -507,7 +507,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $encabezado = $datos[0]["encabezado"];
         $mensaje = $datos[0]["mensaje"];
 
-        $fecha = $datos[0]["fecha"];
+        //$fecha = $datos[0]["fecha"];
         $idmodulo = $datos[0]["idmodulo"];
         $idmenu = $datos[0]["idmenu"];
         $idsubmenu = $datos[0]["idsubmenu"];
@@ -528,6 +528,41 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
 
             if ($tipo == 1 or $tipo == 3 or $tipo == 5 or $tipo == 7) {
                 $correo = $usuarios[$i]->correo;
+                Mail::to($correo)->send(new MensajesNotificacion($datos));
+            }
+        }
+        return 0;
+
+    }
+
+    function enviaNotificacionCo($datos)
+    {
+        $idusuario = $datos[0]["idusuario"];
+        $encabezado = $datos[0]["encabezado"];
+        $mensaje = $datos[0]["mensaje"];
+
+        //$fecha = $datos[0]["fecha"];
+        $idmodulo = $datos[0]["idmodulo"];
+        $idmenu = $datos[0]["idmenu"];
+        $idsubmenu = $datos[0]["idsubmenu"];
+        $idregistro = $datos[0]["idregistro"];
+
+        $usuarios  = $datos[0]["usuarios"];
+
+        $idnotificacion = DB::table('mc_notificaciones')->insertGetId(['idusuario' => $idusuario, 'encabezado' => $encabezado,
+                 'mensaje' => $mensaje,'idmodulo' => $idmodulo, 'idmenu' => $idmenu,
+                 'idsubmenu' => $idsubmenu, 'idregistro' => $idregistro]);
+        
+        
+        for ($i=0; $i < count($usuarios); $i++) { 
+            $idusernotifica = $usuarios[$i]['id_usuario'];
+            $tipo = $usuarios[$i]['notificaciones'];
+
+            DB::insert('insert into mc_notificaciones_det (idusuario, idnotificacion, status) 
+                        values (?, ?, ?)', [$idusernotifica, $idnotificacion, 0]);  
+
+            if ($tipo == 1 or $tipo == 3 or $tipo == 5 or $tipo == 7) {
+                $correo = $usuarios[$i]['correo'];
                 Mail::to($correo)->send(new MensajesNotificacion($datos));
             }
         }

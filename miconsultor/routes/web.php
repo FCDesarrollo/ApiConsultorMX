@@ -286,3 +286,5 @@ Route::post('ingresarExpedienteByMod', 'ConsumoController@ingresarExpedienteByMo
 //NOTIFICACIONES CRM
 Route::get('notificacionesCRM', 'NotificacionesController@notificacionesCRM');
 Route::get('usuariosNotificacion', 'NotificacionesController@usuariosNotificacion');
+Route::post('reenviarNotificacion', 'NotificacionesController@reenviarNotificacion');
+Route::delete('eliminaNotificaion', 'NotificacionesController@eliminaNotificaion');

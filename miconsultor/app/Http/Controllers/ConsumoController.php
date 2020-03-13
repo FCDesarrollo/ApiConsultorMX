@@ -1003,8 +1003,6 @@ class ConsumoController extends Controller
     }
 
 
-
-
     function AlmacenMarcado(Request $request)
     {
 
@@ -1874,58 +1872,60 @@ class ConsumoController extends Controller
         return $array;
     }
 
-    public function ingresarExpedienteByMod(Request $request)
-    {
-        $idexp = 0;
+    public function ClipMarcado(Request $request){
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
 
-        $rfc = $request->rfc;
-        $idusuario = $request->idusuario;
-        $usuario = $request->usuario;
-        $pwd = $request->pwd;
-        $idmodulo = $request->idmodulo;
-        $idcuenta = $request->idcuenta;
-        $fechadocto = $request->fechadocto;
-        $periodo = date("m", $fechadocto)+1;
-        $ejercicio = date("Y", $fechadocto);
-        $tipo_doc = $request->tipo_doc;
-        $descripcion = $request->descripcion;
-        $num1 = $request->numero1;
-        $num2 = $request->numero2;
-        $num3 = $request->numero3;
-        $tex1 = $request->texto1;
-        $tex2 = $request->texto2;
-        $tex3 = $request->texto3;
-        $iddigital = $request->iddigital;
-        $version = $request->version;
-        $ruta = $request->ruta;
+        if ($valida[0]['error'] == 0){
+            
+            $idmodulo = $request->idmodulo;
+            $cuenta = $request->cuenta;
+            $tipodoc = $request->tipodoc;
+            $ejercicio = $request->ejercicio;
+            $periodo = $request->periodo;
+            $status = $request->status; // 1= Marcar.
+                                        // 0= Desmarcar.
+            $fechaprocesado = $request->fechaprocesado;
+            $archivos = $request->archivos;
 
+            $usuario = $valida[0]['usuario'];
+            $idusuario = $usuario[0]->idusuario;
 
-        ConnectDatabaseRFC($rfc);
+            for ($i = 0; $i < count($archivos); $i++) {
+                $idalmacen = $archivos[$i]['idalmacen'];
+                $idarhivodet = $archivos[$i]['idarchivodet'];
+                if($status == 1){ 
+                    DB::table('mc_almdigital_det')->where("id", $idarhivodet)->update([
+                        'idagente' => $idusuario,
+                        'fechaprocesado' => date_create($fechaprocesado), 
+                        'estatus' => $status
+                    ]);
+                    DB::table('mc_almdigital_exp')->insertGetId([
+                        'idalmdigitaldet' => $idarhivodet,
+                        'idmodulo' => $idmodulo, 
+                        'cuenta' => $cuenta,
+                        'tipodoc' => $tipodoc, 
+                        'ejercicio' => $ejercicio, 
+                        'periodo' => $periodo
+                    ]);
+                    $array["archivos"][$i]["idarchivodet"] = $idarchivodet;
+                    $array["archivos"][$i]["marcado"] = 1; //Marcado                
+                }else{ 
+                    DB::table('mc_almdigital_det')->where("id", $idarhivodet)->update([
+                        'idagente' => "NULL",
+                        'fechaprocesado' => "NULL", 
+                        'estatus' => $status
+                    ]);
+                    DB::table('mc_almdigital_exp')->where("idalmdigitaldet", $idarhivodet)->where("ejercicio", $ejercicio)->where("periodo", $periodo)->delete();
+                    $array["archivos"][$i]["idarchivodet"] = $idarchivodet;
+                    $array["archivos"][$i]["marcado"] = 0; //Desmarcado          
+                }
 
-        $idexp = DB::table('mc_modulos_exp')->insertGetId(['idusuario' => $idusuario, 'idcuenta' => $idcuenta, 'periodo' => $periodo, 'ejercicio' => $ejercicio, 'tipo_doc' => $tipo_doc, 'ruta' => $ruta, 'fecha_reg' => now(), 'fecha' => $fechadocto, 'descripcion' => $descripcion, 'numero1' => $num1, 'numero2' => $num2, 'numero3' => $num3, 'texto1' => $tex1, 'texto2' => $tex2, 'texto3' => $tex3, 'iddigital' => $iddigital, 'version' => $version]);
+            }
 
-/*
-    $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
-    
-    DB::table('mc_almdigital_det')->where("id", $idarchivo)->delete();
-    
-    $totalr = DB::select("SELECT totalregistros FROM mc_almdigital WHERE id = $idalmacen");    
-    
-    DB::table('mc_almdigital')->where("id", $idalmacen)->update(['totalregistros' => $totalregistros, 'totalcargados' => $totalc[0]->tc]);    
-    
-    $idalm = DB::table('mc_almdigital')->insertGetId(['fechadecarga' => $now, 'fechadocto' => $fechadocto, 'codigoalm' => $codigoalm, 'idusuario' => $idUsuario, 'idmodulo' => $idsubmenu, 'idsucursal' => $suc[0]->idsucursal, 'observaciones' => $observaciones]);    
-*/        
+        }        
 
-
-        // $archivos = $request->file();
-
-        // foreach ($archivos as $key) {
-        //     $ruta = $key->getClientOriginalName(); //Nombre original del archivo
-
-        // }
-
-        return json_encode($idexp, JSON_UNESCAPED_UNICODE);
-
-    }    
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }   
 
 }

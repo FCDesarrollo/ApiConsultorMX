@@ -281,7 +281,7 @@ Route::post('cargaArchivosAlmacenDigital', 'AlmacenDigitalOperacionesController@
 Route::post('eliminaArchivosDigital', 'AlmacenDigitalOperacionesController@eliminaArchivosDigital');
 
 //API PARA LOS EXPEDIENTES DE LOS MODULOS
-Route::post('ingresarExpedienteByMod', 'ConsumoController@ingresarExpedienteByMod');
+Route::post('ClipMarcado', 'ConsumoController@ClipMarcado');
 
 //NOTIFICACIONES CRM
 Route::get('notificacionesCRM', 'NotificacionesController@notificacionesCRM');

@@ -156,9 +156,9 @@ class EmpresaController extends Controller
         }elseif ($datos['ArregloCertificado']['result'] == 0) {
             $array[0]["error"] = 38;//No se logro validar el certificado
         }
-        $fechavencido = date("d/m/Y", strtotime($datos['Arreglofecha']['fecha']));
+        $fechavencido = date('Y-m-d', strtotime($datos['Arreglofecha']['fecha']));
         
-        $now = date('d/m/Y');
+        $now = date('Y-m-d');
         
         $dato = $datos['ArregloCertificado']['datos'][1];
         $dato = \explode("=", $dato);
@@ -309,7 +309,7 @@ class EmpresaController extends Controller
                                     "idsubmenu" => $mc1009[$i]->idsubmenu, "tipopermiso" => $mc1009[$i]->tipopermiso]);
                             } 
 
-                            $validacarpetas = $this->creaCarpetas($rfc, $archivocer, $archivokey, $password);
+                            $validacarpetas = $this->creaCarpetas($rfc, $archivocer, $archivokey, $passwordstorage);
                             $array["error"] = $validacarpetas;
                         }else{
                             $array["error"] = 44; //ERROR AL REGISTRAR
@@ -660,6 +660,7 @@ class EmpresaController extends Controller
                 id_req int(11) DEFAULT NULL,
                 id_usuario int(11) DEFAULT NULL,
                 fecha date DEFAULT NULL,
+                observaciones varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 status int(11) DEFAULT NULL,
                 PRIMARY KEY (id_bit)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
@@ -667,20 +668,44 @@ class EmpresaController extends Controller
 
               $mc_requerimientos_doc = "create table if not exists mc_requerimientos_doc (
                 id int(11) NOT NULL AUTO_INCREMENT,
+                id_usuario int(11) DEFAULT NULL,
                 id_req int(11) DEFAULT NULL,
                 documento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 codigo_documento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 tipo_doc int(11) DEFAULT NULL,
-                download varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                download varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_requerimientos_doc);
 
-              $mc_usuarios_concepto = "create table mc_usuarios_concepto(
+              $mc_usuarios_concepto = "create table if not exists mc_usuarios_concepto(
                 id_usuario int(11) DEFAULT NULL,
                 id_concepto int(11) DEFAULT NULL
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_usuarios_concepto);
 
+              $mc_notificaciones = "create table if not exists mc_notificaciones(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                idusuario int(11) NOT NULL,
+                encabezado text NOT NULL,
+                mensaje text NOT NULL,
+                fecha timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+                idmodulo int(11) NOT NULL,
+                idmenu int(11) NOT NULL,
+                idsubmenu int(11) NOT NULL,
+                idregistro int(11) NOT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_notificaciones);
+
+              $mc_notificaciones_det = "create table if not exists mc_notificaciones_det(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                idusuario int(11) NOT NULL,
+                idnotificacion int(11) NOT NULL,
+                status int(11) DEFAULT 0 COMMENT '0 = no visto, 1 = visto',
+                PRIMARY KEY (id)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_notificaciones_det);
               
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
@@ -702,7 +727,7 @@ class EmpresaController extends Controller
             DB::statement($SucTemp);
 
             $conceptos = "insert ".$empresaBD.".mc_conceptos SELECT * FROM dublockc_MCGenerales.mc1014;";
-            DB::statement($SucTemp);
+            DB::statement($conceptos);
             //$mc1014 = "insert ".$empresaBD.".mc_conceptos SELECT * FROM dublockc_MCGenerales.mc1014;";
             //DB::statement($mc1014);
             
@@ -722,6 +747,8 @@ class EmpresaController extends Controller
             $servercloud = $datosParam[0]->servidor_storage;
             $usercloud = $datosParam[0]->usuario_storage;
             $passcloud = $datosParam[0]->password_storage;
+
+            
 
             //CREA USUARIO
             $ch = curl_init();

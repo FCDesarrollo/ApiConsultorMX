@@ -327,4 +327,21 @@ class UsuarioController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function editaNotificacion(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idusarm = $request->idusuario;
+            $idsubmenu = $request->idsubmenuMod;
+            $idmenu = $request->idmenu;
+            $notificaion = $request->notificacion;
+
+            DB::update('update mc_usersubmenu set notificaciones = ? 
+                    where idusuario = ? AND  idsubmenu = ?', [$notificaion, $idusuario, $idsubmenu]);
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

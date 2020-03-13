@@ -660,6 +660,7 @@ class EmpresaController extends Controller
                 id_req int(11) DEFAULT NULL,
                 id_usuario int(11) DEFAULT NULL,
                 fecha date DEFAULT NULL,
+                observaciones varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 status int(11) DEFAULT NULL,
                 PRIMARY KEY (id_bit)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";

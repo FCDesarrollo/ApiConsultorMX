@@ -336,11 +336,10 @@ class UsuarioController extends Controller
         if ($valida[0]['error'] == 0){
             $idusarm = $request->idusuario;
             $idsubmenu = $request->idsubmenuMod;
-            $idmenu = $request->idmenu;
             $notificaion = $request->notificacion;
 
             DB::update('update mc_usersubmenu set notificaciones = ? 
-                    where idusuario = ? AND  idsubmenu = ?', [$notificaion, $idusuario, $idsubmenu]);
+                    where idusuario = ? AND  idsubmenu = ?', [$notificaion, $idusarm, $idsubmenu]);
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

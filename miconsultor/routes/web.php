@@ -289,3 +289,6 @@ Route::get('notificacionesCRM', 'NotificacionesController@notificacionesCRM');
 Route::get('usuariosNotificacion', 'NotificacionesController@usuariosNotificacion');
 Route::post('reenviarNotificacion', 'NotificacionesController@reenviarNotificacion');
 Route::delete('eliminaNotificaion', 'NotificacionesController@eliminaNotificaion');
+
+//PERFILES
+Route::get('listaPerfiles', 'PerfilesController@listaPerfiles');

@@ -106,6 +106,7 @@ class AutorizacionyGastosController extends Controller
                                     
                                     if ($poss===false and $posp >=0) {
                                         $tipo =1;
+                                        $ts = 'P';
                                         if (strlen($countreg) == 1) {
                                             $consecutivo = "000" . $countreg;
                                         } elseif (strlen($countreg) == 2) {
@@ -117,6 +118,7 @@ class AutorizacionyGastosController extends Controller
                                         }
                                     }elseif ($posp===false and $poss >= 0) {
                                         $tipo =2;
+                                        $ts = 'S';
                                         if (strlen($countreg2) == 1) {
                                             $consecutivo = "000" . $countreg2;
                                         } elseif (strlen($countreg2) == 2) {
@@ -135,7 +137,7 @@ class AutorizacionyGastosController extends Controller
 
                                     $string = explode("-", $fechareq);
                                     $codfec = substr($string[0], 2) . $string[1];
-                                    $codigoarchivo = $rfc . "_" . $codfec . "_" . $mod . "_";
+                                    $codigoarchivo = $rfc . "_" . $codfec . "_" . $ts . $mod . "_";
 
                                     $existe = DB::select("SELECT doc.* FROM mc_requerimientos_doc AS doc 
                                             INNER JOIN mc_requerimientos AS r ON doc.id_req = r.idReq 
@@ -526,6 +528,7 @@ class AutorizacionyGastosController extends Controller
                             
                             if ($poss===false and $posp >=0 ) {
                                 $tipo =1;
+                                $ts = 'P';
                                 //return $tipo;
                                 if (strlen($countreg) == 1) {
                                     $consecutivo = "000" . $countreg;
@@ -538,6 +541,7 @@ class AutorizacionyGastosController extends Controller
                                 }
                             }elseif ($posp===false and $poss >= 0) {
                                 $tipo =2;
+                                $ts = 'S';
                                 //return $tipo;
                                 if (strlen($countreg2) == 1) {
                                     $consecutivo = "000" . $countreg2;
@@ -557,7 +561,7 @@ class AutorizacionyGastosController extends Controller
 
                             $string = explode("-", $fecha);
                             $codfec = substr($string[0], 2) . $string[1];
-                            $codigoarchivo = $rfc . "_" . $codfec . "_" . $mod . "_";
+                            $codigoarchivo = $rfc . "_" . $codfec . "_" .$ts. $mod . "_";
 
                             $existe = DB::select("SELECT doc.* FROM mc_requerimientos_doc AS doc 
                                     INNER JOIN mc_requerimientos AS r ON doc.id_req = r.idReq 
@@ -630,6 +634,7 @@ class AutorizacionyGastosController extends Controller
                         $datosNoti[0]["idmenu"] = $idmenu;
                         $datosNoti[0]["idsubmenu"] = $idsubmenu;
                         $datosNoti[0]["idregistro"] = $idreq;
+                        $datosNoti[0]["usuarios"]="";
                         $usuarios = DB::select("select c.id_usuario,s.notificaciones,u.correo from $bdd.mc_usuarios_concepto c 
                                     inner join $bdd.mc_usersubmenu s on c.id_usuario=s.idusuario 
                                     inner join " .env('DB_DATABASE_GENERAL').".mc1001 u on c.id_usuario=u.idusuario

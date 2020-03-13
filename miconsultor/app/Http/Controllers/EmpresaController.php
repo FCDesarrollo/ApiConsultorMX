@@ -706,6 +706,13 @@ class EmpresaController extends Controller
                 PRIMARY KEY (id)
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_notificaciones_det);
+
+              $mc_config_time = "create table if not exists mc_config_timeapp(
+                idusuario int(11) DEFAULT NULL,
+                idsubmenu int(11) DEFAULT NULL,
+                tiempo_dias int(11) DEFAULT NULL
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_config_time);
               
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";

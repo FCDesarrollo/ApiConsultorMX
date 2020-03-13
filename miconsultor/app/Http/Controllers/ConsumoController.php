@@ -1891,8 +1891,9 @@ class ConsumoController extends Controller
             $usuario = $valida[0]['usuario'];
             $idusuario = $usuario[0]->idusuario;
 
+            //$i = 0; 
             for ($i = 0; $i < count($archivos); $i++) {
-                $idalmacen = $archivos[$i]['idalmacen'];
+            //foreach ($variable as $key => $value) {
                 $idarhivodet = $archivos[$i]['idarchivodet'];
                 if($status == 1){ 
                     DB::table('mc_almdigital_det')->where("id", $idarhivodet)->update([

@@ -63,12 +63,13 @@ class AutorizacionyGastosController extends Controller
                 $serie = $request->serie;
                 $folio = $request->folio;
                 $idsubmenu = $request->idsubmenu;
-
+                $array["idrequerimiento"] = 0;
                 $idreq = DB::table('mc_requerimientos')->insertGetId(['id_sucursal' => $idsucursal, 'fecha' => $fecha, 
                                 'id_usuario' => $idusuario, 'fecha_req' => $fechareq, 'id_departamento' => $idsubmenu,
                                 'descripcion' => $descripcion, 'importe_estimado' => $importe, 'estado_documento' => $estado,
                                 'id_concepto' => $idconcepto, 'serie' => $serie, 'folio' => $folio, 'estatus' => 1]);
                 if ($idreq !=0) {
+                    $array["idrequerimiento"] = $idreq;
                     DB::insert('insert into mc_requerimientos_bit (id_usuario, id_req, fecha, status)values(?, ?, ?, ?)',
                              [$idusuario, $idreq, $fecha, $estado]);
                     $servidor = getServidorNextcloud();

@@ -752,5 +752,36 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function listaRequerimientosGastos(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idusuario = $valida[0]['usuario'][0]->idusuario;
+            $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
+            $bdd = $empresa[0]->rutaempresa;
+            $query ="select r.*,s.sucursal,u.nombre,u.apellidop,u.apellidom from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
+                            inner join $bdd.mc_catsucursales s ON r.id_sucursal=s.idsucursal                     
+                                where id_usuario =$idusuario and id_departamento=$request->idsubmenu";
+            $requser = DB::select($query);
+            
+            $conceptos = DB::select('select id_concepto from mc_usuarios_concepto where id_usuario = ?', [$idusuario]);
+            for ($i=0; $i < count($conceptos); $i++) { 
+                $idconcepto = $conceptos[$i]->id_concepto;
+                $query ="select r.*,s.sucursal,u.nombre,u.apellidop,u.apellidom from $bdd.mc_requerimientos_gastos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
+                                inner join $bdd.mc_catsucursales s ON r.id_sucursal=s.idsucursal    
+                            where id_concepto =$idconcepto and id_usuario<>$idusuario and id_departamento=$request->idsubmenu";
+                $reqconceto = DB::select($query);
+                $requerimientos = array_merge($requser, $reqconceto);
+                $requser = $requerimientos;
+            }
+            if (empty($requerimientos)) {
+                $requerimientos = $requser;
+            }
+            $array["requerimientos"] = $requerimientos;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
     
 }

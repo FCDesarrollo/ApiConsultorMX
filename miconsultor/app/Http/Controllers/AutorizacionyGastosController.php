@@ -262,10 +262,23 @@ class AutorizacionyGastosController extends Controller
 
                 $requerimiento = DB::select('select * from mc_requerimientos where idReq = ?', [$idrequerimiento]);
                 if (!empty($requerimiento)) {
-                    $datos = $requerimiento;
-                    unset($datos[0]["idReq"]); 
-                    $datos[0]["importe_estimado"] = $importe;
-                    $idgasto = DB::table('mc_requerimientos')->insertGetId($datos);
+                    $idsuc = $requerimiento[0]->id_sucursal;
+                    $fecha = $request->fecha;
+                    $idusuario = $valida[0]['usuario'][0]->idusuario;
+                    $fechagasto = $request->fechagasto;
+                    $iddepar = $requerimiento[0]->id_departamento;
+                    $des = $requerimiento[0]->descripcion;
+                    $estado = 3;
+                    $idconce = $requerimiento[0]->id_concepto;
+                    $serie = $requerimiento[0]->serie;
+                    $folio = $requerimiento[0]->folio;
+                    $estatus = 2;
+
+                    $idgasto = DB::table('mc_requerimientos')->insertGetId(["id_sucursal" => $idsuc, 
+                            "fecha" => $fecha, "id_usuario"=> $idusuario, "fecha_req" => $fechagasto, 
+                            "id_departamento" => $iddepar, "descripcion" => $des, "importe_estimado" => $importe,
+                            "estado_documento" => $estado, "id_concepto" => $idconce, "serie" => $serie,
+                            "folio" => $folio, "estatus" => $estatus]);
                     $resp = $this->insertaAsociacion($idrequerimiento,$idgasto,$importe,$rfcproveedor,$nombreproveedor);
                 }else{
                     $array["error"] = 9;
@@ -808,6 +821,20 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    
+    public function getTotalImporte(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        $array["importe"] = 0;
+        if ($valida[0]['error'] == 0){
+            $idrequerimiento = $request->idrequerimiento;
+            $requeAsoc = DB::select('select sum(importe) as importe from mc_requerimientos_aso where idrequerimiento = ?', [$idrequerimiento]);
+            if (!empty($requeAsoc)) {
+                $array["importe"] = $requeAsoc[0]->importe;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
     
 }

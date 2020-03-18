@@ -229,6 +229,11 @@ class AutorizacionyGastosController extends Controller
                                 $array["error"] = 10;
                             }
                             
+                            if ($estatus==2) {
+                                $rfcproveedor = $request->rfcproveedor;
+                                $nombreproveedor = $request->nombreproveedor;
+                                $resp = $this->insertaAsociacion($idreq, $idreq,$importe, $rfcproveedor,$nombreproveedor);
+                            }
                         }
                     }
                 }else{
@@ -237,6 +242,44 @@ class AutorizacionyGastosController extends Controller
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+
+    public function creaGasto(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $idrequerimiento = $request->idrequerimiento;
+                $importe = $request->importe;
+                $rfcproveedor = $request->rfcproveedor;
+                $nombreproveedor = $request->nombreproveedor;
+
+                $requerimiento = DB::select('select * from mc_requerimientos where idReq = ?', [$idrequerimiento]);
+                if (!empty($requerimiento)) {
+                    $datos = $requerimiento;
+                    unset($datos[0]["idReq"]); 
+                    $datos[0]["importe_estimado"] = $importe;
+                    $idgasto = DB::table('mc_requerimientos')->insertGetId($datos);
+                    $resp = $this->insertaAsociacion($idrequerimiento,$idgasto,$importe,$rfcproveedor,$nombreproveedor);
+                }else{
+                    $array["error"] = 9;
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function insertaAsociacion($idrequerimiento, $idgasto, $importe, $rfc, $nombre)
+    {
+        DB::insert('insert into mc_requerimientos_aso (idrequerimiento, idgasto, importe, rfc, nombre) 
+                    values (?, ?, ?, ?, ?)', [$idrequerimiento, $idgasto, $importe, $rfc, $nombre]);
+        return 0;
     }
 
     public function listaRequerimientos(Request $request)
@@ -326,8 +369,11 @@ class AutorizacionyGastosController extends Controller
                                     from '.$bdd.'.mc_requerimientos_doc d 
                                     INNER JOIN ' .env("DB_DATABASE_GENERAL").'.mc1001 u ON d.id_usuario=u.idusuario 
                                     where id_req = ?', [$idrequerimiento]);
-                    
-                                    $requerimiento[0]->prueba ="prueba"; 
+                    if ($requerimiento[0]->estatus == 2 ){
+                        $datosExtra = DB::select('select rfc,nombre from mc_requerimientos_aso where idgasto = ?', [$idrequerimiento]);
+                        $requerimiento[0]->rfcproveedor = $datosExtra[0]->rfc;
+                        $requerimiento[0]->nombreproveedor = $datosExtra[0]->nombre;
+                    }
                     $array["requerimiento"] = $requerimiento;
                 }
                 
@@ -486,7 +532,7 @@ class AutorizacionyGastosController extends Controller
                 $array["error"] = 4;
             }else{
                 $idreq = $request->idrequerimiento;
-                $requerimiento = DB::select('select id_concepto,fecha_req from mc_requerimientos where idReq = ?', [$idreq]);
+                $requerimiento = DB::select('select id_concepto,fecha_req,estatus from mc_requerimientos where idReq = ?', [$idreq]);
                 if (empty($requerimiento)) {
                     $array["error"] = 9;
                 }else{
@@ -497,8 +543,16 @@ class AutorizacionyGastosController extends Controller
                     $idsubmenu = $request->idsubmenu;
                     $idusuario = $valida[0]['usuario'][0]->idusuario;
                     $descripcion = $request->descripcion;
-
+                    
                     DB::update('update mc_requerimientos set descripcion = ? where idReq = ?', [$descripcion, $idreq]);
+
+                    $estatus = $requerimiento[0]->estatus;
+                    if ($estatus == 2) {
+                        $importe = $request->importe;
+                        $fecha2 = $request->fecha_req;
+                        DB::update('update mc_requerimientos set importe_estimado = ?, fecha_req = ? where idReq = ?', [$importe,$fecha2, $idreq]);
+                        DB::update('update mc_requerimientos_aso set importe = ? where idgasto = ?', [$importe, $idreq]);
+                    }
 
                     $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $idsubmenu);
                     $array["error"] = $validaCarpetas[0]["error"];

@@ -232,7 +232,7 @@ class AutorizacionyGastosController extends Controller
                             if ($estatus==2) {
                                 $rfcproveedor = $request->rfcproveedor;
                                 $nombreproveedor = $request->nombreproveedor;
-                                $resp = $this->insertaAsociacion($idreq, $idreq,$importe, $rfcproveedor,$nombreproveedor);
+                                $resp = $this->insertaAsociacion($idreq, $idreq,$importe, $rfcproveedor,$nombreproveedor, 0);
                             }
                         }
                     }
@@ -273,13 +273,14 @@ class AutorizacionyGastosController extends Controller
                     $serie = $requerimiento[0]->serie;
                     $folio = $requerimiento[0]->folio;
                     $estatus = 2;
+                    $idbitacora = $request->idbitacora;
 
                     $idgasto = DB::table('mc_requerimientos')->insertGetId(["id_sucursal" => $idsuc, 
                             "fecha" => $fecha, "id_usuario"=> $idusuario, "fecha_req" => $fechagasto, 
                             "id_departamento" => $iddepar, "descripcion" => $des, "importe_estimado" => $importe,
                             "estado_documento" => $estado, "id_concepto" => $idconce, "serie" => $serie,
                             "folio" => $folio, "estatus" => $estatus]);
-                    $resp = $this->insertaAsociacion($idrequerimiento,$idgasto,$importe,$rfcproveedor,$nombreproveedor);
+                    $resp = $this->insertaAsociacion($idrequerimiento,$idgasto,$importe,$rfcproveedor,$nombreproveedor,$idbitacora);
                 
                     $documentos = DB::select('select * from mc_requerimientos_doc where id_req = ?', [$idrequerimiento]);
                     for ($i=0; $i < count($documentos); $i++) { 
@@ -298,10 +299,10 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function insertaAsociacion($idrequerimiento, $idgasto, $importe, $rfc, $nombre)
+    public function insertaAsociacion($idrequerimiento, $idgasto, $importe, $rfc, $nombre, $idbitacora)
     {
-        DB::insert('insert into mc_requerimientos_aso (idrequerimiento, idgasto, importe, rfc, nombre) 
-                    values (?, ?, ?, ?, ?)', [$idrequerimiento, $idgasto, $importe, $rfc, $nombre]);
+        DB::insert('insert into mc_requerimientos_aso (idrequerimiento, idgasto, importe, rfc, nombre, id_bit) 
+                    values (?, ?, ?, ?, ?, ?)', [$idrequerimiento, $idgasto, $importe, $rfc, $nombre, $idbitacora]);
         return 0;
     }
 
@@ -424,8 +425,10 @@ class AutorizacionyGastosController extends Controller
                 $idmenu = $request->idmenu;
                 $idsubmenu = $request->idsubmenu;
 
-                DB::insert('insert into mc_requerimientos_bit (id_usuario,id_req, fecha,observaciones, status) values 
-                    (?, ?, ?, ?, ?)', [$idusuario, $idrequerimiento, $fecha,$observaciones, $estatus]);
+                $idhistorial = DB::table('mc_requerimientos_bit')->insertGetId(["id_req" => $idrequerimiento,
+                             "id_usuario" => $idusuario,"fecha" => $fecha,"observaciones"=> $observaciones,"status" => $estatus]);
+                
+                $array["idbitacora"] = $idhistorial;
                 DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $idrequerimiento]);
                 
                 $requerimiento = DB::select('select id_concepto from mc_requerimientos where idReq = ?', [$idrequerimiento]);
@@ -451,6 +454,7 @@ class AutorizacionyGastosController extends Controller
                 if ($datosNoti[0]["usuarios"] != "") {
                     $resp = enviaNotificacion($datosNoti);
                 }
+
             
             }
         }
@@ -828,7 +832,26 @@ class AutorizacionyGastosController extends Controller
                 DB::table('mc_requerimientos_doc')->where("id_req", $idrequerimiento)->delete();
                 $estatus = $request->estatus;
                 if ($estatus == 2) {
+                    $asociacion = DB::select('select id_bit from mc_requerimientos_aso where idgasto = ?', [$idrequerimiento]);
+                    if (!empty($asociacion)) {
+                        $idbit = $asociacion[0]->id_bit;
+                        $bitacora = DB::select('select id_req from mc_requerimientos_bit where id_bit = ?', [$idbit]);
+                        if (!empty($bitacora)) {
+                            $idreqAsoc = $bitacora[0]->id_req;
+                            DB::update('update mc_requerimientos_bit set status = 5 where id_req = ? and status=4', [$idreqAsoc]);
+                        }
+                        DB::table('mc_requerimientos_bit')->where("id_bit", $idbit)->delete();
+                        $utbitacora = DB::select('SELECT  * FROM mc_requerimientos_bit 
+                                WHERE id_req = ? ORDER BY id_bit DESC LIMIT 1', [$idreqAsoc]);
+                        if (!empty($utbitacora)) {
+                            $esta = ($utbitacora[0]->statu == 4) ? 5 : $utbitacora[0]->statu; 
+                            DB::update('update mc_requerimientos set estado_documento = ? 
+                                            where idReq = ?', [$esta, $idreqAsoc]);    
+                        }
+                        
+                    }
                     DB::table('mc_requerimientos_aso')->where("idgasto", $idrequerimiento)->delete();
+                    
                 }
             }
         }

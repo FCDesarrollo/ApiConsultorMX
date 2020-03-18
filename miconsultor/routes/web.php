@@ -274,6 +274,7 @@ Route::post('editarRequerimiento', 'AutorizacionyGastosController@editarRequerim
 Route::delete('eliminaDocumento', 'AutorizacionyGastosController@eliminaDocumento');
 Route::delete('eliminaRequerimiento', 'AutorizacionyGastosController@eliminaRequerimiento');
 Route::post('creaGasto', 'AutorizacionyGastosController@creaGasto');
+Route::get('getTotalImporte', 'AutorizacionyGastosController@getTotalImporte');
 
 
 //ALMACEN DIGITAL OPERACIONES 2020

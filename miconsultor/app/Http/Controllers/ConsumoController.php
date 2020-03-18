@@ -1876,33 +1876,29 @@ class ConsumoController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
-        if ($valida[0]['error'] == 0){
-            
-            $idmodulo = $request->idmodulo;
-            $cuenta = $request->cuenta;
-            $tipodoc = $request->tipodoc;
-            $ejercicio = $request->ejercicio;
-            $periodo = $request->periodo;
+        if ($valida[0]['error'] == 0){         
             $status = $request->status; // 1= Marcar.
                                         // 0= Desmarcar.
-            $fechaprocesado = $request->fechaprocesado;
-            $archivos = $request->archivos;
-
             $usuario = $valida[0]['usuario'];
             $idusuario = $usuario[0]->idusuario;
+            $archivos = $request->archivos;
 
-            //$i = 0; 
             for ($i = 0; $i < count($archivos); $i++) {
-            //foreach ($variable as $key => $value) {
-                $idarhivodet = $archivos[$i]['idarchivodet'];
+                $idarchivodet = $archivos[$i]['idarchivodet'];
                 if($status == 1){ 
-                    DB::table('mc_almdigital_det')->where("id", $idarhivodet)->update([
+                    $idmodulo = $request->idmodulo;
+                    $cuenta = $request->cuenta;
+                    $tipodoc = $request->tipodoc;
+                    $ejercicio = $request->ejercicio;
+                    $periodo = $request->periodo;                    
+                    $fechaprocesado = $request->fechaprocesado;
+                    DB::table('mc_almdigital_det')->where("id", $idarchivodet)->update([
                         'idagente' => $idusuario,
                         'fechaprocesado' => date_create($fechaprocesado), 
                         'estatus' => $status
                     ]);
                     DB::table('mc_almdigital_exp')->insertGetId([
-                        'idalmdigitaldet' => $idarhivodet,
+                        'idalmdigitaldet' => $idarchivodet,
                         'idmodulo' => $idmodulo, 
                         'cuenta' => $cuenta,
                         'tipodoc' => $tipodoc, 
@@ -1912,12 +1908,12 @@ class ConsumoController extends Controller
                     $array["archivos"][$i]["idarchivodet"] = $idarchivodet;
                     $array["archivos"][$i]["marcado"] = 1; //Marcado                
                 }else{ 
-                    DB::table('mc_almdigital_det')->where("id", $idarhivodet)->update([
-                        'idagente' => "NULL",
-                        'fechaprocesado' => "NULL", 
+                    DB::table('mc_almdigital_det')->where("id", $idarchivodet)->update([
+                        'idagente' => NULL,
+                        'fechaprocesado' => NULL, 
                         'estatus' => $status
                     ]);
-                    DB::table('mc_almdigital_exp')->where("idalmdigitaldet", $idarhivodet)->where("ejercicio", $ejercicio)->where("periodo", $periodo)->delete();
+                    DB::table('mc_almdigital_exp')->where("idalmdigitaldet", $idarchivodet)->where("ejercicio", $ejercicio)->where("periodo", $periodo)->delete();
                     $array["archivos"][$i]["idarchivodet"] = $idarchivodet;
                     $array["archivos"][$i]["marcado"] = 0; //Desmarcado          
                 }

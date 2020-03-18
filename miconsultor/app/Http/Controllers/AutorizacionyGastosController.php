@@ -826,6 +826,10 @@ class AutorizacionyGastosController extends Controller
                 DB::table('mc_requerimientos')->where("idReq", $idrequerimiento)->delete();
                 DB::table('mc_requerimientos_bit')->where("id_req", $idrequerimiento)->delete();
                 DB::table('mc_requerimientos_doc')->where("id_req", $idrequerimiento)->delete();
+                $estatus = $request->estatus;
+                if ($estatus == 2) {
+                    DB::table('mc_requerimientos_aso')->where("idgasto", $idrequerimiento)->delete();
+                }
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

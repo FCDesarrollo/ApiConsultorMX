@@ -1882,15 +1882,15 @@ class ConsumoController extends Controller
             $usuario = $valida[0]['usuario'];
             $idusuario = $usuario[0]->idusuario;
             $archivos = $request->archivos;
-
+            $ejercicio = $request->ejercicio;
+            $periodo = $request->periodo;
             for ($i = 0; $i < count($archivos); $i++) {
                 $idarchivodet = $archivos[$i]['idarchivodet'];
+                
                 if($status == 1){ 
                     $idmodulo = $request->idmodulo;
                     $cuenta = $request->cuenta;
-                    $tipodoc = $request->tipodoc;
-                    $ejercicio = $request->ejercicio;
-                    $periodo = $request->periodo;                    
+                    $tipodoc = $request->tipodoc;                    
                     $fechaprocesado = $request->fechaprocesado;
                     DB::table('mc_almdigital_det')->where("id", $idarchivodet)->update([
                         'idagente' => $idusuario,

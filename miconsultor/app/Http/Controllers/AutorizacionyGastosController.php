@@ -280,6 +280,16 @@ class AutorizacionyGastosController extends Controller
                             "estado_documento" => $estado, "id_concepto" => $idconce, "serie" => $serie,
                             "folio" => $folio, "estatus" => $estatus]);
                     $resp = $this->insertaAsociacion($idrequerimiento,$idgasto,$importe,$rfcproveedor,$nombreproveedor);
+                
+                    $documentos = DB::select('select * from mc_requerimientos_doc where id_req = ?', [$idrequerimiento]);
+                    for ($i=0; $i < count($documentos); $i++) { 
+                        DB::insert('insert into mc_requerimientos_doc (id_usuario, id_req, documento,
+                            codigo_documento, tipo_doc, download) values (?, ?, ?, ?, ?, ?)', [
+                                $documentos[$i]->id_usuario, $idgasto, $documentos[$i]->documento,
+                                $documentos[$i]->codigo_documento, $documentos[$i]->tipo_doc,
+                                $documentos[$i]->download]);
+                    }
+
                 }else{
                     $array["error"] = 9;
                 }

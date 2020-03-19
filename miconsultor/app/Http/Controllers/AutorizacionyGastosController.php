@@ -219,8 +219,7 @@ class AutorizacionyGastosController extends Controller
                                         inner join " .env('DB_DATABASE_GENERAL').".mc1001 u on c.id_usuario=u.idusuario
                                         where c.id_concepto = ? and s.idsubmenu= ?", [$idconcepto, $idsubmenu]);
                             if (!empty($usuarios)) {
-                                $datosNoti[0]["usuarios"] = $usuarios;
-                                
+                                $datosNoti[0]["usuarios"] = $usuarios;   
                             }
                             
                             if ($datosNoti[0]["usuarios"] != "") {
@@ -289,6 +288,34 @@ class AutorizacionyGastosController extends Controller
                                 $documentos[$i]->id_usuario, $idgasto, $documentos[$i]->documento,
                                 $documentos[$i]->codigo_documento, $documentos[$i]->tipo_doc,
                                 $documentos[$i]->download]);
+                    }
+                    $idmenu = $request->idmenu;
+                    $idsubmenu = $request->idsubmenu;
+                    $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
+                    $bdd = $empresa[0]->rutaempresa;
+                    $datosNoti[0]["idusuario"] = $idusuario;
+                    $datosNoti[0]["encabezado"] = $request->encabezado;
+
+                    $mensaje = str_replace('iddocumento=0','iddocumento='.$idgasto, $request->mensaje);
+                    $datosNoti[0]["mensaje"] = $mensaje;
+                    $datosNoti[0]["fecha"] = $request->fecha;
+                    $datosNoti[0]["idmodulo"] = 4;
+                    $datosNoti[0]["idmenu"] = $idmenu;
+                    $datosNoti[0]["idsubmenu"] = $idsubmenu;
+                    $datosNoti[0]["idregistro"] = $idgasto;
+                    $datosNoti[0]["usuarios"] ="";
+                    $usuarios = DB::select("select c.id_usuario,s.notificaciones,u.correo from $bdd.mc_usuarios_concepto c 
+                                inner join $bdd.mc_usersubmenu s on c.id_usuario=s.idusuario 
+                                inner join " .env('DB_DATABASE_GENERAL').".mc1001 u on c.id_usuario=u.idusuario
+                                where c.id_concepto = ? and s.idsubmenu= ?", [$idconce, $idsubmenu]);
+                    if (!empty($usuarios)) {
+                        $datosNoti[0]["usuarios"] = $usuarios;   
+                    }
+                    
+                    if ($datosNoti[0]["usuarios"] != "") {
+                        $resp = enviaNotificacion($datosNoti);
+                    }else{
+                        $array["error"] = 10;
                     }
 
                 }else{
@@ -807,8 +834,8 @@ class AutorizacionyGastosController extends Controller
                 $idsubmenu = $request->idsubmenu;
                 $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $idsubmenu);
                 $array["error"] = $validaCarpetas[0]["error"];
-            
-                if ($validaCarpetas[0]['error'] == 0){
+                $estatus = $request->estatus;
+                if ($validaCarpetas[0]['error'] == 0 and $estatus == 1){
                     $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
                     $carpetamenu = $validaCarpetas[0]['carpetamenu'];
                     $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
@@ -830,7 +857,7 @@ class AutorizacionyGastosController extends Controller
                 DB::table('mc_requerimientos')->where("idReq", $idrequerimiento)->delete();
                 DB::table('mc_requerimientos_bit')->where("id_req", $idrequerimiento)->delete();
                 DB::table('mc_requerimientos_doc')->where("id_req", $idrequerimiento)->delete();
-                $estatus = $request->estatus;
+                
                 if ($estatus == 2) {
                     $asociacion = DB::select('select id_bit from mc_requerimientos_aso where idgasto = ?', [$idrequerimiento]);
                     if (!empty($asociacion)) {
@@ -844,7 +871,7 @@ class AutorizacionyGastosController extends Controller
                         $utbitacora = DB::select('SELECT  * FROM mc_requerimientos_bit 
                                 WHERE id_req = ? ORDER BY id_bit DESC LIMIT 1', [$idreqAsoc]);
                         if (!empty($utbitacora)) {
-                            $esta = ($utbitacora[0]->statu == 4) ? 5 : $utbitacora[0]->statu; 
+                            $esta = ($utbitacora[0]->status == 4) ? 5 : $utbitacora[0]->status; 
                             DB::update('update mc_requerimientos set estado_documento = ? 
                                             where idReq = ?', [$esta, $idreqAsoc]);    
                         }

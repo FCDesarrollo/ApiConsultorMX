@@ -14,7 +14,9 @@ class NotificacionesController extends Controller
 
         if ($valida[0]['error'] == 0){
             $idusuario = $valida[0]['usuario'][0]->idusuario;
-            $notificaciones = DB::select('select n.*,d.* from mc_notificaciones n inner join mc_notificaciones_det d on n.id=d.idnotificacion
+            $notificaciones = DB::select('select n.*,d.*,r.* from mc_notificaciones n 
+                    inner join mc_notificaciones_det d on n.id=d.idnotificacion
+                    inner join mc_requerimientos r on n.idregistro=r.idReq
                  where  n.idusuario = ?', [$idusuario]);
                  $array["notificacion"]  = $notificaciones;
         }
@@ -78,7 +80,7 @@ class NotificacionesController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function eliminaNotificaion(Request $request)
+    public function eliminaNotificacion(Request $request)
     {
 
         $valida = verificaUsuario($request->usuario,$request->pwd);
@@ -86,14 +88,14 @@ class NotificacionesController extends Controller
         if ($valida[0]['error'] == 0) {
             $idusuario = $valida[0]["usuario"][0]->idusuario;
             $rfc = $request->rfc;
+            ConnectDatabaseRFC($rfc);
             $valida = VerificaEmpresa($rfc, $idusuario);
             $array["error"] = $valida[0]["error"];
 
             if ($valida[0]['error'] == 0){
                 $idnotificacion =  $request->idnotificacion;
                 
-
-                DB::delete('delete mc_notificaciones_det where idusuario = ? and idnotificacion= ?',
+                DB::delete('delete from mc_notificaciones_det where idusuario = ? and idnotificacion= ?',
                      [$idusuario, $idnotificacion]);
             }
         }

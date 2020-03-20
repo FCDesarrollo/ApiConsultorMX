@@ -557,6 +557,50 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function traerLimiteGastosUsuario(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $idusuario = $request->idusuario;
+                $limiteGastoUsuario = DB::select('select * from mc_usuarios_limite_gastos where id_usuario = ?', [$idusuario]);
+                $array["limiteGasto"] = $limiteGastoUsuario;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function guardaLimiteGastos(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            }else{
+                $idusuario = $request->idusuario;
+                $idconcepto = $request->idconcepto;
+                $importe = $request->importe;
+                $limistesGastoUsuario = DB::select('select * from mc_usuarios_limite_gastos where id_usuario = ?', [$idusuario]);
+                if(count($limistesGastoUsuario) === 0) {
+                    DB::insert('insert into mc_usuarios_limite_gastos (id_usuario, id_concepto, importe) values (?, ?, ?)',
+                                 [$idusuario, $idconcepto, $importe]);
+                }
+                else {
+                    DB::update('update mc_usuarios_limite_gastos set importe = ? where id_usuario = ?', [$importe, $idusuario]);
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     public  function eliminaPermisoAutorizacion(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);

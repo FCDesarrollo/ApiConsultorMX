@@ -910,10 +910,11 @@ class AutorizacionyGastosController extends Controller
                         if (!empty($bitacora)) {
                             $idreqAsoc = $bitacora[0]->id_req;
                             DB::update('update mc_requerimientos_bit set status = 5 where id_req = ? and status=4', [$idreqAsoc]);
-                        }
-                        DB::table('mc_requerimientos_bit')->where("id_bit", $idbit)->delete();
-                        $utbitacora = DB::select('SELECT  * FROM mc_requerimientos_bit 
+                            DB::table('mc_requerimientos_bit')->where("id_bit", $idbit)->delete();
+                            $utbitacora = DB::select('SELECT  * FROM mc_requerimientos_bit 
                                 WHERE id_req = ? ORDER BY id_bit DESC LIMIT 1', [$idreqAsoc]);
+                        }
+                        
                         if (!empty($utbitacora)) {
                             $esta = ($utbitacora[0]->status == 4) ? 5 : $utbitacora[0]->status; 
                             DB::update('update mc_requerimientos set estado_documento = ? 

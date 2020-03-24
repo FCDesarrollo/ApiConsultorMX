@@ -117,10 +117,16 @@ class AlmacenDigitalOperacionesController extends Controller
                     $array["error"] = $validaCarpetas[0]["error"];
                     
                     if ($validaCarpetas[0]['error'] == 0){
-                        $sucursal = $request->sucursal;
-                        $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
+                        if(isset($request->idadw)){
+                            $idadw = $request->idadw;
+                            $suc = DB::select("SELECT * FROM mc_catsucursales WHERE idadw = $idadw");
+                        }else{
+                            $sucursal = $request->sucursal;
+                            $suc = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$sucursal'");
+                        }
                         if (!empty($suc)) {
                             $idsucursal = $suc[0]->idsucursal;
+                            $sucursal = $suc[0]->sucursal;
                             $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
                             $carpetamenu = $validaCarpetas[0]['carpetamenu'];
                             $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];

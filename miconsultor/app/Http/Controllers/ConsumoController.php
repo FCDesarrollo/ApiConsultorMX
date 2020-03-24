@@ -1888,7 +1888,7 @@ class ConsumoController extends Controller
                 $idarchivodet = $archivos[$i]['idarchivodet'];
                 
                 if($status == 1){ 
-                    $idmodulo = $request->idmodulo;
+                    $idmodulo = $request->idmodulodesk;
                     $cuenta = $request->cuenta;
                     $tipodoc = $request->tipodoc;                    
                     $fechaprocesado = $request->fechaprocesado;

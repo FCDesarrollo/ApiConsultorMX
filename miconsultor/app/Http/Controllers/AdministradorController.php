@@ -138,7 +138,7 @@ class AdministradorController extends Controller
                 ConnectDatabase($idempresa);
                 for ($i=0; $i < $num_registros; $i++) {
                     $fechamod = $registros[$i]['Fechamodificacion'];
-
+                    $now = $registros[$i]['Fecha'];
                     $periodo= $registros[$i]['Periodo'];
                     $ejercicio = $registros[$i]['Ejercicio']; 
                     $archivo = $registros[$i]['Archivo'];
@@ -164,7 +164,7 @@ class AdministradorController extends Controller
                         DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
                             where("tipodocumento", $request->Tipodocumento)->
                             where("periodo", $periodo)->where('ejercicio', $ejercicio)->
-                            update(['fechamodificacion' => $fechamod]);
+                            update(['fechamodificacion' => $fechamod, 'fecha' => $now]);
                     } 
                 }
                 $reg = "true";

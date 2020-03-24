@@ -420,7 +420,7 @@ class AutorizacionyGastosController extends Controller
                                     from '.$bdd.'.mc_requerimientos_doc d 
                                     INNER JOIN ' .env("DB_DATABASE_GENERAL").'.mc1001 u ON d.id_usuario=u.idusuario 
                                     where id_req = ?', [$idrequerimiento]);
-                    $requerimientos[0]->gastos = DB::select('select * from mc_requerimientos_aso where idrequerimiento = ?', [$idrequerimiento]);
+                    $requerimiento[0]->gastos = DB::select('select * from mc_requerimientos_aso where idrequerimiento = ?', [$idrequerimiento]);
                     if ($requerimiento[0]->estatus == 2 ){
                         $datosExtra = DB::select('select rfc,nombre from mc_requerimientos_aso where idgasto = ?', [$idrequerimiento]);
                         $requerimiento[0]->rfcproveedor = $datosExtra[0]->rfc;

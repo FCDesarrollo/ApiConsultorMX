@@ -969,9 +969,12 @@ class AutorizacionyGastosController extends Controller
             $array["error"] = $valida[0]["error"];
 
             if ($valida[0]['error'] == 0){
-                for ($i=0; $i < count($proveedores); $i++) { 
+                for ($i=0; $i < count($proveedores); $i++) {
+                    $cod = $proveedores[$i]['codigo'];
+                    $rfcpro = $proveedores[$i]['rfcproveedor'];
+                    $razon = $proveedores[$i]['razon'];  
                     DB::insert('insert into mc_catproveedores (codigo, rfc, razonsocial) 
-                                values (?, ?, ?)', [$proveedores[$i]->codigo, $proveedores[$i]->rfc, $proveedores[$i]->razonsocial]);
+                                values (?, ?, ?)', [$cod, $rfcpro, $razon]);
                 }
             }
         }

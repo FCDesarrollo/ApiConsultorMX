@@ -421,6 +421,8 @@ class AutorizacionyGastosController extends Controller
                                     INNER JOIN ' .env("DB_DATABASE_GENERAL").'.mc1001 u ON d.id_usuario=u.idusuario 
                                     where id_req = ?', [$idrequerimiento]);
                     $requerimiento[0]->gastos = DB::select('select * from mc_requerimientos_aso where idrequerimiento = ?', [$idrequerimiento]);
+                    $requerimiento[0]->requerimiento = DB::select('select * from mc_requerimientos inner join mc_requerimientos_aso on mc_requerimientos.idReq = mc_requerimientos_aso.idrequerimiento
+                    where mc_requerimientos_aso.idgasto = ?', [$idrequerimiento]);
                     if ($requerimiento[0]->estatus == 2 ){
                         $datosExtra = DB::select('select rfc,nombre from mc_requerimientos_aso where idgasto = ?', [$idrequerimiento]);
                         $requerimiento[0]->rfcproveedor = $datosExtra[0]->rfc;
@@ -897,6 +899,13 @@ class AutorizacionyGastosController extends Controller
                         $type = explode(".", $archivos[$i]->documento);
                         $nombrearchivo = $ruta . "/" . $archivos[$i]->codigo_documento . "." . $type[1];
                         $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
+                    }
+
+                    $gastos = DB::select('select * from mc_requerimientos_aso where idrequerimiento = ? AND id_bit = 0', [$idrequerimiento]);
+                    if(count($gastos) > 0) {
+                        $idgasto = $gastos[0]->idgasto;
+                        DB::table('mc_requerimientos')->where("idReq", $idgasto)->delete();
+                        DB::table('mc_requerimientos_doc')->where("id_req", $idgasto)->delete();
                     }
                 }
                 DB::table('mc_requerimientos')->where("idReq", $idrequerimiento)->delete();

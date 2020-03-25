@@ -955,5 +955,27 @@ class AutorizacionyGastosController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function carga_ProveedoresADW(Request $request)
+    {
+        $valida = verificaUsuario($request->usuario,$request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $proveedores = $request->proveedores;
+            $idusuario = $valida[0]["usuario"][0]->idusuario;
+            $rfc = $request->rfc;
+            ConnectDatabaseRFC($rfc);
+            $valida = VerificaEmpresa($rfc, $idusuario);
+            $array["error"] = $valida[0]["error"];
+
+            if ($valida[0]['error'] == 0){
+                for ($i=0; $i < count($proveedores); $i++) { 
+                    DB::insert('insert into mc_catproveedores (codigo, rfc, razonsocial) 
+                                values (?, ?, ?)', [$proveedores[$i]->codigo, $proveedores[$i]->rfc, $proveedores[$i]->razonsocial]);
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
     
 }

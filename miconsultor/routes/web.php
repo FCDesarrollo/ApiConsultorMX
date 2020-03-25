@@ -277,6 +277,7 @@ Route::post('creaGasto', 'AutorizacionyGastosController@creaGasto');
 Route::get('getTotalImporte', 'AutorizacionyGastosController@getTotalImporte');
 Route::get('traerLimiteGastosUsuario', 'AutorizacionyGastosController@traerLimiteGastosUsuario');
 Route::post('guardaLimiteGastos', 'AutorizacionyGastosController@guardaLimiteGastos');
+Route::post('carga_ProveedoresADW', 'AutorizacionyGastosController@carga_ProveedoresADW');
 
 
 //ALMACEN DIGITAL OPERACIONES 2020

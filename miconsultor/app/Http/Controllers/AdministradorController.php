@@ -190,6 +190,7 @@ class AdministradorController extends Controller
                                                 AND periodo= $request->Periodo
                                                 AND ejercicio=$request->Ejercicio");
             if(!empty($result)){
+                $idservicio = 1;
                 DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
                         update(['status' => $request->Status, 'idusuarioE' => $iduserent,'fechacorte' => $fechacor,
@@ -200,7 +201,11 @@ class AdministradorController extends Controller
                     DB::table('mc_bitcontabilidad_det')->insertGetId(['idbitacora' => $result[0]->id,
                          'nombrearchivoE' => $movtos[$i]['NombreE'],'fechacorte' => $movtos[$i]['FechaCorte']]);    
                 }
-                $datos="true"; 
+                $datos="true";
+                DB::insert('insert into mc_agente_entregas (idusuario, idservicio, tipodocumento, 
+                        ejercicio, periodo, fechacorte, status) values (?, ?, ?, ?, ?, ?, ?)', [$iduserent,
+                             $idservicio, $request->Tipodocumento, $request->Ejercicio, $request->Periodo,
+                              $fechacor, $request->Status]); 
             }
         }else{
             $datos = $valida;

@@ -972,9 +972,12 @@ class AutorizacionyGastosController extends Controller
                 for ($i=0; $i < count($proveedores); $i++) {
                     $cod = $proveedores[$i]['codigo'];
                     $rfcpro = $proveedores[$i]['rfcproveedor'];
-                    $razon = $proveedores[$i]['razon'];  
-                    DB::insert('insert into mc_catproveedores (codigo, rfc, razonsocial) 
-                                values (?, ?, ?)', [$cod, $rfcpro, $razon]);
+                    $razon = $proveedores[$i]['razon'];
+                    $pro = DB::select('select * from mc_catproveedores where codigo = ? and rfc= ?', [$cod, $rfcpro]);
+                    if (empty($pro)) {
+                        DB::insert('insert into mc_catproveedores (codigo, rfc, razonsocial) 
+                        values (?, ?, ?)', [$cod, $rfcpro, $razon]);
+                    }
                 }
             }
         }

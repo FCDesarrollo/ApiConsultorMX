@@ -421,8 +421,7 @@ class AutorizacionyGastosController extends Controller
                                     INNER JOIN ' .env("DB_DATABASE_GENERAL").'.mc1001 u ON d.id_usuario=u.idusuario 
                                     where id_req = ?', [$idrequerimiento]);
                     $requerimiento[0]->gastos = DB::select('select * from mc_requerimientos_aso where idrequerimiento = ?', [$idrequerimiento]);
-                    $requerimiento[0]->requerimiento = DB::select('select * from mc_requerimientos inner join mc_requerimientos_aso on mc_requerimientos.idReq = mc_requerimientos_aso.idrequerimiento
-                    where mc_requerimientos_aso.idgasto = ?', [$idrequerimiento]);
+                    $requerimiento[0]->requerimiento = DB::select('select mc_requerimientos.*, mc_conceptos.nombre_concepto as concepto, mc_catsucursales.sucursal as sucursal from mc_requerimientos inner join mc_requerimientos_aso on mc_requerimientos.idReq = mc_requerimientos_aso.idrequerimiento inner join mc_conceptos on mc_requerimientos.id_concepto = mc_conceptos.id inner join mc_catsucursales on mc_requerimientos.id_sucursal = mc_catsucursales.idsucursal where mc_requerimientos_aso.idgasto = ?', [$idrequerimiento]);
                     if ($requerimiento[0]->estatus == 2 ){
                         $datosExtra = DB::select('select rfc,nombre from mc_requerimientos_aso where idgasto = ?', [$idrequerimiento]);
                         $requerimiento[0]->rfcproveedor = $datosExtra[0]->rfc;

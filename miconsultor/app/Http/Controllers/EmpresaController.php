@@ -713,6 +713,29 @@ class EmpresaController extends Controller
                 tiempo_dias int(11) DEFAULT NULL
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_config_time);
+
+              $mc_cat_proveedores = "create table if not exists mc_catproveedores(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                codigo VARCHAR(100) COLLATE latin1_spanish_ci DEFAULT NULL,
+                rfc VARCHAR(70) COLLATE latin1_spanish_ci DEFAULT NULL,
+                razonsocial VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_cat_proveedores);
+
+              $mc_cat_proveedores = "create table if not exists mc_agente_entregas(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                idusuario int(11) DEFAULT NULL,
+                idservicio int(11) DEFAULT NULL,
+                tipodocumento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                fecha timestamp NOT NULL DEFAULT current_timestamp(),
+                ejercicio int(11) DEFAULT NULL,
+                periodo int(11) DEFAULT NULL,
+                fechacorte date DEFAULT NULL,
+                status int(11) DEFAULT NULL,
+                PRIMARY KEY (`id`)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_cat_proveedores);
               
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";

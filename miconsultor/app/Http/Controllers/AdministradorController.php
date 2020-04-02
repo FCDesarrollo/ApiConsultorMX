@@ -190,7 +190,7 @@ class AdministradorController extends Controller
                                                 AND periodo= $request->Periodo
                                                 AND ejercicio=$request->Ejercicio");
             if(!empty($result)){
-                $idservicio = 1;
+                $idservicio = $request->Idservicio;
                 DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
                         update(['status' => $request->Status, 'idusuarioE' => $iduserent,'fechacorte' => $fechacor,
@@ -222,6 +222,7 @@ class AdministradorController extends Controller
             ConnectDatabaseRFC($request->Rfc);
             $usuario = $valida['usuario'];
             $iduserent = $usuario[0]->idusuario;
+            $idservicio = $request->Idservicio;
             $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE tipodocumento= '$request->Tipodocumento'
                                                 AND periodo= $request->Periodo
                                                 AND ejercicio=$request->Ejercicio");
@@ -230,7 +231,11 @@ class AdministradorController extends Controller
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
                         update(['status' => $request->Status, 'idusuarioE' => $iduserent,
                              'fechaentregado' => $now]);
-                $datos="true"; 
+                $datos="true";
+                DB::insert('insert into mc_agente_entregas (idusuario, idservicio, tipodocumento, 
+                        ejercicio, periodo, fechacorte, status) values (?, ?, ?, ?, ?, ?, ?)', [$iduserent,
+                             $idservicio, $request->Tipodocumento, $request->Ejercicio, $request->Periodo,
+                             $now, $request->Status]); 
             }
         }
         return $datos;

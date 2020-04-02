@@ -57,7 +57,7 @@ class AutorizacionyGastosController extends Controller
                 $fechareq = $request->fechareq;
                 $descripcion = $request->descripcion;
                 $importe = $request->importe;
-                $estado = 1;
+                $estado = $request->estadodocumento;
                 $estatus = $request->estatus;
 
                 $idconcepto = $request->idconcepto;
@@ -267,8 +267,8 @@ class AutorizacionyGastosController extends Controller
                     $fechagasto = $request->fechagasto;
                     $iddepar = $requerimiento[0]->id_departamento;
                     $des = $requerimiento[0]->descripcion;
-                    $estado = 3;
-                    $idconce = $requerimiento[0]->id_concepto;
+                    $estado = $request->estatusgasto;
+                    $idconce = $request->idconcepto;
                     $serie = $requerimiento[0]->serie;
                     $folio = $requerimiento[0]->folio;
                     $estatus = 2;
@@ -343,17 +343,15 @@ class AutorizacionyGastosController extends Controller
             $idusuario = $valida[0]['usuario'][0]->idusuario;
             $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
             $bdd = $empresa[0]->rutaempresa;
-            $query ="select r.*,s.sucursal,u.nombre,u.apellidop,u.apellidom from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
-                            inner join $bdd.mc_catsucursales s ON r.id_sucursal=s.idsucursal                     
-                                where id_usuario =$idusuario and id_departamento=$request->idsubmenu and estatus=$estatus";
+            $query ="select r.*,s.sucursal,u.nombre,u.apellidop,u.apellidom, if(!isnull(a.idrequerimiento) and a.idrequerimiento <> a.idgasto and a.id_bit = 0, 1 , 0 ) as requerimiento_gasto, if(isnull(a.idrequerimiento) and r.estatus = 2, 1 , 0 ) as gasto_requerimiento, if(!isnull(a.idrequerimiento) and a.idrequerimiento <> a.idgasto and a.id_bit <> 0, 1 , 0 ) as gasto_surtido,
+            if(!isnull(a.idrequerimiento) and a.idrequerimiento = a.idgasto and a.id_bit = 0, 1 , 0 ) as gasto, if(isnull(a.idrequerimiento) and r.estatus = 1, 1 , 0 ) as requerimiento from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario inner join $bdd.mc_catsucursales s ON r.id_sucursal=s.idsucursal left join mc_requerimientos_aso a ON a.idrequerimiento = r.idReq where id_usuario =$idusuario and id_departamento=$request->idsubmenu and estatus=$estatus";
             $requser = DB::select($query);
-            
+
             $conceptos = DB::select('select id_concepto from mc_usuarios_concepto where id_usuario = ?', [$idusuario]);
             for ($i=0; $i < count($conceptos); $i++) { 
                 $idconcepto = $conceptos[$i]->id_concepto;
-                $query ="select r.*,s.sucursal,u.nombre,u.apellidop,u.apellidom from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
-                                inner join $bdd.mc_catsucursales s ON r.id_sucursal=s.idsucursal    
-                            where id_concepto =$idconcepto and id_usuario<>$idusuario and id_departamento=$request->idsubmenu and estatus=$estatus";
+                $query ="select r.*,s.sucursal,u.nombre,u.apellidop,u.apellidom, if(!isnull(a.idrequerimiento) and a.idrequerimiento <> a.idgasto and a.id_bit = 0, 1 , 0 ) as requerimiento_gasto, if(isnull(a.idrequerimiento) and r.estatus = 2, 1 , 0 ) as gasto_requerimiento, if(!isnull(a.idrequerimiento) and a.idrequerimiento <> a.idgasto and a.id_bit <> 0, 1 , 0 ) as gasto_surtido, if(!isnull(a.idrequerimiento) and a.idrequerimiento = a.idgasto and a.id_bit = 0, 1 , 0 ) as gasto, if(isnull(a.idrequerimiento) and r.estatus = 1, 1 , 0 ) as requerimiento from $bdd.mc_requerimientos r INNER JOIN " .env('DB_DATABASE_GENERAL').".mc1001 u ON r.id_usuario=u.idusuario 
+                                inner join $bdd.mc_catsucursales s ON r.id_sucursal=s.idsucursal left join mc_requerimientos_aso a ON a.idrequerimiento = r.idReq where id_concepto =$idconcepto and id_usuario<>$idusuario and id_departamento=$request->idsubmenu and estatus=$estatus";
                 $reqconceto = DB::select($query);
                 $requerimientos = array_merge($requser, $reqconceto);
                 $requser = $requerimientos;
@@ -454,12 +452,17 @@ class AutorizacionyGastosController extends Controller
                 $idmenu = $request->idmenu;
                 $idsubmenu = $request->idsubmenu;
 
+                $asociacionrequerimiento = DB::select('select * from mc_requerimientos_aso where idrequerimiento = ?', [$idrequerimiento]);
+                if($asociacionrequerimiento[0]->idrequerimiento != $asociacionrequerimiento[0]->idgasto && $asociacionrequerimiento[0]->id_bit == 0) {
+                    DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $asociacionrequerimiento[0]->idgasto]);
+                }
+
                 $idhistorial = DB::table('mc_requerimientos_bit')->insertGetId(["id_req" => $idrequerimiento,
                              "id_usuario" => $idusuario,"fecha" => $fecha,"observaciones"=> $observaciones,"status" => $estatus]);
                 
                 $array["idbitacora"] = $idhistorial;
                 DB::update('update mc_requerimientos set estado_documento = ? where idReq = ?', [$estatus, $idrequerimiento]);
-                
+
                 $requerimiento = DB::select('select id_concepto from mc_requerimientos where idReq = ?', [$idrequerimiento]);
                 $idconcepto = $requerimiento[0]->id_concepto;
                 $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);

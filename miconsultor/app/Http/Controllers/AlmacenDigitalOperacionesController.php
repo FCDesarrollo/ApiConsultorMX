@@ -87,7 +87,7 @@ class AlmacenDigitalOperacionesController extends Controller
                                 $det = DB::select("SELECT * FROM mc_almdigital_exp WHERE idalmdigitaldet = $idalmdigitaldet");
                                 $idmodulo = $det[0]->idmodulo;
                                 $modulo = DB::connection("General")->select("SELECT nombre_modulo FROM fcmodulos WHERE idmodulo = $idmodulo");
-                                $concefolser = $modulo[0]->nombre_modulo . " " . $det[0]->cuenta . " " . $det[0]->tipodoc . " " . $det[0]->periodo . " " . $det[0]->ejercicio;
+                                $concefolser = $modulo[0]->nombre_modulo . "-" . $det[0]->cuenta . "-" . $det[0]->tipodoc . "-" . $det[0]->periodo . "-" . $det[0]->ejercicio;
 
                             }
                             

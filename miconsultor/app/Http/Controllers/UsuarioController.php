@@ -350,7 +350,28 @@ class UsuarioController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] == 0){
+            $correo = $request->correo;
+            $perfil = $request->perfil;
+            $usuario = DB::connection("General")->select('select * from mc1001 where correo = ?', [$correo]);
+            if(count($usuario) > 0) {
+                $idUsuario = $usuario[0]->idusuario;
+                $idEmpresa = $request->idempresa;
+                $fechaVinculacion = $request->fecha_vinculacion;
+                $idUsuarioVinculador = $request->idusuario_vinculador;
+                $validarUsuario = DB::connection("General")->select('select * from mc1002 where idusuario = ? and idempresa = ?', [$idUsuario, $idEmpresa]);
+                if(count($validarUsuario) > 0) {
+                    $array["error"] = 47;
+                }
+                else {
+                    DB::connection("General")->table('mc1002')->insert(['idusuario' => $idUsuario, 'idempresa' => $idEmpresa, 'estatus' => $perfil, 'fecha_vinculacion' => $fechaVinculacion, 'idusuario_vinculador' => $idUsuarioVinculador]);
+                }
+            }
+            else {
+                $array["error"] = 2;
+            }
             
         }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

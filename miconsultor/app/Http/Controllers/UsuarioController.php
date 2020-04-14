@@ -363,7 +363,7 @@ class UsuarioController extends Controller
                     $array["error"] = 47;
                 }
                 else {
-                    DB::connection("General")->table('mc1002')->insert(['idusuario' => $idUsuario, 'idempresa' => $idEmpresa, 'estatus' => $perfil, 'fecha_vinculacion' => $fechaVinculacion, 'idusuario_vinculador' => $idUsuarioVinculador]);
+                    DB::connection("General")->table('mc1002')->insert(['idusuario' => $idUsuario, 'idempresa' => $idEmpresa, 'estatus' => 1, 'fecha_vinculacion' => $fechaVinculacion, 'idusuario_vinculador' => $idUsuarioVinculador == $idUsuario ? 0 : $idUsuarioVinculador]);
                 }
             }
             else {

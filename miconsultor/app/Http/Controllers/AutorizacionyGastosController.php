@@ -64,6 +64,11 @@ class AutorizacionyGastosController extends Controller
                 $serie = $request->serie;
                 $folio = $request->folio;
                 $idsubmenu = $request->idsubmenu;
+                $validarCFS = DB::select('select * from mc_requerimientos where id_concepto = ? and serie = ? and folio = ?', [$idconcepto, $serie, $folio]);
+                if(count($validarCFS) > 0) {
+                    $array["error"] = 48;
+                    return json_encode($array, JSON_UNESCAPED_UNICODE);
+                }
                 $array["idrequerimiento"] = 0;
                 $idreq = DB::table('mc_requerimientos')->insertGetId([
                     'id_sucursal' => $idsucursal, 'fecha' => $fecha,
@@ -550,7 +555,7 @@ class AutorizacionyGastosController extends Controller
                                         where m.tipopermiso>0 and m.idmenu= ? and idempresa = ?", [$idmenu, $idempresa]);
                 for ($i = 0; $i < count($usuarios); $i++) {
                     $idusuario = $usuarios[$i]->idusuario;
-                    $conceptos = DB::select('select c.* from mc_usuarios_concepto u 
+                    $conceptos = DB::select('select c.*, (select l.importe from mc_usuarios_limite_gastos l where id_usuario = u.id_usuario and id_concepto = u.id_concepto) as limite from mc_usuarios_concepto u 
                         inner join mc_conceptos c on u.id_concepto=c.id where id_usuario = ?', [$idusuario]);
                     $usuarios[$i]->conceptos =  $conceptos;
                 }

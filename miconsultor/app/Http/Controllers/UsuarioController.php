@@ -358,11 +358,29 @@ class UsuarioController extends Controller
                 $idEmpresa = $request->idempresa;
                 $fechaVinculacion = $request->fecha_vinculacion;
                 $idUsuarioVinculador = $request->idusuario_vinculador;
+                
                 $validarUsuario = DB::connection("General")->select('select * from mc1002 where idusuario = ? and idempresa = ?', [$idUsuario, $idEmpresa]);
                 if(count($validarUsuario) > 0) {
                     $array["error"] = 47;
                 }
                 else {
+
+                    $permisosmodulos = DB::select('select * from mc_modpermis where idperfil = ?', [$perfil]);
+                    $permisosmenus = DB::select('select * from mc_menupermis where idperfil = ?', [$perfil]);
+                    $permisossubmenus = DB::select('select * from mc_submenupermis where idperfil = ?', [$perfil]);
+
+                    for($x=0 ; $x<count($permisosmodulos) ; $x++) {
+                        DB::insert('insert into mc_usermod (idusuario, idperfil, idmodulo, tipopermiso) values (?, ?, ?, ?)', [$idUsuario, $perfil, $permisosmodulos[$x]->idmodulo, $permisosmodulos[$x]->tipopermiso]);
+                    }
+
+                    for($x=0 ; $x<count($permisosmenus) ; $x++) {
+                        DB::insert('insert into mc_usermenu (idusuario, idperfil, idmodulo, idmenu, tipopermiso) values (?, ?, ?, ?, ?)', [$idUsuario, $perfil, $permisosmenus[$x]->idmodulo, $permisosmenus[$x]->idmenu, $permisosmenus[$x]->tipopermiso]);
+                    }
+
+                    for($x=0 ; $x<count($permisossubmenus) ; $x++) {
+                        DB::insert('insert into mc_usersubmenu (idusuario, idperfil, idmenu, idsubmenu, tipopermiso, notificaciones) values (?, ?, ?, ?, ?, ?)', [$idUsuario, $perfil, $permisossubmenus[$x]->idmenu, $permisossubmenus[$x]->idsubmenu, $permisossubmenus[$x]->tipopermiso, $permisossubmenus[$x]->notificaciones]);
+                    } 
+
                     DB::connection("General")->table('mc1002')->insert(['idusuario' => $idUsuario, 'idempresa' => $idEmpresa, 'estatus' => 1, 'fecha_vinculacion' => $fechaVinculacion, 'idusuario_vinculador' => $idUsuarioVinculador == $idUsuario ? 0 : $idUsuarioVinculador]);
                 }
             }

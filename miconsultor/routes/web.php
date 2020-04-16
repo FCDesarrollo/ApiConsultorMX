@@ -245,6 +245,9 @@ Route::put('desvinculaUsuario', 'UsuarioController@desvinculaUsuario');
 Route::delete('eliminaUsuarioEmpresa', 'UsuarioController@eliminaUsuarioEmpresa');
 Route::post('editaNotificacion', 'UsuarioController@editaNotificacion');
 Route::post('vincularUsuario', 'UsuarioController@vincularUsuario');
+Route::post('crearNuevoUsuario', 'UsuarioController@crearNuevoUsuario');
+Route::get('traerNuevoUsuarioRegistrado', 'UsuarioController@traerNuevoUsuarioRegistrado');
+Route::put('cambiarContraNuevoUsuarioRegistrado', 'UsuarioController@cambiarContraNuevoUsuarioRegistrado');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');

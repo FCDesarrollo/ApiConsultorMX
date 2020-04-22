@@ -6,9 +6,9 @@
     <title>Correo de Validación</title>
 </head>
 <body>
-    <strong>Correo Enviado Exitosamente!</strong>
-    <p>Usted ha sido registrado por un administrador, favor de ingresar a la siguiente direccion para completar su registro.</p>
+    <strong>¡Correo Enviado Exitosamente!</strong>
+    <p>Usted ha sido registrado por un administrador, favor de ingresar a la siguiente dirección para completar su registro.</p>
     <p>Código de confirmación: {{ $datosUser["identificador"] }}</p>
-    <a href={{ $datosUser["link"] }}>Haz click aqui para completar su registro.</a>
+    <a href={{ $datosUser["link"] }}>Haga click aquí para completar su registro.</a>
 </body>
 </html>

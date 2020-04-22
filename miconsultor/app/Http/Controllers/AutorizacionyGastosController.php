@@ -1051,4 +1051,16 @@ class AutorizacionyGastosController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function traerRequerimientoPorSerie(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0) {
+            $requerimiento = DB::select('select * from mc_requerimientos where serie = ? order by idreq desc limit 1', [$request->serie]);
+            $array["requerimiento"] = $requerimiento;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

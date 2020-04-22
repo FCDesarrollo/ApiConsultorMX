@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Mail;
 use App\Mail\MensajesValidacion;
 use App\Mail\MensajesValidacionNuevoUsuario;
+use App\Mail\MensajesGenerales;
 
 class UsuarioController extends Controller
 {
@@ -437,6 +438,7 @@ class UsuarioController extends Controller
             if(count($usuario) > 0) {
                 $idUsuario = $usuario[0]->idusuario;
                 $idEmpresa = $request->idempresa;
+                $nombreEmpresa = $request->nombreempresa;
                 $fechaVinculacion = $request->fecha_vinculacion;
                 $idUsuarioVinculador = $request->idusuario_vinculador;
                 
@@ -465,12 +467,34 @@ class UsuarioController extends Controller
                     DB::insert('insert into mc_userprofile (idusuario, idperfil) values (?, ?)', [$idUsuario, $perfil]);
 
                     DB::connection("General")->table('mc1002')->insert(['idusuario' => $idUsuario, 'idempresa' => $idEmpresa, 'estatus' => 1, 'fecha_vinculacion' => $fechaVinculacion, 'idusuario_vinculador' => $idUsuarioVinculador == $idUsuario ? 0 : $idUsuarioVinculador]);
+
+                    $data["titulo"] = "Vinculación a empresa";
+                    $data["cabecera"] = "Vinculación exitosa";
+                    $data["mensaje"] = "Usted ha sido vinculado a la empresa ".$nombreEmpresa." por un administrador";
+                    Mail::to($correo)->send(new MensajesGenerales($data));
                 }
             }
             else {
                 $array["error"] = 2;
             }
             
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function cambiarContraUsuario(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idusuario = $request->idusuario;
+            $password = password_hash($request->password, PASSWORD_BCRYPT);
+            DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["password" => $password]);
+            $usuario = DB::connection("General")->select("SELECT * FROM mc1001 
+            WHERE idusuario='$idusuario'");
+            $array["usuario"] = $usuario;
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

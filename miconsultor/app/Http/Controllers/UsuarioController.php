@@ -177,7 +177,7 @@ class UsuarioController extends Controller
         if ($valida[0]['error'] == 0){
             $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
             $idempresa = $empresa[0]->idempresa;
-            $usuarios = DB::connection("General")->select('select u.* from mc1002 v INNER JOIN mc1001 u ON 
+            $usuarios = DB::connection("General")->select('select u.*, v.estatus AS estatus_vinculacion from mc1002 v INNER JOIN mc1001 u ON 
                                     v.idusuario=u.idusuario where idempresa = ?', [$idempresa]);
             $array["usuarios"] = $usuarios;
         }
@@ -294,6 +294,7 @@ class UsuarioController extends Controller
                 if (!empty($empresa)) {
                     $idempresa = $empresa[0]->idempresa;
                     DB::connection("General")->update('update mc1002 set estatus = ? where idusuario = ? and idempresa = ?', [$estatus, $idusuariomod, $idempresa]);
+                    $array["estatus"] = $estatus;
                 }else{
                     $array["error"] = 1;
                 }
@@ -322,6 +323,7 @@ class UsuarioController extends Controller
                     DB::table('mc_usermod')->where("idusuario", $idusuariomod)->delete();
                     DB::table('mc_usermenu')->where("idusuario", $idusuariomod)->delete();
                     DB::table('mc_usersubmenu')->where("idusuario", $idusuariomod)->delete();
+                    DB::table('mc_userprofile')->where("idusuario", $idusuariomod)->delete();
                 }else{
                     $array["error"] = 1;
                 }
@@ -470,7 +472,7 @@ class UsuarioController extends Controller
 
                     $data["titulo"] = "Vinculación a empresa";
                     $data["cabecera"] = "Vinculación exitosa";
-                    $data["mensaje"] = "Usted ha sido vinculado a la empresa ".$nombreEmpresa." por un administrador";
+                    $data["mensaje"] = "Usted ha sido vinculado a la empresa ".$nombreEmpresa." por un administrador.";
                     Mail::to($correo)->send(new MensajesGenerales($data));
                 }
             }

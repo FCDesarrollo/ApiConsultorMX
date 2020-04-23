@@ -439,6 +439,26 @@ class GeneralesController extends Controller
         return $doctos;
     }
 
+    function traerDocumentosLote(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $idlote = $request->idlote;
+
+        ConnectDatabase($idempresa);
+
+        $doctos = DB::select("SELECT * FROM mc_lotesdocto WHERE idlote = $idlote");
+        for ($i = 0; $i < count($doctos); $i++) {
+            $codigocon = $doctos[$i]->concepto;
+            $nombrec = DB::select("SELECT nombreconcepto FROM mc_catconceptos WHERE codigoconcepto = '$codigocon'");
+            if (!empty($nombrec)) {
+                $doctos[$i]->concepto = $nombrec[0]->nombreconcepto;
+            }
+        }
+        $array["doctos"] = $doctos;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function ConsultarMovtosLote(Request $request)
     {
         $idempresa = $request->idempresa;
@@ -460,6 +480,29 @@ class GeneralesController extends Controller
         return $movtos;
     }
 
+    function traerMovimientosLote(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $id = $request->id;
+
+        ConnectDatabase($idempresa);
+
+        $movtos = DB::select("SELECT m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.idlote = $id");
+
+
+        for ($i = 0; $i < count($movtos); $i++) {
+            $codigoprod = $movtos[$i]->producto;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = '$codigoprod'");
+            if (!empty($doctos)) {
+                $movtos[$i]->producto = $doctos[0]->nombreprod;
+            }
+        }
+
+        $array["movtos"] = $movtos;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function ConsultarMovtosDocto(Request $request)
     {
         $idempresa = $request->idempresa;
@@ -477,6 +520,26 @@ class GeneralesController extends Controller
         }
 
         return $movtos;
+    }
+
+    function traerMovimientosDocumentosLote(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $id = $request->id;
+        ConnectDatabase($idempresa);
+
+        $movtos = DB::select("SELECT d.folio, d.serie, d.sucursal, m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.iddocto = $id");
+
+        for ($i = 0; $i < count($movtos); $i++) {
+            $codigoprod = $movtos[$i]->producto;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = '$codigoprod'");
+            if (!empty($doctos)) {
+                $movtos[$i]->producto = $doctos[0]->nombreprod;
+            }
+        }
+        $array["movtos"] = $movtos;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function EliminarLote(Request $request)

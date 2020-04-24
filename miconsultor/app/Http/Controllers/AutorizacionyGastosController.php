@@ -1131,4 +1131,22 @@ class AutorizacionyGastosController extends Controller
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }    
+
+    public function getGastosRelacionados(Request $request)
+    {
+        $autenticacion = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+
+        $idsubmenu = $request->idsubmenu;
+
+        $array["error"] = $autenticacion[0]["error"];    
+        
+        if ($autenticacion[0]['error'] == 0) {
+            $reg = DB::select("SELECT * FROM mc_requerimientos_rel WHERE idmodulo = $idsubmenu");
+            if(!empty($reg)){
+                $array["relacionados"] = $reg;  
+            }
+        }
+        
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

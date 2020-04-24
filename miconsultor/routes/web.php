@@ -293,7 +293,7 @@ Route::post('carga_ProveedoresADW', 'AutorizacionyGastosController@carga_Proveed
 Route::get('traerProveedores', 'AutorizacionyGastosController@traerProveedores');
 Route::get('traerRequerimientoPorSerie', 'AutorizacionyGastosController@traerRequerimientoPorSerie');
 Route::post('RequerimientoMarcadoDocs', 'AutorizacionyGastosController@RequerimientoMarcadoDocs');
-
+Route::get('getGastosRelacionados', 'AutorizacionyGastosController@getGastosRelacionados');
 
 
 //ALMACEN DIGITAL OPERACIONES 2020

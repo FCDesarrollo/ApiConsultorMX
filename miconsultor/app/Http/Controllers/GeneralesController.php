@@ -561,6 +561,26 @@ class GeneralesController extends Controller
         return $doctos;
     }
 
+    function eliminaLote(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $idlote = $request->idlote;
+
+        ConnectDatabase($idempresa);
+
+        $doctos = DB::select("SELECT * FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
+
+        if (empty($doctos)) {
+            DB::table('mc_lotes')->where("id", $idlote)->delete();
+            DB::table('mc_lotesdocto')->where("idlote", $idlote)->delete();
+            DB::table('mc_lotesmovtos')->where("idlote", $idlote)->delete();
+        }
+
+        $array["doctos"] = $doctos;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function EliminarDocto(Request $request)
     {
         $idempresa = $request->idempresa;
@@ -592,6 +612,41 @@ class GeneralesController extends Controller
         }
 
         return $docto;
+    }
+
+    function eliminaDocto(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $iddocto = $request->iddocto;
+
+        ConnectDatabase($idempresa);
+
+        $docto = DB::select("SELECT * FROM mc_lotesdocto WHERE id = $iddocto");
+
+        if ($docto[0]->estatus == 0) {
+
+            $idlote = $docto[0]->idlote;
+            DB::table('mc_lotesdocto')->where("id", $iddocto)->update(['estatus' => 2]);
+
+            $doctos = DB::select("SELECT COUNT(id) AS doctos FROM mc_lotesdocto WHERE idlote = '$idlote' AND estatus <> 2");
+
+            //$cargados = DB::select("SELECT totalregistros FROM mc_lotes WHERE id = '$idlote'");
+
+            if ($doctos[0]->doctos > 0) {
+                DB::table('mc_lotes')->where("id", $idlote)->update(['totalcargados' => $doctos[0]->doctos]);
+            } else {
+                DB::table('mc_lotes')->where("id", $idlote)->delete();
+                DB::table('mc_lotesdocto')->where("idlote", $idlote)->delete();
+                DB::table('mc_lotesmovtos')->where("idlote", $idlote)->delete();
+            }
+
+
+            $docto = DB::select("SELECT * FROM mc_lotesdocto WHERE id = $iddocto And estatus <> 2");
+        }
+
+        $array["docto"] = $docto;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function VerificarLote(Request $request)

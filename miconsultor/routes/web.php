@@ -155,7 +155,9 @@ Route::get('ConsultarMovtosDocto', 'GeneralesController@ConsultarMovtosDocto');
 Route::get('traerMovimientosDocumentosLote', 'GeneralesController@traerMovimientosDocumentosLote');
 //Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
 Route::post('EliminarLote', 'GeneralesController@EliminarLote');
+Route::delete('eliminaLote', 'GeneralesController@eliminaLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
+Route::delete('eliminaDocto', 'GeneralesController@eliminaDocto');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
 Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
@@ -214,6 +216,7 @@ Route::post('datosRubrosSubMenu', 'AdministradorController@datosRubrosSubMenu');
 Route::post('documentosdigitales', 'AdministradorController@documentosdigitales');
 Route::post('usuarionube', 'AdministradorController@usuarionube');
 Route::post('Plantillas', 'AdministradorController@Plantillas');
+Route::get('traerPlantillas', 'AdministradorController@traerPlantillas');
 
 
 

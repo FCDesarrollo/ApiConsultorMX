@@ -1071,6 +1071,8 @@ class AutorizacionyGastosController extends Controller
 
         $array["error"] = $autenticacion[0]["error"];
 
+        $idusuario = $valida[0]["usuario"][0]->idusuario;
+
         if ($autenticacion[0]['error'] == 0) {
 
             if (isset($request->registros)) {
@@ -1113,7 +1115,7 @@ class AutorizacionyGastosController extends Controller
                 $sta = ($reg[0]->reg > 0 ? 1 : 0);
 
                 $resp = DB::table('mc_requerimientos_doc')->where("id", $idrequerimientodoc)->update([
-                        'idagente' => $autenticacion[0]["idusuario"],
+                        'idagente' => $idusuario,
                         'fechaprocesado' => date_create($registros[$i]["fechapro"]), 'estatus' => $sta
                     ]);
 

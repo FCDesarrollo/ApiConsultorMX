@@ -1071,7 +1071,7 @@ class AutorizacionyGastosController extends Controller
 
         $array["error"] = $autenticacion[0]["error"];
 
-        $idusuario = $valida[0]["usuario"][0]->idusuario;
+        $idusuario = $autenticacion[0]["usuario"][0]->idusuario;
 
         if ($autenticacion[0]['error'] == 0) {
 

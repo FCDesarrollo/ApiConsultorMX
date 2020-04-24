@@ -1063,4 +1063,70 @@ class AutorizacionyGastosController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function RequerimientoMarcadoDocs(Request $request)
+    {
+
+        $autenticacion = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+
+        $array["error"] = $autenticacion[0]["error"];
+
+        if ($autenticacion[0]['error'] == 0) {
+
+            if (isset($request->registros)) {
+                $registros = $request->registros;
+            } else {
+                $registros[0]["id"] = $request->id;
+                $registros[0]["status"] = $request->status;
+                $registros[0]["fechapro"] = $request->fechapro;
+                $registros[0]["idmodulo"] = $request->idmodulo;
+                $registros[0]["concepto"] = $request->concepto;
+                $registros[0]["folio"] = $request->folio;
+                $registros[0]["serie"] = $request->serie;
+                $registros[0]["iddoc"] = $request->iddoc;
+            }            
+
+            for ($i = 0; $i < count($registros); $i++) {
+
+                $idrequerimientodoc = $registros[$i]['id'];
+                $iddoc = $registros[$i]['iddoc'];
+
+                if ($registros[$i]["status"] == 1) {
+                    $doc = DB::select("SELECT * FROM mc_requerimientos_rel WHERE idrequerimientodoc = $idrequerimientodoc AND iddocadw=$iddoc");
+
+                    if (empty($doc)) {
+                        DB::table('mc_requerimientos_rel')->insertGetId([
+                            'idrequerimientodoc' => $idrequerimientodoc,
+                            'iddocadw' => $iddoc,
+                            'conceptoadw' => $registros[$i]["concepto"],
+                            'idmodulo' => $registros[$i]["idmodulo"],
+                            'folioadw' => $registros[$i]["folio"],
+                            'serieadw' => $registros[$i]["serie"]
+                        ]);
+                    }
+                } else {
+                    DB::table('mc_requerimientos_rel')->where("idrequerimientodoc", $idrequerimientodoc)->where("iddocadw", $iddoc)->delete();
+                }
+
+
+                $reg = DB::select("SELECT count(idrequerimientodoc) as reg FROM mc_requerimientos_rel WHERE idrequerimientodoc=$idrequerimientodoc");
+                $sta = ($reg[0]->reg > 0 ? 1 : 0);
+
+                $resp = DB::table('mc_requerimientos_doc')->where("id", $idrequerimientodoc)->update([
+                        'idagente' => $autenticacion[0]["idusuario"],
+                        'fechaprocesado' => date_create($registros[$i]["fechapro"]), 'estatus' => $sta
+                    ]);
+
+                if (!empty($resp)) {
+                    $registros[$i]["estatus"] = true;
+                } else {
+                    $registros[$i]["estatus"] = false;
+                }
+            }
+
+            $array["registros"] = $registros;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }    
 }

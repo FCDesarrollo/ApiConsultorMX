@@ -23,4 +23,16 @@ class PerfilesController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function agregarPerfil(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permisosDatos = $request->permisosdatos;
+            $array["permisosdatos"] = $permisosDatos;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

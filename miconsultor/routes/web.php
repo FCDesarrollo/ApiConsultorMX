@@ -313,3 +313,4 @@ Route::delete('eliminaNotificacion', 'NotificacionesController@eliminaNotificaci
 
 //PERFILES
 Route::get('listaPerfiles', 'PerfilesController@listaPerfiles');
+Route::post('agregarPerfil', 'PerfilesController@agregarPerfil');

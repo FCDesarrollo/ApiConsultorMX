@@ -1064,7 +1064,7 @@ class AutorizacionyGastosController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function RequerimientoMarcadoDocs(Request $request)
+    public function RequerimientoMarcado(Request $request)
     {
 
         $autenticacion = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
@@ -1090,15 +1090,15 @@ class AutorizacionyGastosController extends Controller
 
             for ($i = 0; $i < count($registros); $i++) {
 
-                $idrequerimientodoc = $registros[$i]['id'];
+                $idgasto = $registros[$i]['id'];
                 $iddoc = $registros[$i]['iddoc'];
 
                 if ($registros[$i]["status"] == 1) {
-                    $doc = DB::select("SELECT * FROM mc_requerimientos_rel WHERE idrequerimientodoc = $idrequerimientodoc AND iddocadw=$iddoc");
+                    $doc = DB::select("SELECT * FROM mc_requerimientos_rel WHERE idgasto = $idgasto AND iddocadw=$iddoc");
 
                     if (empty($doc)) {
                         DB::table('mc_requerimientos_rel')->insertGetId([
-                            'idrequerimientodoc' => $idrequerimientodoc,
+                            'idgasto' => $idgasto,
                             'iddocadw' => $iddoc,
                             'conceptoadw' => $registros[$i]["concepto"],
                             'idmodulo' => $registros[$i]["idmodulo"],
@@ -1107,16 +1107,16 @@ class AutorizacionyGastosController extends Controller
                         ]);
                     }
                 } else {
-                    DB::table('mc_requerimientos_rel')->where("idrequerimientodoc", $idrequerimientodoc)->where("iddocadw", $iddoc)->delete();
+                    DB::table('mc_requerimientos_rel')->where("idgasto", $idgasto)->where("iddocadw", $iddoc)->delete();
                 }
 
-
-                $reg = DB::select("SELECT count(idrequerimientodoc) as reg FROM mc_requerimientos_rel WHERE idrequerimientodoc=$idrequerimientodoc");
+                $reg = DB::select("SELECT count(idgasto) as reg FROM mc_requerimientos_rel WHERE idgasto=$idgasto");
                 $sta = ($reg[0]->reg > 0 ? 1 : 0);
 
-                $resp = DB::table('mc_requerimientos_doc')->where("id", $idrequerimientodoc)->update([
-                        'idagente' => $idusuario,
-                        'fechaprocesado' => date_create($registros[$i]["fechapro"]), 'estatus' => $sta
+                $resp = DB::table('mc_requerimientos')->where("idReq", $idgasto)->update([
+                        'id_agente' => $idusuario,
+                        'fecha_procesado' => date_create($registros[$i]["fechapro"]), 
+                        'estatus_procesado' => $sta
                     ]);
 
                 if (!empty($resp)) {

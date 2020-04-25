@@ -292,7 +292,7 @@ Route::post('guardaLimiteGastos', 'AutorizacionyGastosController@guardaLimiteGas
 Route::post('carga_ProveedoresADW', 'AutorizacionyGastosController@carga_ProveedoresADW');
 Route::get('traerProveedores', 'AutorizacionyGastosController@traerProveedores');
 Route::get('traerRequerimientoPorSerie', 'AutorizacionyGastosController@traerRequerimientoPorSerie');
-Route::post('RequerimientoMarcadoDocs', 'AutorizacionyGastosController@RequerimientoMarcadoDocs');
+Route::post('RequerimientoMarcado', 'AutorizacionyGastosController@RequerimientoMarcado');
 Route::get('getGastosRelacionados', 'AutorizacionyGastosController@getGastosRelacionados');
 
 

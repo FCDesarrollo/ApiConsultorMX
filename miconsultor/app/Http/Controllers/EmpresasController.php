@@ -444,6 +444,7 @@ class EmpresasController extends Controller
                 descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 fecha date DEFAULT NULL,
                 status int(11) DEFAULT NULL,
+                concepto_relacion int(11) DEFAULT NULL,
                 PRIMARY KEY (id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
                 DB::statement($mc_conceptos);
@@ -472,6 +473,15 @@ class EmpresasController extends Controller
                 PRIMARY KEY (id_bit)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_requerimientos_bit);
+
+              $mc_usuarios_limite_gastos = "create table if not exists mc_usuarios_limite_gastos (
+                id int(11) not null auto_increment,
+                id_usuario int(11) not null,
+                id_concepto int(11) not null,
+                importe float not null,
+                primary key (`id`)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_usuarios_limite_gastos);
 
               $mc_almdigital_exp = "create table if not exists mc_almdigital_exp (
                 idalmdigitaldet INT(11) NOT NULL,

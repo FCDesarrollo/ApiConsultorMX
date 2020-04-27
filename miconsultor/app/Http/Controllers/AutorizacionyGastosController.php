@@ -1149,4 +1149,22 @@ class AutorizacionyGastosController extends Controller
         
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function getProveedoresRelacionadosAGastos(Request $request)
+    {
+        $autenticacion = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+
+        $idsubmenu = $request->idsubmenu;
+
+        $array["error"] = $autenticacion[0]["error"];    
+        
+        if ($autenticacion[0]['error'] == 0) {
+            $result = DB::select("SELECT asoc.* FROM mc_requerimientos r INNER JOIN mc_requerimientos_aso asoc ON r.idReq = asoc.idgasto WHERE r.estatus = 2");
+            if(!empty($result)){
+                $array["proveedores"] = $result;  
+            }
+        }
+        
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }    
 }

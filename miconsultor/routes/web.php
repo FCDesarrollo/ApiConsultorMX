@@ -292,8 +292,11 @@ Route::post('guardaLimiteGastos', 'AutorizacionyGastosController@guardaLimiteGas
 Route::post('carga_ProveedoresADW', 'AutorizacionyGastosController@carga_ProveedoresADW');
 Route::get('traerProveedores', 'AutorizacionyGastosController@traerProveedores');
 Route::get('traerRequerimientoPorSerie', 'AutorizacionyGastosController@traerRequerimientoPorSerie');
+
+//APIS PARA MODULO XML 26/04/2020
 Route::post('RequerimientoMarcado', 'AutorizacionyGastosController@RequerimientoMarcado');
 Route::get('getGastosRelacionados', 'AutorizacionyGastosController@getGastosRelacionados');
+Route::get('getProveedoresRelacionadosAGastos', 'AutorizacionyGastosController@getProveedoresRelacionadosAGastos');
 
 
 //ALMACEN DIGITAL OPERACIONES 2020

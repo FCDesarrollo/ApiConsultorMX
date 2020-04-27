@@ -1074,26 +1074,15 @@ class AutorizacionyGastosController extends Controller
         $idusuario = $autenticacion[0]["usuario"][0]->idusuario;
 
         if ($autenticacion[0]['error'] == 0) {
-
-            if (isset($request->registros)) {
-                $registros = $request->registros;
-            } else {
-                $registros[0]["id"] = $request->id;
-                $registros[0]["status"] = $request->status;
-                $registros[0]["fechapro"] = $request->fechapro;
-                $registros[0]["idmodulo"] = $request->idmodulo;
-                $registros[0]["concepto"] = $request->concepto;
-                $registros[0]["folio"] = $request->folio;
-                $registros[0]["serie"] = $request->serie;
-                $registros[0]["iddoc"] = $request->iddoc;
-            }            
+            
+            $registros = $request->registros;          
 
             for ($i = 0; $i < count($registros); $i++) {
 
-                $idgasto = $registros[$i]['id'];
-                $iddoc = $registros[$i]['iddoc'];
+                $idgasto = $registros[$i]['id'];                
 
                 if ($registros[$i]["status"] == 1) {
+                    $iddoc = $registros[$i]['iddoc'];
                     $doc = DB::select("SELECT * FROM mc_requerimientos_rel WHERE idgasto = $idgasto AND iddocadw=$iddoc");
 
                     if (empty($doc)) {
@@ -1103,11 +1092,18 @@ class AutorizacionyGastosController extends Controller
                             'conceptoadw' => $registros[$i]["concepto"],
                             'idmodulo' => $registros[$i]["idmodulo"],
                             'folioadw' => $registros[$i]["folio"],
-                            'serieadw' => $registros[$i]["serie"]
+                            'serieadw' => $registros[$i]["serie"],
+                            'UUID' => $registros[$i]["UUID"]
                         ]);
                     }
                 } else {
-                    DB::table('mc_requerimientos_rel')->where("idgasto", $idgasto)->where("iddocadw", $iddoc)->delete();
+                    if(isset($registros[$i]['iddoc'])) {
+                        $iddoc = $registros[$i]['iddoc'];
+                        DB::table('mc_requerimientos_rel')->where("idgasto", $idgasto)->where("iddocadw", $iddoc)->delete();
+                    } else {
+                        $UUID = $registros[$i]['UUID'];
+                        DB::table('mc_requerimientos_rel')->where("idgasto", $idgasto)->where("UUID", $UUID)->delete();
+                    }
                 }
 
                 $reg = DB::select("SELECT count(idgasto) as reg FROM mc_requerimientos_rel WHERE idgasto=$idgasto");

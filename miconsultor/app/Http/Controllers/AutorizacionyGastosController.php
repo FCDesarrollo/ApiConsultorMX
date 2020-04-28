@@ -1077,12 +1077,11 @@ class AutorizacionyGastosController extends Controller
             
             $registros = $request->registros;          
 
-            for ($i = 0; $i < count($registros); $i++) {
-
-                $idgasto = $registros[$i]['id'];                
+            for ($i = 0; $i < count($registros); $i++) {                
 
                 if ($registros[$i]["status"] == 1) {
                     $iddoc = $registros[$i]['iddoc'];
+                    $idgasto = $registros[$i]['id'];
                     $doc = DB::select("SELECT * FROM mc_requerimientos_rel WHERE idgasto = $idgasto AND iddocadw=$iddoc");
 
                     if (empty($doc)) {
@@ -1094,14 +1093,18 @@ class AutorizacionyGastosController extends Controller
                             'folioadw' => $registros[$i]["folio"],
                             'serieadw' => $registros[$i]["serie"],
                             'UUID' => $registros[$i]["UUID"]
-                        ]);
+                        ]);                      
                     }
                 } else {
                     if(isset($registros[$i]['iddoc'])) {
                         $iddoc = $registros[$i]['iddoc'];
+                        $gasto = DB::select("SELECT idgasto FROM mc_requerimientos_rel WHERE iddocadw=$iddoc");
+                        $idgasto = $gasto[0]->idgasto;                        
                         DB::table('mc_requerimientos_rel')->where("idgasto", $idgasto)->where("iddocadw", $iddoc)->delete();
                     } else {
                         $UUID = $registros[$i]['UUID'];
+                        $gasto = DB::select("SELECT idgasto FROM mc_requerimientos_rel WHERE UUID=$UUID");
+                        $idgasto = $gasto[0]->idgasto;
                         DB::table('mc_requerimientos_rel')->where("idgasto", $idgasto)->where("UUID", $UUID)->delete();
                     }
                 }
@@ -1113,7 +1116,7 @@ class AutorizacionyGastosController extends Controller
                         'id_agente' => $idusuario,
                         'fecha_procesado' => date_create($registros[$i]["fechapro"]), 
                         'estatus_procesado' => $sta
-                    ]);
+                    ]);  
 
                 if (!empty($resp)) {
                     $registros[$i]["estatus"] = true;

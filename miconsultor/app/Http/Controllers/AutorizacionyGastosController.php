@@ -1073,6 +1073,8 @@ class AutorizacionyGastosController extends Controller
 
         $idusuario = $autenticacion[0]["usuario"][0]->idusuario;
 
+        $array["desasociado"] = false;
+
         if ($autenticacion[0]['error'] == 0) {
             
             $registros = $request->registros;          
@@ -1118,14 +1120,10 @@ class AutorizacionyGastosController extends Controller
                         'estatus_procesado' => $sta
                     ]);  
 
-                if (!empty($resp)) {
-                    $registros[$i]["estatus"] = true;
-                } else {
-                    $registros[$i]["estatus"] = false;
-                }
+                $array["desasociado"] = true;
             }
 
-            $array["registros"] = $registros;
+            
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

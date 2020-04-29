@@ -1120,7 +1120,9 @@ class AutorizacionyGastosController extends Controller
                         'estatus_procesado' => $sta
                     ]);  
 
+
                 $array["desasociado"] = true;
+                $array["idgasto"] = $idgasto;
             }
 
             

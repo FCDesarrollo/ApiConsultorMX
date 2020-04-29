@@ -1105,7 +1105,7 @@ class AutorizacionyGastosController extends Controller
                         DB::table('mc_requerimientos_rel')->where("idgasto", $idgasto)->where("iddocadw", $iddoc)->delete();
                     } else {
                         $UUID = $registros[$i]['UUID'];
-                        $gasto = DB::select("SELECT idgasto FROM mc_requerimientos_rel WHERE UUID=$UUID");
+                        $gasto = DB::select("SELECT idgasto FROM mc_requerimientos_rel WHERE UUID='$UUID'");
                         $idgasto = $gasto[0]->idgasto;
                         DB::table('mc_requerimientos_rel')->where("idgasto", $idgasto)->where("UUID", $UUID)->delete();
                     }

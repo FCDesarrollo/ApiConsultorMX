@@ -649,6 +649,18 @@ class GeneralesController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function validarDocumentoLote(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $documento = $request->file('documento');
+            return $documento->getClientOriginalName();
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function VerificarLote(Request $request)
     {
         $idempresa = $request->idempresa;

@@ -496,6 +496,22 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function traerPlantillas(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $permiso = $valida[0]['permiso'];
+            if ($permiso < 2) {
+                $array["error"] = 4;
+            } else {
+                $plantillas = DB::connection("General")->select( "select * from mc1011");
+                $array["plantillas"] = $plantillas;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     public function listaempresas(Request $request)
     {
         $valida = $this->usuarioadmin($request->usuario, $request->pwd);

@@ -146,17 +146,24 @@ Route::post('activa', 'FcPremiumController@activa');
 
 //VALIDACIONES RECEPCION POR LOTES
 Route::get('ConsultarLotes', 'GeneralesController@ConsultarLotes');
+Route::get('traerLotes', 'GeneralesController@traerLotes');
 Route::get('ConsultarDoctos', 'GeneralesController@ConsultarDoctos');
+Route::get('traerDocumentosLote', 'GeneralesController@traerDocumentosLote');
 Route::get('ConsultarMovtosLote', 'GeneralesController@ConsultarMovtosLote');
+Route::get('traerMovimientosLote', 'GeneralesController@traerMovimientosLote');
 Route::get('ConsultarMovtosDocto', 'GeneralesController@ConsultarMovtosDocto');
+Route::get('traerMovimientosDocumentosLote', 'GeneralesController@traerMovimientosDocumentosLote');
 //Route::post('RegistrarLote', 'GeneralesController@RegistrarLote');
 Route::post('EliminarLote', 'GeneralesController@EliminarLote');
+Route::delete('eliminaLote', 'GeneralesController@eliminaLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
+Route::delete('eliminaDocto', 'GeneralesController@eliminaDocto');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
 Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
 Route::get('Paginador', 'GeneralesController@Paginador');
 Route::post('VerificarClave', 'GeneralesController@VerificarClave');
+Route::post('validarDocumentoLote', 'GeneralesController@validarDocumentoLote');
 
 //PARA CONSUMO DEL MODULO DE INVENTARIOS
 Route::post('LoteCargado', 'GeneralesController@LoteCargado');
@@ -210,6 +217,7 @@ Route::post('datosRubrosSubMenu', 'AdministradorController@datosRubrosSubMenu');
 Route::post('documentosdigitales', 'AdministradorController@documentosdigitales');
 Route::post('usuarionube', 'AdministradorController@usuarionube');
 Route::post('Plantillas', 'AdministradorController@Plantillas');
+Route::get('traerPlantillas', 'AdministradorController@traerPlantillas');
 
 
 
@@ -244,6 +252,11 @@ Route::get('permisosUsuarioGeneral', 'UsuarioController@permisosUsuarioGeneral')
 Route::put('desvinculaUsuario', 'UsuarioController@desvinculaUsuario');
 Route::delete('eliminaUsuarioEmpresa', 'UsuarioController@eliminaUsuarioEmpresa');
 Route::post('editaNotificacion', 'UsuarioController@editaNotificacion');
+Route::post('vincularUsuario', 'UsuarioController@vincularUsuario');
+Route::post('crearNuevoUsuario', 'UsuarioController@crearNuevoUsuario');
+Route::get('traerNuevoUsuarioRegistrado', 'UsuarioController@traerNuevoUsuarioRegistrado');
+Route::put('cambiarContraNuevoUsuarioRegistrado', 'UsuarioController@cambiarContraNuevoUsuarioRegistrado');
+Route::put('cambiarContraUsuario', 'UsuarioController@cambiarContraUsuario');
 
 //EMPRESA 2020
 Route::get('listaEmpresasUsuario', 'EmpresaController@listaEmpresasUsuario');
@@ -279,6 +292,12 @@ Route::get('traerLimiteGastosUsuario', 'AutorizacionyGastosController@traerLimit
 Route::post('guardaLimiteGastos', 'AutorizacionyGastosController@guardaLimiteGastos');
 Route::post('carga_ProveedoresADW', 'AutorizacionyGastosController@carga_ProveedoresADW');
 Route::get('traerProveedores', 'AutorizacionyGastosController@traerProveedores');
+Route::get('traerRequerimientoPorSerie', 'AutorizacionyGastosController@traerRequerimientoPorSerie');
+
+//APIS PARA MODULO XML 26/04/2020
+Route::post('RequerimientoMarcado', 'AutorizacionyGastosController@RequerimientoMarcado');
+Route::get('getGastosRelacionados', 'AutorizacionyGastosController@getGastosRelacionados');
+Route::get('getProveedoresRelacionadosAGastos', 'AutorizacionyGastosController@getProveedoresRelacionadosAGastos');
 
 
 //ALMACEN DIGITAL OPERACIONES 2020
@@ -298,3 +317,7 @@ Route::delete('eliminaNotificacion', 'NotificacionesController@eliminaNotificaci
 
 //PERFILES
 Route::get('listaPerfiles', 'PerfilesController@listaPerfiles');
+Route::post('agregarPerfil', 'PerfilesController@agregarPerfil');
+Route::delete('eliminarPerfil', 'PerfilesController@eliminarPerfil');
+Route::get('datosPerfil', 'PerfilesController@datosPerfil');
+Route::put('editarPerfil', 'PerfilesController@editarPerfil');

@@ -168,6 +168,7 @@ class ActualizarBaseDatosController extends Controller
                     descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                     fecha date DEFAULT NULL,
                     status int(11) DEFAULT NULL,
+                    concepto_relacion int(11) DEFAULT NULL,
                     PRIMARY KEY (id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
                     DB::statement($mc_conceptos);
@@ -205,6 +206,15 @@ class ActualizarBaseDatosController extends Controller
                         download varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL
                         ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
                   DB::statement($mc_requerimientos_doc);
+
+                  $mc_usuarios_limite_gastos = "create table if not exists mc_usuarios_limite_gastos (
+                    id int(11) not null auto_increment,
+                    id_usuario int(11) not null,
+                    id_concepto int(11) not null,
+                    importe float not null,
+                    primary key (`id`)
+                  ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                  DB::statement($mc_usuarios_limite_gastos);
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

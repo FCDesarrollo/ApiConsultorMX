@@ -77,10 +77,23 @@ class AlmacenDigitalOperacionesController extends Controller
                         if ($archivos[$i]->conceptoadw == null) {
                             $idalmdigitaldet = $archivos[$i]->id;
                             $det = DB::select("SELECT * FROM mc_almdigital_doc WHERE idalmdigitaldet = $idalmdigitaldet");
+
                             $concefolser = "";
-                            for ($j = 0; $j < count($det); $j++) {
-                                $concefolser = $concefolser . $det[$j]->conceptoadw . " " . $det[$j]->folioadw . "-" . $det[$j]->serieadw . ", ";
+                            if(!empty($det)){
+                                for ($j = 0; $j < count($det); $j++) {
+                                    $concefolser = $concefolser . $det[$j]->conceptoadw . " " . $det[$j]->folioadw . "-" . $det[$j]->serieadw . ", ";
+                                }
+                            }else{
+                                $det = DB::select("SELECT * FROM mc_almdigital_exp WHERE idalmdigitaldet = $idalmdigitaldet");                                
+                                for ($j = 0; $j < count($det); $j++) {
+                                    $idmodulo = $det[$j]->idmodulo;
+                                    $modulo = DB::connection("General")->select("SELECT nombre_modulo FROM fcmodulos WHERE idmodulo = $idmodulo");
+                                    $concefolser = $concefolser . $modulo[0]->nombre_modulo . "-" . $det[$j]->cuenta . "-" . $det[$j]->tipodoc . "-" . $det[$j]->periodo . "-" . $det[$j]->ejercicio. ", ";
+                                }
+
                             }
+                            
+
                             $archivos[$i]->conceptoadw = $concefolser;
                         }
                     } else {

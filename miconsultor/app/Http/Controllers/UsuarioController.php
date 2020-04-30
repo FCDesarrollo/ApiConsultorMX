@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Mail;
 use App\Mail\MensajesValidacion;
+use App\Mail\MensajesValidacionNuevoUsuario;
+use App\Mail\MensajesGenerales;
 
 class UsuarioController extends Controller
 {
@@ -71,6 +73,7 @@ class UsuarioController extends Controller
                 $password = $data["password"];             
                 $data['password'] = password_hash($password, PASSWORD_BCRYPT);
                 unset($data["idusuario"]);
+                unset($data["subject"]);
                 if(isset($data["user_perfil"])){
                     $id = DB::connection("General")->table('mc1001')->insertGetId(['nombre' => ucwords(strtolower($data['nombre'])), 'apellidop' => ucwords(strtolower($data['apellidop'])), 'apellidom' => ucwords(strtolower($data['apellidom'])), 'cel' => $data['cel'], 'correo' => $data['correo'], 'password' => $data['password'], 'status' => $data['status'], 'identificador' => $data['identificador']]);
 
@@ -174,7 +177,7 @@ class UsuarioController extends Controller
         if ($valida[0]['error'] == 0){
             $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$request->rfc]);
             $idempresa = $empresa[0]->idempresa;
-            $usuarios = DB::connection("General")->select('select u.* from mc1002 v INNER JOIN mc1001 u ON 
+            $usuarios = DB::connection("General")->select('select u.*, v.estatus AS estatus_vinculacion from mc1002 v INNER JOIN mc1001 u ON 
                                     v.idusuario=u.idusuario where idempresa = ?', [$idempresa]);
             $array["usuarios"] = $usuarios;
         }
@@ -291,6 +294,7 @@ class UsuarioController extends Controller
                 if (!empty($empresa)) {
                     $idempresa = $empresa[0]->idempresa;
                     DB::connection("General")->update('update mc1002 set estatus = ? where idusuario = ? and idempresa = ?', [$estatus, $idusuariomod, $idempresa]);
+                    $array["estatus"] = $estatus;
                 }else{
                     $array["error"] = 1;
                 }
@@ -319,6 +323,7 @@ class UsuarioController extends Controller
                     DB::table('mc_usermod')->where("idusuario", $idusuariomod)->delete();
                     DB::table('mc_usermenu')->where("idusuario", $idusuariomod)->delete();
                     DB::table('mc_usersubmenu')->where("idusuario", $idusuariomod)->delete();
+                    DB::table('mc_userprofile')->where("idusuario", $idusuariomod)->delete();
                 }else{
                     $array["error"] = 1;
                 }
@@ -344,13 +349,156 @@ class UsuarioController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function traerNuevoUsuarioRegistrado(Request $request)
+    {
+        $array["error"] = 0;
+        $usuarioRegistrado = DB::connection("General")->select('select * from mc1001 where idusuario = ?', [$request->idusuario]);
+        $array["usuario"] = $usuarioRegistrado;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function cambiarContraNuevoUsuarioRegistrado(Request $request)
+    {
+        $array["error"] = 0;
+        $password = password_hash($request->password, PASSWORD_BCRYPT);
+        DB::connection("General")->table('mc1001')->where("idusuario", $request->idusuario)->update(["password" => $password, "tipo" => 1]);
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function crearNuevoUsuario(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $correo = $request->correo;
+            $celular = $request->celular;
+            $validarcorreo = DB::connection("General")->select('select * from mc1001 where correo = ?', [$correo]);
+            $validarcel = DB::connection("General")->select('select * from mc1001 where cel = ?', [$celular]);
+            $array["correo"] = count($validarcorreo);
+            $array["cel"] = count($validarcel);
+            if(count($validarcorreo) == 0) {
+                if(count($validarcel) == 0) {
+                    $nombre = $request->nombre;
+                    $apellidop = $request->apellidop;
+                    $apellidom = $request->apellidom;
+                    $perfil = $request->perfil;
+                    $identificador = $request->identificador;
+                    $password = password_hash($request->password, PASSWORD_BCRYPT);
+                    $idUsuario = DB::connection("General")->table('mc1001')->insertGetId(['nombre' => ucwords(strtolower($nombre)), 'apellidop' => ucwords(strtolower($apellidop)), 'apellidom' => ucwords(strtolower($apellidom)), 'cel' => $celular, 'correo' => $correo, 'password' => $password, 'status' => 1, 'tipo' => -1, 'identificador' => $identificador]);
+                    $idEmpresa = $request->idempresa;
+                    $fechaVinculacion = $request->fecha_vinculacion;
+                    $idUsuarioVinculador = $request->idusuario_vinculador;
+
+                    $permisosmodulos = DB::select('select * from mc_modpermis where idperfil = ?', [$perfil]);
+                    $permisosmenus = DB::select('select * from mc_menupermis where idperfil = ?', [$perfil]);
+                    $permisossubmenus = DB::select('select * from mc_submenupermis where idperfil = ?', [$perfil]);
+
+                    for($x=0 ; $x<count($permisosmodulos) ; $x++) {
+                        DB::insert('insert into mc_usermod (idusuario, idperfil, idmodulo, tipopermiso) values (?, ?, ?, ?)', [$idUsuario, $perfil, $permisosmodulos[$x]->idmodulo, $permisosmodulos[$x]->tipopermiso]);
+                    }
+
+                    for($x=0 ; $x<count($permisosmenus) ; $x++) {
+                        DB::insert('insert into mc_usermenu (idusuario, idperfil, idmodulo, idmenu, tipopermiso) values (?, ?, ?, ?, ?)', [$idUsuario, $perfil, $permisosmenus[$x]->idmodulo, $permisosmenus[$x]->idmenu, $permisosmenus[$x]->tipopermiso]);
+                    }
+
+                    for($x=0 ; $x<count($permisossubmenus) ; $x++) {
+                        DB::insert('insert into mc_usersubmenu (idusuario, idperfil, idmenu, idsubmenu, tipopermiso, notificaciones) values (?, ?, ?, ?, ?, ?)', [$idUsuario, $perfil, $permisossubmenus[$x]->idmenu, $permisossubmenus[$x]->idsubmenu, $permisossubmenus[$x]->tipopermiso, $permisossubmenus[$x]->notificaciones]);
+                    } 
+
+                    DB::insert('insert into mc_userprofile (idusuario, idperfil) values (?, ?)', [$idUsuario, $perfil]);
+
+                    DB::connection("General")->table('mc1002')->insert(['idusuario' => $idUsuario, 'idempresa' => $idEmpresa, 'estatus' => 1, 'fecha_vinculacion' => $fechaVinculacion, 'idusuario_vinculador' => $idUsuarioVinculador == $idUsuario ? 0 : $idUsuarioVinculador]);
+
+                    $data["subject"] = "Confirma tu cuenta";
+                    $data["identificador"] = $identificador;
+                    $data["link"] = $request->linkconfirmacion.$idUsuario;
+                    Mail::to($correo)->send(new MensajesValidacionNuevoUsuario($data));
+                }
+                else {
+                    $array["error"] = -1;
+                }
+            }
+            else {
+                $array["error"] = -2;
+            }
+            
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     public function vincularUsuario(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] == 0){
+            $correo = $request->correo;
+            $perfil = $request->perfil;
+            $usuario = DB::connection("General")->select('select * from mc1001 where correo = ?', [$correo]);
+            if(count($usuario) > 0) {
+                $idUsuario = $usuario[0]->idusuario;
+                $idEmpresa = $request->idempresa;
+                $nombreEmpresa = $request->nombreempresa;
+                $fechaVinculacion = $request->fecha_vinculacion;
+                $idUsuarioVinculador = $request->idusuario_vinculador;
+                
+                $validarUsuario = DB::connection("General")->select('select * from mc1002 where idusuario = ? and idempresa = ?', [$idUsuario, $idEmpresa]);
+                if(count($validarUsuario) > 0) {
+                    $array["error"] = 47;
+                }
+                else {
+
+                    $permisosmodulos = DB::select('select * from mc_modpermis where idperfil = ?', [$perfil]);
+                    $permisosmenus = DB::select('select * from mc_menupermis where idperfil = ?', [$perfil]);
+                    $permisossubmenus = DB::select('select * from mc_submenupermis where idperfil = ?', [$perfil]);
+
+                    for($x=0 ; $x<count($permisosmodulos) ; $x++) {
+                        DB::insert('insert into mc_usermod (idusuario, idperfil, idmodulo, tipopermiso) values (?, ?, ?, ?)', [$idUsuario, $perfil, $permisosmodulos[$x]->idmodulo, $permisosmodulos[$x]->tipopermiso]);
+                    }
+
+                    for($x=0 ; $x<count($permisosmenus) ; $x++) {
+                        DB::insert('insert into mc_usermenu (idusuario, idperfil, idmodulo, idmenu, tipopermiso) values (?, ?, ?, ?, ?)', [$idUsuario, $perfil, $permisosmenus[$x]->idmodulo, $permisosmenus[$x]->idmenu, $permisosmenus[$x]->tipopermiso]);
+                    }
+
+                    for($x=0 ; $x<count($permisossubmenus) ; $x++) {
+                        DB::insert('insert into mc_usersubmenu (idusuario, idperfil, idmenu, idsubmenu, tipopermiso, notificaciones) values (?, ?, ?, ?, ?, ?)', [$idUsuario, $perfil, $permisossubmenus[$x]->idmenu, $permisossubmenus[$x]->idsubmenu, $permisossubmenus[$x]->tipopermiso, $permisossubmenus[$x]->notificaciones]);
+                    } 
+
+                    DB::insert('insert into mc_userprofile (idusuario, idperfil) values (?, ?)', [$idUsuario, $perfil]);
+
+                    DB::connection("General")->table('mc1002')->insert(['idusuario' => $idUsuario, 'idempresa' => $idEmpresa, 'estatus' => 1, 'fecha_vinculacion' => $fechaVinculacion, 'idusuario_vinculador' => $idUsuarioVinculador == $idUsuario ? 0 : $idUsuarioVinculador]);
+
+                    $data["titulo"] = "Vinculación a empresa";
+                    $data["cabecera"] = "Vinculación exitosa";
+                    $data["mensaje"] = "Usted ha sido vinculado a la empresa ".$nombreEmpresa." por un administrador.";
+                    Mail::to($correo)->send(new MensajesGenerales($data));
+                }
+            }
+            else {
+                $array["error"] = 2;
+            }
             
         }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function cambiarContraUsuario(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idusuario = $request->idusuario;
+            $password = password_hash($request->password, PASSWORD_BCRYPT);
+            DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["password" => $password]);
+            $usuario = DB::connection("General")->select("SELECT * FROM mc1001 
+            WHERE idusuario='$idusuario'");
+            $array["usuario"] = $usuario;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

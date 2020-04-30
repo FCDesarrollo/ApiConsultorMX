@@ -358,6 +358,61 @@ class GeneralesController extends Controller
         return $lotes;
     }
 
+    function traerLotes(Request $request)
+    {
+        /* $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) { */
+            $idempresa = $request->idempresa;
+            ConnectDatabase($idempresa);
+            $idmenu = $request->idmenu;
+            $idsubmenu = $request->idsubmenu;
+
+            $tipos = DB::select("SELECT claveplantilla FROM mc_rubros WHERE idmenu = $idmenu And idsubmenu = $idsubmenu");
+
+            $filtro = "";
+            for ($i = 0; $i < count($tipos); $i++) {
+                $filtro = $filtro . " l.tipo = " . $tipos[$i]->claveplantilla . " OR ";
+            }
+            $filtro = substr($filtro, 0, -4);
+
+            if (count($tipos) > 0) {
+
+                $lotes = DB::select("SELECT l.*,SUM(IF(d.error>0,d.error,0)) AS cError, d.sucursal FROM mc_lotes l LEFT JOIN mc_lotesdocto d ON l.id = d.idlote WHERE l.totalregistros <> 0 AND l.totalcargados <> 0 And d.estatus <> 2 And " . $filtro . " GROUP BY l.id ORDER BY l.id DESC");
+
+                for ($i = 0; $i < count($lotes); $i++) {
+
+                    $idlote = $lotes[$i]->id;
+
+                    $procesados = DB::select("SELECT id FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
+
+                    $lotes[$i]->procesados = count($procesados);
+
+                    $idusuario = $lotes[$i]->usuario;
+
+                    $datosuser = DB::connection("General")->select("SELECT nombre FROM mc1001 WHERE idusuario = $idusuario");
+
+                    $lotes[$i]->usuario = $datosuser[0]->nombre;
+
+                    $clave = $lotes[$i]->tipo;
+
+                    $tipo = DB::connection("General")->select("SELECT tipo FROM mc1011 WHERE clave = '$clave'");
+
+                    $lotes[$i]->tipodet = $tipo[0]->tipo;
+
+                    //$suc = DB::select("SELECT sucursal FROM mc_lotesdocto WHERE idlote = $idlote");
+
+                    //$lotes[$i]->sucursal = $suc[0]->sucursal;
+                }
+                $array["lotes"] = $lotes;
+            } else {
+                $array["lotes"] = [];
+            }
+        //}
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function ConsultarDoctos(Request $request)
     {
         $idempresa = $request->idempresa;
@@ -384,6 +439,26 @@ class GeneralesController extends Controller
         return $doctos;
     }
 
+    function traerDocumentosLote(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $idlote = $request->idlote;
+
+        ConnectDatabase($idempresa);
+
+        $doctos = DB::select("SELECT * FROM mc_lotesdocto WHERE idlote = $idlote");
+        for ($i = 0; $i < count($doctos); $i++) {
+            $codigocon = $doctos[$i]->concepto;
+            $nombrec = DB::select("SELECT nombreconcepto FROM mc_catconceptos WHERE codigoconcepto = '$codigocon'");
+            if (!empty($nombrec)) {
+                $doctos[$i]->concepto = $nombrec[0]->nombreconcepto;
+            }
+        }
+        $array["doctos"] = $doctos;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function ConsultarMovtosLote(Request $request)
     {
         $idempresa = $request->idempresa;
@@ -405,6 +480,29 @@ class GeneralesController extends Controller
         return $movtos;
     }
 
+    function traerMovimientosLote(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $id = $request->id;
+
+        ConnectDatabase($idempresa);
+
+        $movtos = DB::select("SELECT m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.idlote = $id");
+
+
+        for ($i = 0; $i < count($movtos); $i++) {
+            $codigoprod = $movtos[$i]->producto;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = '$codigoprod'");
+            if (!empty($doctos)) {
+                $movtos[$i]->producto = $doctos[0]->nombreprod;
+            }
+        }
+
+        $array["movtos"] = $movtos;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function ConsultarMovtosDocto(Request $request)
     {
         $idempresa = $request->idempresa;
@@ -424,6 +522,26 @@ class GeneralesController extends Controller
         return $movtos;
     }
 
+    function traerMovimientosDocumentosLote(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $id = $request->id;
+        ConnectDatabase($idempresa);
+
+        $movtos = DB::select("SELECT d.folio, d.serie, d.sucursal, m.* FROM mc_lotesdocto d, mc_lotesmovtos m WHERE d.id = m.iddocto AND d.estatus <> 2 AND m.iddocto = $id");
+
+        for ($i = 0; $i < count($movtos); $i++) {
+            $codigoprod = $movtos[$i]->producto;
+            $doctos = DB::select("SELECT nombreprod FROM mc_catproductos WHERE codigoprod = '$codigoprod'");
+            if (!empty($doctos)) {
+                $movtos[$i]->producto = $doctos[0]->nombreprod;
+            }
+        }
+        $array["movtos"] = $movtos;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function EliminarLote(Request $request)
     {
         $idempresa = $request->idempresa;
@@ -441,6 +559,26 @@ class GeneralesController extends Controller
         }
 
         return $doctos;
+    }
+
+    function eliminaLote(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $idlote = $request->idlote;
+
+        ConnectDatabase($idempresa);
+
+        $doctos = DB::select("SELECT * FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
+
+        if (empty($doctos)) {
+            DB::table('mc_lotes')->where("id", $idlote)->delete();
+            DB::table('mc_lotesdocto')->where("idlote", $idlote)->delete();
+            DB::table('mc_lotesmovtos')->where("idlote", $idlote)->delete();
+        }
+
+        $array["doctos"] = $doctos;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function EliminarDocto(Request $request)
@@ -474,6 +612,53 @@ class GeneralesController extends Controller
         }
 
         return $docto;
+    }
+
+    function eliminaDocto(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $iddocto = $request->iddocto;
+
+        ConnectDatabase($idempresa);
+
+        $docto = DB::select("SELECT * FROM mc_lotesdocto WHERE id = $iddocto");
+
+        if ($docto[0]->estatus == 0) {
+
+            $idlote = $docto[0]->idlote;
+            DB::table('mc_lotesdocto')->where("id", $iddocto)->update(['estatus' => 2]);
+
+            $doctos = DB::select("SELECT COUNT(id) AS doctos FROM mc_lotesdocto WHERE idlote = '$idlote' AND estatus <> 2");
+
+            //$cargados = DB::select("SELECT totalregistros FROM mc_lotes WHERE id = '$idlote'");
+
+            if ($doctos[0]->doctos > 0) {
+                DB::table('mc_lotes')->where("id", $idlote)->update(['totalcargados' => $doctos[0]->doctos]);
+            } else {
+                DB::table('mc_lotes')->where("id", $idlote)->delete();
+                DB::table('mc_lotesdocto')->where("idlote", $idlote)->delete();
+                DB::table('mc_lotesmovtos')->where("idlote", $idlote)->delete();
+            }
+
+
+            $docto = DB::select("SELECT * FROM mc_lotesdocto WHERE id = $iddocto And estatus <> 2");
+        }
+
+        $array["docto"] = $docto;
+        $array["error"] = 0;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function validarDocumentoLote(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $documento = $request->file('documento');
+            return $documento->getClientOriginalName();
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function VerificarLote(Request $request)

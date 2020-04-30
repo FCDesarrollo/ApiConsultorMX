@@ -24,9 +24,9 @@ class EmpresaController extends Controller
             $array["usuario"] = $valida[0]['usuario'];
             $empresas = DB::connection("General")->select("SELECT mc1000.* FROM mc1002 m02 
                                                     INNER JOIN mc1000 on m02.idempresa=mc1000.idempresa 
-                                                    WHERE m02.idusuario=$iduser AND mc1000.status=1");
+                                                    WHERE m02.idusuario=$iduser AND m02.estatus=1");
             for ($i=0; $i < count($empresas); $i++) { 
-                $empresaBD = $empresas[$i]->rutaempresa;        
+                $empresaBD = $empresas[$i]->rutaempresa;
                 ConnectaEmpresaDatabase($empresaBD);
 
                 $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles 
@@ -38,7 +38,7 @@ class EmpresaController extends Controller
                 $empresas[$i]->sucursales = $sucursales;
             }
             
-            $array["empresas"] = $empresas;
+            $array["empresas"] = $empresas;            
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
@@ -633,6 +633,7 @@ class EmpresaController extends Controller
                 descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 fecha date DEFAULT NULL,
                 status int(11) DEFAULT NULL,
+                concepto_relacion int(11) DEFAULT NULL,
                 PRIMARY KEY (id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
                 DB::statement($mc_conceptos);
@@ -706,6 +707,15 @@ class EmpresaController extends Controller
                 PRIMARY KEY (id)
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_notificaciones_det);
+
+              $mc_usuarios_limite_gastos = "create table if not exists mc_usuarios_limite_gastos (
+                id int(11) not null auto_increment,
+                id_usuario int(11) not null,
+                id_concepto int(11) not null,
+                importe float not null,
+                primary key (`id`)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_usuarios_limite_gastos);
 
               $mc_config_time = "create table if not exists mc_config_timeapp(
                 idusuario int(11) DEFAULT NULL,

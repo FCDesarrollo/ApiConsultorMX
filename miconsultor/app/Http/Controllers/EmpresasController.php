@@ -268,6 +268,8 @@ class EmpresasController extends Controller
               sucursal VARCHAR(100) COLLATE latin1_spanish_ci DEFAULT NULL,
               rutaadw VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
               sincronizado INT(11) DEFAULT '0',
+              idadw INT(11) DEFAULT NULL,
+              default TINYINT(1) DEFAULT 0,              
               PRIMARY KEY (idsucursal)
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catsucursales); 
@@ -442,6 +444,7 @@ class EmpresasController extends Controller
                 descripcion varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 fecha date DEFAULT NULL,
                 status int(11) DEFAULT NULL,
+                concepto_relacion int(11) DEFAULT NULL,
                 PRIMARY KEY (id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
                 DB::statement($mc_conceptos);
@@ -471,15 +474,24 @@ class EmpresasController extends Controller
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_requerimientos_bit);
 
-              $mc_requerimientos_doc = "create table if not exists mc_requerimientos_doc (
-                id_req int(11) DEFAULT NULL,
-                documento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
-                codigo_documento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
-                tipo_doc int(11) DEFAULT NULL,
-                download varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-              DB::statement($mc_requerimientos_doc);
+              $mc_usuarios_limite_gastos = "create table if not exists mc_usuarios_limite_gastos (
+                id int(11) not null auto_increment,
+                id_usuario int(11) not null,
+                id_concepto int(11) not null,
+                importe float not null,
+                primary key (`id`)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_usuarios_limite_gastos);
 
+              $mc_almdigital_exp = "create table if not exists mc_almdigital_exp (
+                idalmdigitaldet INT(11) NOT NULL,
+                idmodulo INT(11) NOT NULL,
+                cuenta VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                tipodoc VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                ejercicio INT(11) DEFAULT NULL,
+                periodo INT(11) DEFAULT NULL
+                ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_almdigital_exp);
               
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";

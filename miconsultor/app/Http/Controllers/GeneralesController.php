@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 use App\Http\Controller\LoteCargadoExt;
 
@@ -646,18 +648,6 @@ class GeneralesController extends Controller
 
         $array["docto"] = $docto;
         $array["error"] = 0;
-        return json_encode($array, JSON_UNESCAPED_UNICODE);
-    }
-
-    function validarDocumentoLote(Request $request)
-    {
-        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
-        $array["error"] = $valida[0]["error"];
-
-        if ($valida[0]['error'] == 0){
-            $documento = $request->file('documento');
-            return $documento->getClientOriginalName();
-        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
@@ -1359,6 +1349,43 @@ class GeneralesController extends Controller
         return $datos;
         //return $respuesta;
 
+    }
+
+    function validarDocumentoLote(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $carpetaDestino="archivostemp/";
+            $documento = $request->file('documento');
+            $nombreDocumento = $documento->getClientOriginalName();
+            $extencionDocumento = $documento->getClientOriginalExtension();
+            $soloNombreDocumento = explode('.'.$extencionDocumento,$nombreDocumento);
+            if(file_exists($carpetaDestino) || mkdir($carpetaDestino)) {
+                $destino=$carpetaDestino.$soloNombreDocumento[0].$request->pwd.".".$extencionDocumento;
+                if(move_uploaded_file($documento, $destino))
+                {
+                    //echo "<br>".$_FILES["archivo"]["name"][$i]." movido correctamente";
+                    /* $inputFileType = PHPExcel_IOFactory::identify($destino);
+                    $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+                    $objPHPExcel = $objReader->load($destino);
+                    $sheet = $objPHPExcel->getSheet(0);
+                    $highestRow = $sheet->getHighestRow();
+                    $highestColumn = $sheet->getHighestColumn(); */
+                    $status = array("Estatus" => "True");
+                    return json_encode($status);
+                }else{
+                	$status = array("Estatus" => "False");
+                	return json_encode($status);
+                    //echo "<br>No se ha podido mover el archivo: ".$_FILES["archivo"]["name"][$i];
+                }
+            }
+            else {
+                return 0;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function VerificarClave(Request $request)

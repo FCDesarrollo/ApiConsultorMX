@@ -1225,10 +1225,13 @@ class GeneralesController extends Controller
                     $fechadocto = $request->fechadocto;
                     $sucursal = $request->sucursal;
                     $observaciones = $request->observaciones;
+                    
                     $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
                     $servidor = $result[0]->servidor_storage;
+                    
                     $u_storage = $autenticacion[0]["userstorage"];
                     $p_storage = $autenticacion[0]["passstorage"];
+                   
                     $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idmenu");
                     $menu = $result[0]->nombre_carpeta;
                     $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1005 WHERE idsubmenu=$idsubmenu");

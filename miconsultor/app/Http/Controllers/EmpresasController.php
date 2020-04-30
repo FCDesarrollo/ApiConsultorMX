@@ -471,6 +471,15 @@ class EmpresasController extends Controller
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_requerimientos_bit);
 
+              $mc_requerimientos_doc = "create table if not exists mc_requerimientos_doc (
+                id_req int(11) DEFAULT NULL,
+                documento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                codigo_documento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                tipo_doc int(11) DEFAULT NULL,
+                download varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_requerimientos_doc);
+
               
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";

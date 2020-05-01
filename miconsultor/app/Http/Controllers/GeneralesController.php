@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 use App\Http\Controller\LoteCargadoExt;
 
@@ -1363,26 +1363,71 @@ class GeneralesController extends Controller
             $extencionDocumento = $documento->getClientOriginalExtension();
             $soloNombreDocumento = explode('.'.$extencionDocumento,$nombreDocumento);
             if(file_exists($carpetaDestino) || mkdir($carpetaDestino)) {
-                $destino=$carpetaDestino.$soloNombreDocumento[0].$request->pwd.".".$extencionDocumento;
+                $now = date('YmdHis');
+                $destino=$carpetaDestino.$soloNombreDocumento[0].$now.".".$extencionDocumento;
                 if(move_uploaded_file($documento, $destino))
                 {
-                    //echo "<br>".$_FILES["archivo"]["name"][$i]." movido correctamente";
-                    /* $inputFileType = PHPExcel_IOFactory::identify($destino);
-                    $objReader = PHPExcel_IOFactory::createReader($inputFileType);
-                    $objPHPExcel = $objReader->load($destino);
-                    $sheet = $objPHPExcel->getSheet(0);
-                    $highestRow = $sheet->getHighestRow();
-                    $highestColumn = $sheet->getHighestColumn(); */
-                    $status = array("Estatus" => "True");
-                    return json_encode($status);
+                    $archivoExcel = IOFactory::load($destino);
+                    $tipodocto = $archivoExcel->getActiveSheet()->getCell("Z1")->getValue();
+                    $tipodoctodet = $archivoExcel->getActiveSheet()->getCell("Z2")->getValue();
+                    $array["tipodocto"] = $tipodocto;
+                    $array["tipodoctodet"] = $tipodoctodet;
+                    if($tipodocto == "" || $tipodoctodet == "") {
+                        $array["error"] = 50;
+                    }
+                    else {
+                        /* $datosExcel = array("tipodocto" => $tipodocto, "tipodoctodet" => $tipodoctodet);
+                        $array["datosExcel"] = $datosExcel; */
+                        $rubros = DB::select('select * from mc_rubros where claveplantilla = ? and idmenu = ? and idsubmenu = ?', [$tipodocto, $request->idmenu, $request->idsubmenu]);
+                        if(count($rubros) === 0) {
+                            $array["error"] = 51;
+                        }
+                        else {
+                            $array["rubros"] = $rubros;
+                            switch($tipodocto) {
+                                case "2":
+                                    $y = 0;
+                                    for($x=7 ; $archivoExcel->getActiveSheet()->getCell("A".$x) != "" ; $x++) {
+                                        $suc = $archivoExcel->getActiveSheet()->getCell("A".$x)->getValue();	
+                                        $fecha = $archivoExcel->getActiveSheet()->getCell("B".$x)->getFormattedValue();
+                                        $fechaPartes = explode('/',$fecha);
+                                        $dia = $fechaPartes[1] < 10 ? "0".$fechaPartes[1] : $fechaPartes[1];
+                                        $mes = $fechaPartes[0] < 10 ? "0".$fechaPartes[0] : $fechaPartes[0];
+                                        $fecha = $fechaPartes[2]."-".$mes."-".$dia;
+                                        $codigoconcepto = $archivoExcel->getActiveSheet()->getCell("C".$x)->getValue();
+                                        $concepto = $archivoExcel->getActiveSheet()->getCell("D".$x)->getValue();
+                                        $codcliprov = $archivoExcel->getActiveSheet()->getCell("E".$x)->getValue();
+                                        $rfc = $archivoExcel->getActiveSheet()->getCell("F".$x)->getValue();
+                                        $razonsocial = $archivoExcel->getActiveSheet()->getCell("G".$x)->getValue();
+                                        $codigoproducto = $archivoExcel->getActiveSheet()->getCell("H".$x)->getValue();
+                                        $producto = $archivoExcel->getActiveSheet()->getCell("I".$x)->getValue();
+                                        $almacen = $archivoExcel->getActiveSheet()->getCell("J".$x)->getValue();
+                                        $litros = $archivoExcel->getActiveSheet()->getCell("K".$x)->getValue();
+                                        $importe = $archivoExcel->getActiveSheet()->getCell("L".$x)->getValue();
+                                        $kilometros = $archivoExcel->getActiveSheet()->getCell("M".$x)->getValue();
+                                        $horometros = $archivoExcel->getActiveSheet()->getCell("N".$x)->getValue();
+                                        $unidad = $archivoExcel->getActiveSheet()->getCell("O".$x)->getValue();										
+
+                                        $movtos[$y] = array("fecha" => $fecha, "codigoconcepto" => $codigoconcepto, "nombreconcepto" => $concepto, "codigocliprov" => $codcliprov, "rfc" => $rfc, "razonsocial" => $razonsocial, "codigoproducto" => $codigoproducto, "nombreproducto" => $producto, "almacen" => $almacen, "cantidad" => $litros, "total" => $importe, "kilometro" => $kilometros, "horometro" => $horometros, "unidad" => $unidad, "sucursal" => $suc, "idconce" => $tipodocto, "estatus" => "", "codigo" => "");
+                                        $y++;
+                                    }
+                                    $array["movtos"] = $movtos;
+                                    break;
+                                case "3":
+
+                                    break;
+                                default:
+                                    $array["error"] = 49;
+                                    break;
+                            }
+                        }
+                    }
                 }else{
-                	$status = array("Estatus" => "False");
-                	return json_encode($status);
-                    //echo "<br>No se ha podido mover el archivo: ".$_FILES["archivo"]["name"][$i];
+                	$array["error"] = 49;
                 }
             }
             else {
-                return 0;
+                $array["error"] = 49;
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

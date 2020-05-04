@@ -1235,6 +1235,8 @@ class GeneralesController extends Controller
                     $datos[$i]['idmenu'] = $concepto[0]->idmenu;
                     $datos[$i]['idsubmenu'] = $concepto[0]->idsubmenu;
                     $datos[$i]['clave'] = $concepto[0]->claveplantilla;
+                }else{
+                    $datos[$i]['clave'] = $concepto[0]->claveplantilla;
                 }
             }
 

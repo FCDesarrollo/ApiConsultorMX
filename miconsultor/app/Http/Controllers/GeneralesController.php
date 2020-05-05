@@ -1432,7 +1432,7 @@ class GeneralesController extends Controller
                                         $codcliprov = $archivoExcel->getActiveSheet()->getCell("E".$x)->getValue();
                                         $rfc = $archivoExcel->getActiveSheet()->getCell("F".$x)->getValue();
                                         $razonsocial = $archivoExcel->getActiveSheet()->getCell("G".$x)->getValue();
-                                        $codigoproducto = $archivoExcel->getActiveSheet()->getCell("H".$x)->getValue();
+                                        $codigoconcepto = $archivoExcel->getActiveSheet()->getCell("H".$x)->getValue();
                                         $concepto = $archivoExcel->getActiveSheet()->getCell("I".$x)->getValue();
                                         $codigoproducto = $archivoExcel->getActiveSheet()->getCell("J".$x)->getValue();
                                         $producto = $archivoExcel->getActiveSheet()->getCell("K".$x)->getValue();
@@ -1443,6 +1443,48 @@ class GeneralesController extends Controller
                                         $total = $archivoExcel->getActiveSheet()->getCell("P".$x)->getValue();						
 
                                         $movtos[$y] = array("fecha" => $fecha, "codigoconcepto" => $codigoconcepto, "nombreconcepto" => $concepto, "codigocliprov" => $codcliprov, "rfc" => $rfc, "razonsocial" => $razonsocial, "codigoproducto" => $codigoproducto, "nombreproducto" => $producto, "folio" => $folio, "serie" => $serie, "cantidad" => $cantidad, "subtotal" => $subtotal, "descuento" => $descuento, "iva" => $iva, "total" => $total, "sucursal" => $suc ,"idconce" => $tipodocto, "estatus" => "", "codigo" => "");
+                                        
+                                        $TotalNeto = 0; 
+                                        $TotalDesc = 0;
+                                        $TotalIVA = 0;
+                                        $TotalDoc = 0;
+                                        $Cantidad = 0;
+
+                                        $foliotmp = $folio;
+                                        $fechatmp = $fecha;	
+                                        $suctemp = $suc;
+                                        
+                                        for($z=7 ; $archivoExcel->getActiveSheet()->getCell("A".$z) != "" ; $z++) {
+                                            if(is_null($archivoExcel->getActiveSheet()->getCell("P".$z)->getValue()) == false && is_null($archivoExcel->getActiveSheet()->getCell("M".$z)->getValue()) == false && $archivoExcel->getActiveSheet()->getCell("Z".$x)->getValue() != "A") {
+                                                $fechamov = $archivoExcel->getActiveSheet()->getCell("B".$x)->getFormattedValue();
+                                                $fechaPartesmov = explode('/',$fechamov);
+                                                $diamov = $fechaPartesmov[1] < 10 ? "0".$fechaPartesmov[1] : $fechaPartesmov[1];
+                                                $mesmov = $fechaPartesmov[0] < 10 ? "0".$fechaPartesmov[0] : $fechaPartesmov[0];
+                                                $fechamov = $fechaPartesmov[2]."-".$mesmov."-".$diamov;
+                                                
+                                                if(ValidarFolio($archivoExcel->getActiveSheet()->getCell("C".$z)->getValue()) == true) {
+                                                    if($archivoExcel->getActiveSheet()->getCell("C".$z)->getValue() == $foliotmp && $fechamov == $fechatmp && $archivoExcel->getActiveSheet()->getCell("A".$z)->getValue() == $suctemp) {
+                                                        $Cantidad = $Cantidad + $archivoExcel->getActiveSheet()->getCell("L".$x)->getValue();//siempre agarra la cantidad de x.
+                                                        $TotalNeto = $TotalNeto + $archivoExcel->getActiveSheet()->getCell("M".$z)->getValue();
+                                                        $TotalDesc = $TotalDesc + $archivoExcel->getActiveSheet()->getCell("N".$z)->getValue();
+                                                        $TotalIVA = $TotalIVA + $archivoExcel->getActiveSheet()->getCell("O".$z)->getValue();
+                                                        $TotalDoc = $TotalDoc + $archivoExcel->getActiveSheet()->getCell("P".$z)->getValue();
+                                                        $movtos[$y]["cantidad"] = $Cantidad;
+                                                        $movtos[$y]["subtotal"] = $TotalNeto;
+                                                        $movtos[$y]["descuento"] = $TotalDesc;
+                                                        $movtos[$y]["iva"] = $TotalIVA;
+                                                        $movtos[$y]["total"] = $TotalDoc;								
+                                                        
+                                                        $archivoExcel->getActiveSheet()->getCell("Z".$z)->setValue("A");
+                                                        //$sheet->setCellValue("Z".$z, "A");
+                                                    }
+                                                }
+                                                $foliotmp = $folio;
+                                                $fechatmp = $fechamov;
+                                                $suctemo = $suc;
+                                            }
+                                        }
+
                                         $y++;
                                     }
                                     break;
@@ -1571,8 +1613,6 @@ class GeneralesController extends Controller
                                             $datos[$i]['idmenu'] = $concepto[0]->idmenu;
                                             $datos[$i]['idsubmenu'] = $concepto[0]->idsubmenu;
                                             $datos[$i]['clave'] = $concepto[0]->claveplantilla;
-                                        }else{
-                                            $datos[$i]['clave'] = $concepto[0]->claveplantilla;
                                         }
                                     }
 
@@ -1582,6 +1622,9 @@ class GeneralesController extends Controller
                                         $datos[$i]['sucursalreg'] = 1;
                                     } else {
                                     }
+                                }
+                                if($dato[1]['status'] == 0) {
+                                    $array["error"] = 53;
                                 }
                                 $dato[0] = $datos;
                                 $array["dato"] = $dato;

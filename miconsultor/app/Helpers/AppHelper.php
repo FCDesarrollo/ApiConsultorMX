@@ -569,3 +569,16 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return 0;
 
     }
+
+    function ValidarFolio($variable) {
+        
+        $permitidos = "0123456789"; 
+        $flag = true;
+        for ($i=0; $i<strlen($variable); $i++){ 
+            if (strpos($permitidos, substr($variable,$i,1))===false){ 
+                $flag = false;
+                break;
+            } 
+        }
+        return $flag;  		
+    }

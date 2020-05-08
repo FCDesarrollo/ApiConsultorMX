@@ -1412,10 +1412,12 @@ class GeneralesController extends Controller
                                         $importe = $archivoExcel->getActiveSheet()->getCell("L".$x)->getValue();
                                         $kilometros = $archivoExcel->getActiveSheet()->getCell("M".$x)->getValue();
                                         $horometros = $archivoExcel->getActiveSheet()->getCell("N".$x)->getValue();
-                                        $unidad = $archivoExcel->getActiveSheet()->getCell("O".$x)->getValue();										
+                                        $unidad = $archivoExcel->getActiveSheet()->getCell("O".$x)->getValue();
+                                        									
 
                                         $movtos[$y] = array("fecha" => $fecha, "codigoconcepto" => $codigoconcepto, "nombreconcepto" => $concepto, "codigocliprov" => $codcliprov, "rfc" => $rfc, "razonsocial" => $razonsocial, "codigoproducto" => $codigoproducto, "nombreproducto" => $producto, "almacen" => $almacen, "cantidad" => $litros, "total" => $importe, "kilometro" => $kilometros, "horometro" => $horometros, "unidad" => $unidad, "sucursal" => $suc, "idconce" => $tipodocto, "estatus" => "", "codigo" => "");
                                         $y++;
+                                        
                                     }
                                     break;
                                 case "3":
@@ -1459,31 +1461,31 @@ class GeneralesController extends Controller
 
                                         $array["movtostemp"] = $movtos;
                                         
-                                        for($x=0 ; $x < count($movtos) - 1 ; $x++) {
-                                            for($y= $x + 1 ; $y < count($movtos) ; $y++) {
-                                                if(is_null($movtos[$y]["total"]) == false && is_null($movtos[$y]["subtotal"]) == false) {
+                                        for($a=0 ; $a < count($movtos) - 1 ; $a++) {
+                                            for($b= $a + 1 ; $b < count($movtos) ; $b++) {
+                                                if(is_null($movtos[$b]["total"]) == false && is_null($movtos[$b]["subtotal"]) == false) {
                                                     /* $fechamov = $archivoExcel->getActiveSheet()->getCell("B".$x)->getFormattedValue();
                                                     $fechaPartesmov = explode('/',$fechamov);
                                                     $diamov = $fechaPartesmov[1] < 10 ? "0".$fechaPartesmov[1] : $fechaPartesmov[1];
                                                     $mesmov = $fechaPartesmov[0] < 10 ? "0".$fechaPartesmov[0] : $fechaPartesmov[0];
                                                     $fechamov = $fechaPartesmov[2]."-".$mesmov."-".$diamov; */
                                                     
-                                                    if(ValidarFolio($movtos[$y]["folio"]) == true) {
-                                                        if($movtos[$x]["folio"] == $movtos[$y]["folio"] && $movtos[$x]["fecha"] == $movtos[$y]["fecha"] && $movtos[$x]["sucursal"] == $movtos[$y]["sucursal"]) {
+                                                    if(ValidarFolio($movtos[$b]["folio"]) == true) {
+                                                        if($movtos[$a]["folio"] == $movtos[$b]["folio"] && $movtos[$a]["fecha"] == $movtos[$b]["fecha"] && $movtos[$a]["sucursal"] == $movtos[$b]["sucursal"]) {
                                                             /* $Cantidad = $Cantidad + $archivoExcel->getActiveSheet()->getCell("L".$x)->getValue();//siempre agarra la cantidad de x.
                                                             $TotalNeto = $TotalNeto + $archivoExcel->getActiveSheet()->getCell("M".$z)->getValue();
                                                             $TotalDesc = $TotalDesc + $archivoExcel->getActiveSheet()->getCell("N".$z)->getValue();
                                                             $TotalIVA = $TotalIVA + $archivoExcel->getActiveSheet()->getCell("O".$z)->getValue();
                                                             $TotalDoc = $TotalDoc + $archivoExcel->getActiveSheet()->getCell("P".$z)->getValue(); */
-                                                            $movtos[$x]["cantidad"] = $movtos[$x]["cantidad"] + $movtos[$y]["cantidad"];
-                                                            $movtos[$x]["subtotal"] = $movtos[$x]["subtotal"] + $movtos[$y]["subtotal"];
-                                                            $movtos[$x]["descuento"] = $movtos[$x]["descuento"] + $movtos[$y]["descuento"];
-                                                            $movtos[$x]["iva"] = $movtos[$x]["iva"] + $movtos[$y]["iva"];
-                                                            $movtos[$x]["total"] = $movtos[$x]["total"] + $movtos[$y]["total"];
+                                                            $movtos[$a]["cantidad"] = $movtos[$a]["cantidad"] + $movtos[$b]["cantidad"];
+                                                            $movtos[$a]["subtotal"] = $movtos[$a]["subtotal"] + $movtos[$b]["subtotal"];
+                                                            $movtos[$a]["descuento"] = $movtos[$a]["descuento"] + $movtos[$b]["descuento"];
+                                                            $movtos[$a]["iva"] = $movtos[$a]["iva"] + $movtos[$b]["iva"];
+                                                            $movtos[$a]["total"] = $movtos[$a]["total"] + $movtos[$b]["total"];
 
-                                                            unset($movtos[$y]);
+                                                            unset($movtos[$b]);
                                                             $movtos = array_values($movtos);
-                                                            $y--;
+                                                            $b--;
                                                             
                                                             //$archivoExcel->getActiveSheet()->getCell("Z".$z)->setValue("A");
                                                             //$sheet->setCellValue("Z".$z, "A");
@@ -1631,11 +1633,53 @@ class GeneralesController extends Controller
                                     } else {
                                     }
                                 }
-                                if($dato[1]['status'] == 0) {
+                                /* if($dato[1]['status'] == 0) {
                                     $array["error"] = 53;
-                                }
+                                } */
                                 $dato[0] = $datos;
                                 $array["dato"] = $dato;
+
+                                for ($i = 0; $i < count($datos); $i++) {
+                                    $fecha = $datos[$i]['fecha'];
+                                    $fecha = str_replace("-", "", $fecha);
+                        
+                        
+                                    if ($datos[$i]['idconce'] == 3) {
+                                        $folio = $datos[$i]['folio'];
+                                        //$estatus = $request->movtos[$i];
+                                        $codigo = $fecha . $tipodocto . $folio;
+                                    } else if ($datos[$i]['idconce'] == 2) {
+                                        $unidad = $datos[$i]['unidad'];
+                                        //$estatus = $request->movtos[$i];
+                                        $litros = $datos[$i]['cantidad'];
+                                        $codigo = $fecha . $tipodocto . $litros . $unidad;
+                                    } else if ($datos[$i]['idconce'] == 4) {
+                                        $cantidad = $datos[$i]['cantidad'];
+                                        $unidad = $datos[$i]['unidad'];
+                                        $precio = $datos[$i]['total'];
+                                        $codigo = $fecha . $tipodocto . $cantidad . $unidad . $precio;
+                                    } else if ($datos[$i]['idconce'] == 5) {
+                                        $cantidad = $datos[$i]['cantidad'];
+                                        $unidad = $datos[$i]['unidad'];
+                                        //$estatus = $request->movtos[$i];                
+                                        $codigo = $fecha . $tipodocto . $cantidad . $unidad;
+                                    }
+                        
+                        
+                                    $result = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo' And error <> 1");
+                        
+                        
+                                    if (empty($result)) {
+                                        $datos[$i]['estatus'] = "False";
+                                    } else {
+                                        $datos[$i]['estatus'] = "True";
+                                        $datos[$i]['iddocto'] = $result[0]->id;
+                                        $datos[$i]['procesado'] = $result[0]->estatus;
+                                    }
+                        
+                                    $datos[$i]['codigo'] = $codigo;
+                                }
+                                $array["lotes"] = $datos;
                             }
                         }
                     }

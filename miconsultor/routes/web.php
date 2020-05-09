@@ -158,12 +158,14 @@ Route::post('EliminarLote', 'GeneralesController@EliminarLote');
 Route::delete('eliminaLote', 'GeneralesController@eliminaLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
 Route::delete('eliminaDocto', 'GeneralesController@eliminaDocto');
+Route::delete('eliminaDocumentoLote', 'GeneralesController@eliminaDocumentoLote');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
 Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
 Route::get('Paginador', 'GeneralesController@Paginador');
 Route::post('VerificarClave', 'GeneralesController@VerificarClave');
 Route::post('validarDocumentoLote', 'GeneralesController@validarDocumentoLote');
+Route::post('guardarLote', 'GeneralesController@guardarLote');
 
 //PARA CONSUMO DEL MODULO DE INVENTARIOS
 Route::post('LoteCargado', 'GeneralesController@LoteCargado');

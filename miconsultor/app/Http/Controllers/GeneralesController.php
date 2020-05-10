@@ -895,12 +895,13 @@ class GeneralesController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] == 0) {
             $idusuario = $request->idusuario;
+            $tipodocto = $request->tipodocto;
             $movimientos = $request->movimientos;
+            $movimientos = $this->ValidarDatos($movimientos, $tipodocto, count($movimientos));
 
             for($x=0 ; $x<count($movimientos) ; $x++) {
                 $fechac = date("Ymd");
                 $sucursal = $movimientos[$x]["sucursal"];
-                $tipodocto = $request->tipodocto;
                 $codigolote = $fechac . $idusuario . $tipodocto . $sucursal;
                 $idlote = DB::select("SELECT id FROM mc_lotes WHERE codigolote = '$codigolote'");
                 if (empty($idlote)) {
@@ -910,10 +911,32 @@ class GeneralesController extends Controller
                     $idlote = $idlote[0]->id;
                 }
                 if($tipodocto == 2) {
-                    $codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["cantidad"] . $movimientos[$x]["unidad"];
-                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'codigo' => $codigo, 'sucursal' => $movimientos[$x]["sucursal"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'total' => $movimientos[$x]["total"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"]/* , 'error' => $error,  'detalle_error' => $error_det */]);
-                    $array["iddocto"] = $iddocto;
+                    //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["cantidad"] . $movimientos[$x]["unidad"];
+
+                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'codigo' => $movimientos[$x]["codigo"], 'sucursal' => $movimientos[$x]["sucursal"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'total' => $movimientos[$x]["total"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
+                    
                     DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "kilometros" => $movimientos[$x]["kilometro"], "horometro" => $movimientos[$x]["horometro"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"], "total" => $movimientos[$x]["total"]]);
+                }
+                else if($tipodocto == 3) {
+                    //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["folio"];
+
+                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], "folio" => $movimientos[$x]["folio"], "serie" => $movimientos[$x]["serie"], "subtotal" => $movimientos[$x]["subtotal"], "descuento" => $movimientos[$x]["descuento"], "iva" => $movimientos[$x]["iva"], 'total' => $movimientos[$x]["total"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
+                    
+                    for($y=0 ; $y<count($movimientos[$x]["movimientos"]) ; $y++) {
+                        DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["movimientos"][$y]["fecha"], "producto" => $movimientos[$x]["movimientos"][$y]["codigoproducto"], "cantidad" => $movimientos[$x]["movimientos"][$y]["cantidad"], "subtotal" => $movimientos[$x]["movimientos"][$y]["subtotal"], "descuento" => $movimientos[$x]["movimientos"][$y]["descuento"], "iva" => $movimientos[$x]["movimientos"][$y]["iva"], "total" => $movimientos[$x]["movimientos"][$y]["total"]]);
+                    }
+                }
+                else if($tipodocto == 4) {
+                    //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["cantidad"] . $movimientos[$x]["unidad"] . $movimientos[$x]["total"];
+
+                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'total' => $movimientos[$x]["total"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
+
+                    DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"], "total" => $movimientos[$x]["total"]]);
+                }
+                else if($tipodocto == 5) {
+                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
+
+                    DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"]]);
                 }
                 $totalcargados = DB::select("SELECT count(id) AS reg FROM mc_lotesdocto WHERE idlote = '$idlote' And error <> 1");
                 DB::table('mc_lotes')->where("id", $idlote)->update(['totalcargados' => $totalcargados[0]->reg]);

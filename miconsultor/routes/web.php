@@ -166,6 +166,7 @@ Route::get('Paginador', 'GeneralesController@Paginador');
 Route::post('VerificarClave', 'GeneralesController@VerificarClave');
 Route::post('validarDocumentoLote', 'GeneralesController@validarDocumentoLote');
 Route::post('guardarLote', 'GeneralesController@guardarLote');
+Route::post('registrarElementos', 'GeneralesController@registrarElementos');
 
 //PARA CONSUMO DEL MODULO DE INVENTARIOS
 Route::post('LoteCargado', 'GeneralesController@LoteCargado');

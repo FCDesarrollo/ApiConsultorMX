@@ -902,6 +902,7 @@ class GeneralesController extends Controller
             for($x=0 ; $x<count($movimientos) ; $x++) {
                 $fechac = date("Ymd");
                 $sucursal = $movimientos[$x]["sucursal"];
+                $estatus = $movimientos[$x]["estatus"];
                 $codigolote = $fechac . $idusuario . $tipodocto . $sucursal;
                 $idlote = DB::select("SELECT id FROM mc_lotes WHERE codigolote = '$codigolote'");
                 if (empty($idlote)) {
@@ -910,14 +911,14 @@ class GeneralesController extends Controller
                 else {
                     $idlote = $idlote[0]->id;
                 }
-                if($tipodocto == 2) {
+                if($tipodocto == 2 && $estatus == "False") {
                     //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["cantidad"] . $movimientos[$x]["unidad"];
 
                     $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'codigo' => $movimientos[$x]["codigo"], 'sucursal' => $movimientos[$x]["sucursal"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'total' => $movimientos[$x]["total"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
                     
                     DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "kilometros" => $movimientos[$x]["kilometro"], "horometro" => $movimientos[$x]["horometro"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"], "total" => $movimientos[$x]["total"]]);
                 }
-                else if($tipodocto == 3) {
+                else if($tipodocto == 3 && $estatus == "False") {
                     //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["folio"];
 
                     $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], "folio" => $movimientos[$x]["folio"], "serie" => $movimientos[$x]["serie"], "subtotal" => $movimientos[$x]["subtotal"], "descuento" => $movimientos[$x]["descuento"], "iva" => $movimientos[$x]["iva"], 'total' => $movimientos[$x]["total"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
@@ -926,14 +927,14 @@ class GeneralesController extends Controller
                         DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["movimientos"][$y]["fecha"], "producto" => $movimientos[$x]["movimientos"][$y]["codigoproducto"], "cantidad" => $movimientos[$x]["movimientos"][$y]["cantidad"], "subtotal" => $movimientos[$x]["movimientos"][$y]["subtotal"], "descuento" => $movimientos[$x]["movimientos"][$y]["descuento"], "iva" => $movimientos[$x]["movimientos"][$y]["iva"], "total" => $movimientos[$x]["movimientos"][$y]["total"]]);
                     }
                 }
-                else if($tipodocto == 4) {
+                else if($tipodocto == 4 && $estatus == "False") {
                     //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["cantidad"] . $movimientos[$x]["unidad"] . $movimientos[$x]["total"];
 
                     $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'total' => $movimientos[$x]["total"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
 
                     DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"], "total" => $movimientos[$x]["total"]]);
                 }
-                else if($tipodocto == 5) {
+                else if($tipodocto == 5 && $estatus == "False") {
                     $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
 
                     DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"]]);
@@ -1305,6 +1306,67 @@ class GeneralesController extends Controller
         return $dato;
     }
 
+    function registrarElementos(Request $request) {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $tipodocumento = $request->tipodocumento;
+
+            switch ($tipodocumento) {
+                case 2:
+                case 4:
+                case 5:
+                    $tipocliente = 2;
+                    break;
+                case 3:
+                    $tipocliente = 1;
+                    break;
+            }
+
+            $productosnuevos = $request->productosnuevos;
+            //$array["productosnuevos"] = $productosnuevos;
+            $clientesnuevos = $request->clientesnuevos;
+            //$array["clientesnuevos"] = $clientesnuevos;
+            
+            for($x=0 ; $x<count($productosnuevos["codigoProductos"]) ; $x++) {
+                $codigoproducto = strtoupper($productosnuevos["codigoProductos"][$x]);
+                $elementoproducto = strtoupper($productosnuevos["elementos"][$x]);
+                $nombreproducto = strtoupper($productosnuevos["nombreProductos"][$x]);
+                $ele = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$codigoproducto' OR codigoadw = '$codigoproducto'");
+                if (empty($ele)) {
+                    DB::table('mc_catproductos')->insertGetId(['codigoprod' => $elementoproducto, 'nombreprod' => $nombreproducto, 'codigoadw' => $codigoproducto, 'nombreadw' => $nombreproducto, 'fechaalta' => now()]);
+                } 
+            }
+
+            for($x=0 ; $x<count($clientesnuevos["codigos"]) ; $x++) {
+                $codigo = strtoupper($clientesnuevos["codigos"][$x]);
+                $elemento = strtoupper($clientesnuevos["elementos"][$x]);
+                $razonsocial = strtoupper($clientesnuevos["razonesSociales"][$x]);
+                $rfc = strtoupper($clientesnuevos["rfcs"][$x]);
+
+                if ($rfc == "XAXX010101000") {
+                    $codigoclienteproveedor = strtoupper($elemento);
+                    $ele = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$codigoclienteproveedor'");
+                } else {
+                    $codigoclienteproveedor = ($elemento == "" ? $rfc : strtoupper($elemento));
+                    $ele = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$rfc'");
+                }
+
+                if (empty($ele)) {
+                    DB::table('mc_catclienprov')->insertGetId(['codigoc' => $codigoclienteproveedor, 'rfc' => $rfc, 'razonsocial' => $razonsocial, 'tipocli' => $tipocliente]);
+                } else {
+                    if ($ele[0]->tipocli != 3) {
+                        if ($ele[0]->razonsocial == $razonsocial || $ele[0]->codigoc == $codigoclienteproveedor) {
+                            DB::table('mc_catclienprov')->where("id", $ele[0]->id)->update(['tipocli' => 3, 'razonsocial' => $razonsocial]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function RegistrarElemento(Request $request)
     {
         $datos = $request->datos;
@@ -1422,7 +1484,7 @@ class GeneralesController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
-        if ($valida[0]['error'] == 0){
+        if ($valida[0]['error'] == 0) {
             //subir_archivo.php
             $carpetaDestino="archivostemp/";
             $documento = $request->file('documento');
@@ -1729,6 +1791,7 @@ class GeneralesController extends Controller
                             }
                         }
                     }
+                    unlink($destino);
                 }else{
                 	$array["error"] = 49;
                 }

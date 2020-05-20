@@ -1469,6 +1469,7 @@ class GeneralesController extends Controller
 
     function eliminaDocumentoLote(Request $request) {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["index"] = $request->index;
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] == 0) {
             $iddocumento = $request->iddocumento;

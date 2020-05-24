@@ -328,4 +328,5 @@ Route::put('editarPerfil', 'PerfilesController@editarPerfil');
 //PROVEEDORES
 Route::get('getEmpresas', 'ProveedoresController@getEmpresas');
 Route::get('getUsuarios', 'ProveedoresController@getUsuarios');
+Route::post('agregarUsuario', 'ProveedoresController@agregarUsuario');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');

@@ -26,6 +26,40 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function agregarUsuario(Request $request)
+    {
+        $nombre = $request->nombre;
+        $apellidop = $request->apellidop;
+        $apellidom = $request->apellidom;
+        $cel = $request->cel;
+        $correo = $request->correo;
+        $password = password_hash($request->password, PASSWORD_BCRYPT);
+        $tipo = $request->tipo;
+
+        $array["error"] = 0;
+        $validarcel = DB::connection("General")->select("SELECT * FROM mc1001 WHERE cel = '$cel'");
+        if(count($validarcel) == 0) {
+            $validarcorreo = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo = '$correo'");
+            if(count($validarcorreo) == 0) {
+                do {
+                    $identificador = rand(100000, 999999);
+                    $validaridentificador = DB::connection("General")->select("SELECT * FROM mc1001 WHERE identificador = '$identificador'");
+                }while($validaridentificador == 0);
+        
+                DB::connection("General")->table("mc1001")->insert(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "status" => 1 , "tipo" => $tipo, "identificador" => $identificador]);
+                
+            }
+            else {
+                $array["error"] = -2;
+            }
+        }
+        else {
+            $array["error"] = -1;
+        }
+        
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function getPerfiles(Request $request)
     {
         $perfiles = DB::connection("General")->select("SELECT * FROM mc1006");

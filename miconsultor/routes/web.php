@@ -330,4 +330,5 @@ Route::get('getEmpresas', 'ProveedoresController@getEmpresas');
 Route::get('getUsuarios', 'ProveedoresController@getUsuarios');
 Route::get('getUsuario', 'ProveedoresController@getUsuario');
 Route::post('guardarUsuario', 'ProveedoresController@guardarUsuario');
+Route::delete('deleteUsuario', 'ProveedoresController@deleteUsuario');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');

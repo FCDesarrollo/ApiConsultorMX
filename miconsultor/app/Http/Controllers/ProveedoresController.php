@@ -19,59 +19,87 @@ class ProveedoresController extends Controller
 
     function getUsuarios(Request $request)
     {
-        $usuarios = DB::connection("General")->select("SELECT mc1001.*, mc1006.nombre AS tipoUsuario FROM mc1001 LEFT JOIN mc1006 ON mc1001.tipo = mc1006.idperfil");
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
 
-        $array["usuarios"] = $usuarios;
+        if ($valida[0]['error'] == 0) {
+            $usuarios = DB::connection("General")->select("SELECT mc1001.*, mc1006.nombre AS tipoUsuario FROM mc1001 LEFT JOIN mc1006 ON mc1001.tipo = mc1006.idperfil");
 
+            $array["usuarios"] = $usuarios;
+        }
+        
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
     
     function getUsuario(Request $request)
     {
-        $idusuario = $request->idusuario;
-        $usuario = DB::connection("General")->select("SELECT mc1001.*, mc1006.nombre AS tipoUsuario FROM mc1001 LEFT JOIN mc1006 ON mc1001.tipo = mc1006.idperfil WHERE mc1001.idusuario = $idusuario");
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
 
-        $array["usuario"] = $usuario;
+        if ($valida[0]['error'] == 0) {
+            $idusuario = $request->idusuario;
+            $usuario = DB::connection("General")->select("SELECT mc1001.*, mc1006.nombre AS tipoUsuario FROM mc1001 LEFT JOIN mc1006 ON mc1001.tipo = mc1006.idperfil WHERE mc1001.idusuario = $idusuario");
+
+            $array["usuario"] = $usuario;
+        }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function guardarUsuario(Request $request)
     {
-        $nombre = $request->nombre;
-        $apellidop = $request->apellidop;
-        $apellidom = $request->apellidom;
-        $cel = $request->cel;
-        $correo = $request->correo;
-        $password = password_hash($request->password, PASSWORD_BCRYPT);
-        $tipo = $request->tipo;
-        $accion = $request->accion;
-        $validacion = $request->validacion;
-        $idusuario = $request->idusuario;
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
 
-        $array["error"] = 0;
-        $validarcel = DB::connection("General")->select("SELECT * FROM mc1001 WHERE cel = '$cel'");
-        if(count($validarcel) == 0 || $validacion == 0) {
-            $validarcorreo = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo = '$correo'");
-            if(count($validarcorreo) == 0 || $validacion == 0) {
-                if($accion == 1) {
-                    do {
-                        $identificador = rand(100000, 999999);
-                        $validaridentificador = DB::connection("General")->select("SELECT * FROM mc1001 WHERE identificador = '$identificador'");
-                    }while($validaridentificador == 0);
+        if ($valida[0]['error'] == 0) {
+            $nombre = $request->nombre;
+            $apellidop = $request->apellidop;
+            $apellidom = $request->apellidom;
+            $cel = $request->cel;
+            $correo = $request->correo;
+            $password = password_hash($request->password, PASSWORD_BCRYPT);
+            $tipo = $request->tipo;
+            $accion = $request->accion;
+            $validacion = $request->validacion;
+            $idusuario = $request->idusuario;
             
-                    DB::connection("General")->table("mc1001")->insert(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "status" => 1 , "tipo" => $tipo, "identificador" => $identificador]);
+            $validarcel = DB::connection("General")->select("SELECT * FROM mc1001 WHERE cel = '$cel'");
+            if(count($validarcel) == 0 || $validacion == 0) {
+                $validarcorreo = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo = '$correo'");
+                if(count($validarcorreo) == 0 || $validacion == 0) {
+                    if($accion == 1) {
+                        do {
+                            $identificador = rand(100000, 999999);
+                            $validaridentificador = DB::connection("General")->select("SELECT * FROM mc1001 WHERE identificador = '$identificador'");
+                        }while($validaridentificador == 0);
+                
+                        DB::connection("General")->table("mc1001")->insert(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "status" => 1 , "tipo" => $tipo, "identificador" => $identificador]);
+                    }
+                    else {
+                        DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "tipo" => $tipo]);
+                    }
                 }
                 else {
-                    DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "tipo" => $tipo]);
+                    $array["error"] = -2;
                 }
             }
             else {
-                $array["error"] = -2;
+                $array["error"] = -1;
             }
         }
-        else {
-            $array["error"] = -1;
+        
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function deleteUsuario(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0) {
+            $idusuario = $request->idusuario;
+            DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->delete();
+            DB::connection("General")->table('mc1002')->where("idusuario", $idusuario)->delete();
         }
         
         return json_encode($array, JSON_UNESCAPED_UNICODE);

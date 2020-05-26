@@ -295,6 +295,24 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $permiso;
     }
 
+    function verificarProveedor($user, $pass)
+    {
+        $datos[0]['error'] = 0;
+        $usuario = DB::select("SELECT * FROM mc1001 WHERE (correo='$user' or cel='$user') AND status=1 AND tipo = 4");
+        if (!empty($usuario)){
+            $hash_BD = $usuario[0]->password;
+
+            if ($pass == $hash_BD) {
+                $datos[0]['usuario'] = $usuario;
+            } else {
+                $datos[0]['error'] = 3;
+            } 
+        }else {
+            $datos[0]['error'] = 2;
+        }
+        return $datos;
+    }
+
     function verificaPermisos($usuario, $pwd, $rfc, $idsubmenu)
     {
 

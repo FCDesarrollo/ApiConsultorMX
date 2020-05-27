@@ -7,16 +7,6 @@ use Illuminate\Http\Request;
 
 class ProveedoresController extends Controller
 {
-
-    function getEmpresas(Request $request)
-    {
-        $empresas = DB::connection("General")->select("SELECT * FROM mc1000");
-
-        $array["empresas"] = $empresas;
-
-        return json_encode($array, JSON_UNESCAPED_UNICODE);
-    }
-
     function getUsuarios(Request $request)
     {
         $valida = verificarProveedor($request->usuario, $request->pwd);
@@ -60,13 +50,14 @@ class ProveedoresController extends Controller
             $password = password_hash($request->password, PASSWORD_BCRYPT);
             $tipo = $request->tipo;
             $accion = $request->accion;
-            $validacion = $request->validacion;
+            $validacioncel = $request->validacioncel;
+            $validacioncorreo = $request->validacioncorreo;
             $idusuario = $request->idusuario;
             
             $validarcel = DB::connection("General")->select("SELECT * FROM mc1001 WHERE cel = '$cel'");
-            if(count($validarcel) == 0 || $validacion == 0) {
+            if(count($validarcel) == 0 || $validacioncel == 0) {
                 $validarcorreo = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo = '$correo'");
-                if(count($validarcorreo) == 0 || $validacion == 0) {
+                if(count($validarcorreo) == 0 || $validacioncorreo == 0) {
                     if($accion == 1) {
                         do {
                             $identificador = rand(100000, 999999);
@@ -76,7 +67,7 @@ class ProveedoresController extends Controller
                         DB::connection("General")->table("mc1001")->insert(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "status" => 1 , "tipo" => $tipo, "identificador" => $identificador]);
                     }
                     else {
-                        DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "tipo" => $tipo]);
+                        DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "tipo" => $tipo]);
                     }
                 }
                 else {
@@ -91,17 +82,51 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    function deleteUsuario(Request $request)
+    public function cambioContraUsuario(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idusuario = $request->idusuario;
+            $password = password_hash($request->password, PASSWORD_BCRYPT);
+            DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["password" => $password]);
+            /* $usuario = DB::connection("General")->select("SELECT * FROM mc1001 
+            WHERE idusuario='$idusuario'");
+            $array["usuario"] = $usuario; */
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function cambiarEstatusUsuario(Request $request)
     {
         $valida = verificarProveedor($request->usuario, $request->pwd);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] == 0) {
             $idusuario = $request->idusuario;
-            DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->delete();
-            DB::connection("General")->table('mc1002')->where("idusuario", $idusuario)->delete();
+            $estatus = $request->estatus;
+            DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["status" => $estatus]);
+            DB::connection("General")->table('mc1002')->where("idusuario", $idusuario)->update(["estatus" => $estatus]);
+            /* DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->delete();
+            DB::connection("General")->table('mc1002')->where("idusuario", $idusuario)->delete(); */
         }
         
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getEmpresas(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $empresas = DB::connection("General")->select("SELECT * FROM mc1000");
+
+            $array["empresas"] = $empresas;
+        }
+
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 

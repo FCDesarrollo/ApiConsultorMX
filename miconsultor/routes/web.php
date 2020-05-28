@@ -326,10 +326,11 @@ Route::get('datosPerfil', 'PerfilesController@datosPerfil');
 Route::put('editarPerfil', 'PerfilesController@editarPerfil');
 
 //PROVEEDORES
-Route::get('getEmpresas', 'ProveedoresController@getEmpresas');
 Route::get('getUsuarios', 'ProveedoresController@getUsuarios');
 Route::get('getUsuario', 'ProveedoresController@getUsuario');
 Route::post('guardarUsuario', 'ProveedoresController@guardarUsuario');
 Route::put('cambiarEstatusUsuario', 'ProveedoresController@cambiarEstatusUsuario');
 Route::put('cambioContraUsuario', 'ProveedoresController@cambioContraUsuario');
+Route::get('getEmpresas', 'ProveedoresController@getEmpresas');
+Route::get('getUsuariosPorEmpresa', 'ProveedoresController@getUsuariosPorEmpresa');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');

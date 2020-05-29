@@ -137,7 +137,12 @@ class ProveedoresController extends Controller
 
         if($valida[0]['error'] === 0) {
             $idempresa = $request->idempresa;
-            $usuarios = DB::connection("General")->select("SELECT mc1001.* FROM mc1002 INNER JOIN mc1001 ON mc1002.idusuario = mc1001.idusuario WHERE idempresa = $idempresa");
+            $db = $request->db;
+            /* $usuarios = DB::connection("General")->select("SELECT mc1001.* FROM mc1002 INNER JOIN mc1001 ON mc1002.idusuario = mc1001.idusuario WHERE idempresa = $idempresa"); */
+            $usuarios = DB::connection("General")->select("SELECT mc1001.*, $db.mc_profiles.nombre AS perfil FROM mc1002 INNER JOIN mc1001 ON mc1002.idusuario = mc1001.idusuario 
+            INNER JOIN $db.mc_userprofile ON mc1001.idusuario = $db.mc_userprofile.idusuario  
+            INNER JOIN $db.mc_profiles ON $db.mc_userprofile.idperfil = $db.mc_profiles.idperfil
+            WHERE idempresa = $idempresa");
 
             $array["usuarios"] = $usuarios;
         }

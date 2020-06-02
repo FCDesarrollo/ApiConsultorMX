@@ -130,6 +130,21 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function getEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa = $idempresa");
+
+            $array["empresa"] = $empresa;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function getUsuariosPorEmpresa(Request $request)
     {
         $valida = verificarProveedor($request->usuario, $request->pwd);

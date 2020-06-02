@@ -332,5 +332,6 @@ Route::post('guardarUsuario', 'ProveedoresController@guardarUsuario');
 Route::put('cambiarEstatusUsuario', 'ProveedoresController@cambiarEstatusUsuario');
 Route::put('cambioContraUsuario', 'ProveedoresController@cambioContraUsuario');
 Route::get('getEmpresas', 'ProveedoresController@getEmpresas');
+Route::get('getEmpresa', 'ProveedoresController@getEmpresa');
 Route::get('getUsuariosPorEmpresa', 'ProveedoresController@getUsuariosPorEmpresa');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');

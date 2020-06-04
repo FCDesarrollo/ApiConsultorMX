@@ -165,6 +165,80 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function getNotificacionesEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $notificaciones = DB::connection("General")->select("SELECT * FROM mc1016 WHERE idempresa = $idempresa");
+
+            $array["notificaciones"] = $notificaciones;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function guardarNotificacionEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0) {
+            $mensaje = $request->mensaje;
+            $idempresa = $request->idempresa;
+            $idusuario = $request->idusuario;
+            
+            DB::connection("General")->table("mc1016")->insert(["mensaje" => $mensaje, "idempresa" => $idempresa, "idusuario" => $idusuario]);
+        }
+        
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function guardarFechaLimitePagoEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $fecharestriccion = $request->fecharestriccion;
+            DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["fecharestriccion" => $fecharestriccion]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function guardarFechaPeriodoPruebaEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $fechaprueba = $request->fechaprueba;
+            DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["fechaprueba" => $fechaprueba]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function cambiarEstatusEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $status = $request->status;
+            DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["statusempresa" => $status]);
+            $array["status"] = $status == 1 ? 0 : 1;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function getPerfiles(Request $request)
     {
         $perfiles = DB::connection("General")->select("SELECT * FROM mc1006");

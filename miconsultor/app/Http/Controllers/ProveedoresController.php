@@ -172,7 +172,7 @@ class ProveedoresController extends Controller
 
         if($valida[0]['error'] === 0) {
             $idempresa = $request->idempresa;
-            $notificaciones = DB::connection("General")->select("SELECT * FROM mc1016 WHERE idempresa = $idempresa");
+            $notificaciones = DB::connection("General")->select("SELECT mc1016.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario FROM mc1016 INNER JOIN mc1001 ON mc1016.idusuario = mc1001.idusuario WHERE idempresa =  $idempresa");
 
             $array["notificaciones"] = $notificaciones;
         }
@@ -189,8 +189,9 @@ class ProveedoresController extends Controller
             $mensaje = $request->mensaje;
             $idempresa = $request->idempresa;
             $idusuario = $request->idusuario;
+            $fechamensaje = $request->fechamensaje;
             
-            DB::connection("General")->table("mc1016")->insert(["mensaje" => $mensaje, "idempresa" => $idempresa, "idusuario" => $idusuario]);
+            DB::connection("General")->table("mc1016")->insert(["mensaje" => $mensaje, "idempresa" => $idempresa, "idusuario" => $idusuario, "fechamensaje" => $fechamensaje]);
         }
         
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -234,6 +235,21 @@ class ProveedoresController extends Controller
             $status = $request->status;
             DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["statusempresa" => $status]);
             $array["status"] = $status == 1 ? 0 : 1;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getMovimientosEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $movimientos = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa =  $idempresa");
+
+            $array["movimientos"] = $movimientos;
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

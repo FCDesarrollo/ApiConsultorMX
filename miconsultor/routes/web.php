@@ -340,4 +340,5 @@ Route::put('cambiarEstatusEmpresa', 'ProveedoresController@cambiarEstatusEmpresa
 Route::get('getNotificacionesEmpresa', 'ProveedoresController@getNotificacionesEmpresa');
 Route::post('guardarNotificacionEmpresa', 'ProveedoresController@guardarNotificacionEmpresa');
 Route::get('getMovimientosEmpresa', 'ProveedoresController@getMovimientosEmpresa');
+Route::post('guardarMovimientoEmpresa', 'ProveedoresController@guardarMovimientoEmpresa');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');

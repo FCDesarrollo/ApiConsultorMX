@@ -255,6 +255,27 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function guardarMovimientoEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0) {
+            $idempresa = $request->idempresa;
+            $idusuario = $request->idusuario;
+            $fecha = $request->fecha;
+            $documento = $request->documento;
+            $importe = $request->importe;
+            $pendiente = $request->pendiente;
+            $tipomovimiento = $request->tipomovimiento;
+            
+            $idmovimiento = DB::connection("General")->table("mc1017")->insertGetId(["idempresa" => $idempresa, "idusuario" => $idusuario, "fecha" => $fecha, "documento" => $documento, "importe" => $importe, "pendiente" => $pendiente, "tipomovimiento" => $tipomovimiento]);
+            $array["idmovimiento"] = $idmovimiento;
+        }
+        
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function getPerfiles(Request $request)
     {
         $perfiles = DB::connection("General")->select("SELECT * FROM mc1006");

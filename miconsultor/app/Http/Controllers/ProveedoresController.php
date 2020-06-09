@@ -268,9 +268,72 @@ class ProveedoresController extends Controller
             $importe = $request->importe;
             $pendiente = $request->pendiente;
             $tipomovimiento = $request->tipomovimiento;
-            
+            $rfc = $request->rfc;
+            $codigofecha = $request->codigofecha;
+            $usuariostorage = $request->usuariostorage;
+            $passwordstorage = $request->passwordstorage;
+
+            $servidor = getServidorNextcloud();
+            $archivos = $request->file();
+
             $idmovimiento = DB::connection("General")->table("mc1017")->insertGetId(["idempresa" => $idempresa, "idusuario" => $idusuario, "fecha" => $fecha, "documento" => $documento, "importe" => $importe, "pendiente" => $pendiente, "tipomovimiento" => $tipomovimiento]);
             $array["idmovimiento"] = $idmovimiento;
+
+            //$x=0;
+            foreach ($archivos as $key => $file) {
+                $archivo = $file->getClientOriginalName();
+                /* $array["archivos"][$x] = $archivo;
+                $array["archivoskey"][$x] = $key; */
+
+                $mod = substr(strtoupper("EstadoCuenta"), 0, 3);
+                /* $string = explode("-", $fecha);
+                $codfec = substr($string[0], 2) . $string[1]; */
+                $consecutivo = "";
+                $codigoarchivo = $rfc . "_" . $codigofecha . "_" . $mod . "_";
+
+                $validacionArchivo = true;
+                $numero = 1;
+                while($validacionArchivo == true) {
+
+                    if($numero >= 1000) {
+                        $consecutivo = "" . $numero;
+                    }
+                    else if($numero >= 100) {
+                        $consecutivo = "0" . $numero;
+                    }
+                    else if($numero >= 10) {
+                        $consecutivo = "00" . $numero;
+                    }
+                    else {
+                        $consecutivo = "000" . $numero;
+                    }
+
+                    $codigobusqueda = $codigoarchivo . $consecutivo;
+                    $documento = DB::connection("General")->select("SELECT * FROM mc1019 where codigodocumento = '$codigobusqueda'");
+
+                    if(!empty($documento)) {
+                        $numero++;
+                    }
+                    else {
+                        $validacionArchivo = false;
+                    }
+                }
+
+                //$codigoarchivo = $rfc . "_" . $codfec . "_" . $mod . "_" . $numero;
+                $codigoarchivocompleto = $codigoarchivo . $consecutivo;
+                $array["codigoarchivo"] = $codigoarchivocompleto;
+
+                $resultado = subirMovimientoEmpresaNextcloud($archivo, $file, $rfc, $servidor, $usuariostorage, $passwordstorage, $codigoarchivo, $consecutivo);
+
+                $directorio = $rfc . '/Cuenta/Empresa/EstadoCuenta';
+                $type = explode(".", $archivo);
+                $target_path = $directorio . '/' . $codigoarchivocompleto . "." . $type[count($type) - 1];
+                $link = GetLinkArchivo($target_path, $servidor, $usuariostorage, $passwordstorage);
+
+                DB::connection("General")->table("mc1019")->insertGetId(["idmovimiento" => $idmovimiento, "documento" => $archivo, "codigodocumento" => $codigoarchivocompleto, "download" => $link]);
+
+                //$x++;
+            }            
         }
         
         return json_encode($array, JSON_UNESCAPED_UNICODE);

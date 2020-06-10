@@ -255,6 +255,35 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function getMovimientoEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idmovimiento = $request->idmovimiento;
+            $movimiento = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idmovimiento =  $idmovimiento");
+
+            $array["movimiento"] = $movimiento;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function editarMovimientoEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idmovimiento = $request->idmovimiento;
+            $documento = $request->documento;
+            DB::connection("General")->table('mc1017')->where("idmovimiento", $idmovimiento)->update(["documento" => $documento]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function guardarMovimientoEmpresa(Request $request)
     {
         $valida = verificarProveedor($request->usuario, $request->pwd);
@@ -336,6 +365,78 @@ class ProveedoresController extends Controller
             }            
         }
         
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getArchivosEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idmovimiento = $request->idmovimiento;
+            $archivos = DB::connection("General")->select("SELECT mc1019.*, mc1017.fecha, mc1017.documento as nombredocumento, mc1017.tipomovimiento FROM mc1019 INNER JOIN mc1017 ON mc1019.idmovimiento = mc1017.idmovimiento WHERE mc1019.idmovimiento = $idmovimiento");
+
+            $array["archivos"] = $archivos;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function eliminarMovimientoEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idmovimiento = $request->idmovimiento;
+            $rfc = $request->rfc;
+            $usuariostorage = $request->usuariostorage;
+            $passwordstorage = $request->passwordstorage;
+            $ruta = $rfc . '/Cuenta/Empresa/EstadoCuenta';
+            $servidor = getServidorNextcloud();
+            $archivos = DB::connection("General")->select("SELECT * FROM mc1019 WHERE idmovimiento = $idmovimiento");
+            DB::connection("General")->table("mc1017")->where("idmovimiento", $idmovimiento)->delete();
+            DB::connection("General")->table("mc1019")->where("idmovimiento", $idmovimiento)->delete();
+
+            for ($i = 0; $i < count($archivos); $i++) {
+                $type = explode(".", $archivos[$i]->documento);
+                $extencionarchivo = $type[count($type) - 1];
+                $nombrearchivo = $ruta . "/" . $archivos[$i]->codigodocumento . "." . $extencionarchivo;
+                $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $nombrearchivo);
+            }
+
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function eliminarArchivoMovimientoEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $iddocumento = $request->iddocumento;
+            $rfc = $request->rfc;
+            $usuariostorage = $request->usuariostorage;
+            $passwordstorage = $request->passwordstorage;
+            $ruta = $rfc . '/Cuenta/Empresa/EstadoCuenta';
+            $servidor = getServidorNextcloud();
+            $archivo = DB::connection("General")->select("SELECT * FROM mc1019 WHERE iddocumento = $iddocumento");
+            DB::connection("General")->table("mc1019")->where("iddocumento", $iddocumento)->delete();
+
+            $type = explode(".", $archivo[0]->documento);
+            $extencionarchivo = $type[count($type) - 1];
+            $nombrearchivo = $ruta . "/" . $archivo[0]->codigodocumento . "." . $extencionarchivo;
+            $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $nombrearchivo);
+            $array["type"][0] = $type;
+            $array["extencionarchivo"][0] = $extencionarchivo;
+            $array["nombrearchivo"][0] = $nombrearchivo;
+            $array["resp"][0] = $resp;
+
+        }
+
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 

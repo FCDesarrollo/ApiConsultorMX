@@ -340,5 +340,10 @@ Route::put('cambiarEstatusEmpresa', 'ProveedoresController@cambiarEstatusEmpresa
 Route::get('getNotificacionesEmpresa', 'ProveedoresController@getNotificacionesEmpresa');
 Route::post('guardarNotificacionEmpresa', 'ProveedoresController@guardarNotificacionEmpresa');
 Route::get('getMovimientosEmpresa', 'ProveedoresController@getMovimientosEmpresa');
+Route::get('getMovimientoEmpresa', 'ProveedoresController@getMovimientoEmpresa');
 Route::post('guardarMovimientoEmpresa', 'ProveedoresController@guardarMovimientoEmpresa');
+Route::get('getArchivosEmpresa', 'ProveedoresController@getArchivosEmpresa');
+Route::put('editarMovimientoEmpresa', 'ProveedoresController@editarMovimientoEmpresa');
+Route::delete('eliminarMovimientoEmpresa', 'ProveedoresController@eliminarMovimientoEmpresa');
+Route::delete('eliminarArchivoMovimientoEmpresa', 'ProveedoresController@eliminarArchivoMovimientoEmpresa');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');

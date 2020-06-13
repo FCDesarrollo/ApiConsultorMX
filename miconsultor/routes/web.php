@@ -341,9 +341,11 @@ Route::get('getNotificacionesEmpresa', 'ProveedoresController@getNotificacionesE
 Route::post('guardarNotificacionEmpresa', 'ProveedoresController@guardarNotificacionEmpresa');
 Route::get('getMovimientosEmpresa', 'ProveedoresController@getMovimientosEmpresa');
 Route::get('getMovimientoEmpresa', 'ProveedoresController@getMovimientoEmpresa');
+Route::get('getAbonosPorMovimientoEmpresa', 'ProveedoresController@getAbonosPorMovimientoEmpresa');
 Route::post('guardarMovimientoEmpresa', 'ProveedoresController@guardarMovimientoEmpresa');
 Route::get('getArchivosEmpresa', 'ProveedoresController@getArchivosEmpresa');
 Route::put('editarMovimientoEmpresa', 'ProveedoresController@editarMovimientoEmpresa');
 Route::delete('eliminarMovimientoEmpresa', 'ProveedoresController@eliminarMovimientoEmpresa');
+Route::delete('eliminarAbonoMovimientoEmpresa', 'ProveedoresController@eliminarAbonoMovimientoEmpresa');
 Route::delete('eliminarArchivoMovimientoEmpresa', 'ProveedoresController@eliminarArchivoMovimientoEmpresa');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');

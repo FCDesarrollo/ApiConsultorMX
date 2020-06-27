@@ -250,11 +250,17 @@ class ProveedoresController extends Controller
             $tabla = $request->tabla;
             if($tabla == 1) {
                 $movimientos = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario, (SELECT SUM(importe) FROM mc1018 WHERE iddoccargo = mc1017.idmovimiento) AS abonos
-                FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa = $idempresa AND tipomovimiento = 1");
+                FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa = $idempresa ORDER BY mc1017.fecha ASC, mc1017.idmovimiento ASC");
             }
             else {
-                $movimientos = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario, (SELECT SUM(importe) FROM mc1018 WHERE iddoccargo = mc1017.idmovimiento) AS abonos
-                FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa = $idempresa AND tipomovimiento = 1 AND pendiente <> 0");
+                $tipomovimientos = $request->tipomovimientos;
+                if($tipomovimientos == 1) {
+                    $movimientos = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario, (SELECT SUM(importe) FROM mc1018 WHERE iddoc = mc1017.idmovimiento) AS abonos FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa = $idempresa AND tipomovimiento = 2 AND pendiente <> 0 ORDER BY mc1017.fecha DESC, mc1017.idmovimiento DESC");
+                }
+                else {
+                    $movimientos = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario, (SELECT SUM(importe) FROM mc1018 WHERE iddoccargo = mc1017.idmovimiento) AS abonos
+                    FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa = $idempresa AND tipomovimiento = 1 AND pendiente <> 0 ORDER BY mc1017.fecha DESC, mc1017.idmovimiento DESC");
+                }
             }
 
             $array["movimientos"] = $movimientos;
@@ -271,8 +277,14 @@ class ProveedoresController extends Controller
         if($valida[0]['error'] === 0) {
             $idmovimiento = $request->idmovimiento;
             $movimiento = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idmovimiento =  $idmovimiento");
+            $abonos = DB::connection("General")->select("SELECT mc1018.*, mc1017.documento FROM mc1018 INNER JOIN mc1017 ON mc1018.iddoc = mc1017.idmovimiento WHERE iddoccargo = $idmovimiento ORDER BY mc1018.fecha DESC, mc1018.iddocabono DESC");
+            $cargos = DB::connection("General")->select("SELECT mc1017.*, mc1018.iddocabono, mc1018.importe AS abono FROM mc1017 INNER JOIN mc1018 ON mc1017.idmovimiento = mc1018.iddoccargo WHERE mc1018.iddoc = $idmovimiento ORDER BY mc1017.fecha DESC, mc1017.idmovimiento DESC");
+            $archivos = DB::connection("General")->select("SELECT mc1019.* FROM mc1019 INNER JOIN mc1017 ON mc1019.idmovimiento = mc1017.idmovimiento WHERE mc1019.idmovimiento = $idmovimiento UNION SELECT mc1019.* FROM mc1019 LEFT JOIN mc1018 ON mc1019.idmovimiento = mc1018.iddoc WHERE mc1018.iddoccargo = $idmovimiento");
 
             $array["movimiento"] = $movimiento;
+            $array["abonos"] = $abonos;
+            $array["cargos"] = $cargos;
+            $array["archivos"] = $archivos;
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -301,7 +313,86 @@ class ProveedoresController extends Controller
         if($valida[0]['error'] === 0) {
             $idmovimiento = $request->idmovimiento;
             $documento = $request->documento;
-            DB::connection("General")->table('mc1017')->where("idmovimiento", $idmovimiento)->update(["documento" => $documento]);
+            $pendiente = $request->pendiente;
+            $tipomovimiento = $request->tipomovimiento;
+            $fecha = $request->fecha;
+            $asociados = $request->asociados;
+            
+            if($asociados != 0) {
+                $idsabonos = explode(",", $request->idsabonos);
+                $abonos = explode(",", $request->abonos);
+                $pendientes = explode(",", $request->pendientes);
+                /* $idsabonos = $request->idsabonos;
+                $abonos = $request->abonos;
+                $pendientes = $request->pendientes; */
+                for($x=0 ; $x<count($abonos) ; $x++) {
+                    if($tipomovimiento == 1) {
+                        DB::connection("General")->table("mc1018")->insert(["iddoccargo" => $idmovimiento,"iddoc" => $idsabonos[$x], "importe" => $abonos[$x], "fecha" => $fecha]);
+                    }
+                    else {
+                        DB::connection("General")->table("mc1018")->insert(["iddoccargo" => $idsabonos[$x],"iddoc" => $idmovimiento, "importe" => $abonos[$x], "fecha" => $fecha]);
+                    }
+                    DB::connection("General")->table('mc1017')->where("idmovimiento", $idsabonos[$x])->update(["pendiente" => $pendientes[$x]]);
+                }
+            }
+
+            DB::connection("General")->table('mc1017')->where("idmovimiento", $idmovimiento)->update(["documento" => $documento, "pendiente" => $pendiente]);
+
+            $rfc = $request->rfc;
+            $codigofecha = $request->codigofecha;
+            $usuariostorage = $request->usuariostorage;
+            $passwordstorage = $request->passwordstorage;
+            $servidor = getServidorNextcloud();
+            $archivos = $request->file();
+
+            foreach ($archivos as $key => $file) {
+                $archivo = $file->getClientOriginalName();
+
+                $mod = substr(strtoupper("EstadoCuenta"), 0, 3);
+                $consecutivo = "";
+                $codigoarchivo = $rfc . "_" . $codigofecha . "_" . $mod . "_";
+
+                $validacionArchivo = true;
+                $numero = 1;
+                while($validacionArchivo == true) {
+
+                    if($numero >= 1000) {
+                        $consecutivo = "" . $numero;
+                    }
+                    else if($numero >= 100) {
+                        $consecutivo = "0" . $numero;
+                    }
+                    else if($numero >= 10) {
+                        $consecutivo = "00" . $numero;
+                    }
+                    else {
+                        $consecutivo = "000" . $numero;
+                    }
+
+                    $codigobusqueda = $codigoarchivo . $consecutivo;
+                    $documento = DB::connection("General")->select("SELECT * FROM mc1019 where codigodocumento = '$codigobusqueda'");
+
+                    if(!empty($documento)) {
+                        $numero++;
+                    }
+                    else {
+                        $validacionArchivo = false;
+                    }
+                }
+
+                $codigoarchivocompleto = $codigoarchivo . $consecutivo;
+                $array["codigoarchivo"] = $codigoarchivocompleto;
+
+                $resultado = subirMovimientoEmpresaNextcloud($archivo, $file, $rfc, $servidor, $usuariostorage, $passwordstorage, $codigoarchivo, $consecutivo);
+
+                $directorio = $rfc . '/Cuenta/Empresa/EstadoCuenta';
+                $type = explode(".", $archivo);
+                $target_path = $directorio . '/' . $codigoarchivocompleto . "." . $type[count($type) - 1];
+                $link = GetLinkArchivo($target_path, $servidor, $usuariostorage, $passwordstorage);
+
+                DB::connection("General")->table("mc1019")->insertGetId(["idmovimiento" => $idmovimiento, "documento" => $archivo, "codigodocumento" => $codigoarchivocompleto, "download" => $link]);
+
+            }
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -421,7 +512,21 @@ class ProveedoresController extends Controller
 
         if($valida[0]['error'] === 0) {
             $idmovimiento = $request->idmovimiento;
+            $abonosdoc = DB::connection("General")->select("SELECT * FROM mc1018 WHERE iddoc = $idmovimiento");
+
+            for($x=0 ; $x<count($abonosdoc) ; $x++) {
+                $iddocabono = $abonosdoc[$x]->iddocabono;
+                $iddoccargo = $abonosdoc[$x]->iddoccargo;
+                $importeabono = $abonosdoc[$x]->importe;
+
+                $cargo = DB::connection("General")->select("SELECT * FROM mc1017 WHERE idmovimiento = $iddoccargo");
+                $pendientecargo = $cargo[0]->pendiente + $importeabono;
+                DB::connection("General")->table('mc1017')->where("idmovimiento", $iddoccargo)->update(["pendiente" => $pendientecargo]);
+                DB::connection("General")->table("mc1018")->where("iddocabono", $iddocabono)->delete();
+            }
+
             $abonos = DB::connection("General")->select("SELECT * FROM mc1018 WHERE iddoccargo = $idmovimiento");
+            
             if(count($abonos) === 0) {
                 $rfc = $request->rfc;
                 $usuariostorage = $request->usuariostorage;
@@ -454,14 +559,16 @@ class ProveedoresController extends Controller
 
         if($valida[0]['error'] === 0) {
             $idabono = $request->idabono;
+            $tipomovimiento = $request->tipomovimiento;
             $abono = DB::connection("General")->select("SELECT * FROM mc1018 WHERE iddocabono = $idabono");
             $iddoc = $abono[0]->iddoc;
             $iddoccargo = $abono[0]->iddoccargo;
             $importeabono = $abono[0]->importe;
             /* $array["idmovimiento"] = $iddoc; */
             $abonosasociados = DB::connection("General")->select("SELECT * FROM mc1018 WHERE iddoc = $iddoc");
-            /* $array["abonosasociados"] = $abonosasociados;
-            $array["numeroabonosasociados"] = count($abonosasociados); */
+            /* $array["abonosasociados"] = $abonosasociados; */
+            $array["numeroabonosasociados"] = count($abonosasociados);
+            $array["tipomovimiento"] = $tipomovimiento;
             if(count($abonosasociados) === 1) {
                 $rfc = $request->rfc;
                 $usuariostorage = $request->usuariostorage;
@@ -478,6 +585,11 @@ class ProveedoresController extends Controller
                     $nombrearchivo = $ruta . "/" . $archivos[$i]->codigodocumento . "." . $extencionarchivo;
                     $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $nombrearchivo);
                 }
+            }
+            else {
+                $cargo = DB::connection("General")->select("SELECT * FROM mc1017 WHERE idmovimiento = $iddoc");
+                $pendiente = $cargo[0]->pendiente + $importeabono;
+                DB::connection("General")->table('mc1017')->where("idmovimiento", $iddoc)->update(["pendiente" => $pendiente]);
             }
 
             DB::connection("General")->table("mc1018")->where("iddocabono", $idabono)->delete();

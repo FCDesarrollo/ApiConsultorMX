@@ -344,7 +344,7 @@ Route::get('getMovimientoEmpresa', 'ProveedoresController@getMovimientoEmpresa')
 Route::get('getAbonosPorMovimientoEmpresa', 'ProveedoresController@getAbonosPorMovimientoEmpresa');
 Route::post('guardarMovimientoEmpresa', 'ProveedoresController@guardarMovimientoEmpresa');
 Route::get('getArchivosEmpresa', 'ProveedoresController@getArchivosEmpresa');
-Route::put('editarMovimientoEmpresa', 'ProveedoresController@editarMovimientoEmpresa');
+Route::post('editarMovimientoEmpresa', 'ProveedoresController@editarMovimientoEmpresa');
 Route::delete('eliminarMovimientoEmpresa', 'ProveedoresController@eliminarMovimientoEmpresa');
 Route::delete('eliminarAbonoMovimientoEmpresa', 'ProveedoresController@eliminarAbonoMovimientoEmpresa');
 Route::delete('eliminarArchivoMovimientoEmpresa', 'ProveedoresController@eliminarArchivoMovimientoEmpresa');

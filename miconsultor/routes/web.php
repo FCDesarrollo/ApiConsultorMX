@@ -240,6 +240,7 @@ Route::get('listaempresas', 'AdministradorController@listaempresas');
 
 //MENU 2020
 Route::get('menuWeb', 'MenuController@menuWeb');
+Route::get('getEmpresaValidacion', 'MenuController@getEmpresaValidacion');
 
 //USUARIO 2020
 Route::post('inicioUsuario', 'UsuarioController@inicioUsuario');

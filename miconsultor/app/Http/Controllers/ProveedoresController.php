@@ -632,10 +632,12 @@ class ProveedoresController extends Controller
 
     function getPerfiles(Request $request)
     {
-        $perfiles = DB::connection("General")->select("SELECT * FROM mc1006");
-
-        $array["perfiles"] = $perfiles;
-
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $perfiles = DB::connection("General")->select("SELECT * FROM mc1006");
+            $array["perfiles"] = $perfiles;
+        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

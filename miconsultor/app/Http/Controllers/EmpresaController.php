@@ -29,7 +29,7 @@ class EmpresaController extends Controller
                 $empresaBD = $empresas[$i]->rutaempresa;
                 ConnectaEmpresaDatabase($empresaBD);
 
-                $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles 
+                $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles ON mc_userprofile.idperfil = mc_profiles.idperfil
                                 where idusuario = ?', [$iduser]);
                 $empresas[$i]->perfil = $perfil[0]->nombre;
 

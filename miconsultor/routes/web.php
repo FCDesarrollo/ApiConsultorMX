@@ -350,3 +350,5 @@ Route::delete('eliminarMovimientoEmpresa', 'ProveedoresController@eliminarMovimi
 Route::delete('eliminarAbonoMovimientoEmpresa', 'ProveedoresController@eliminarAbonoMovimientoEmpresa');
 Route::delete('eliminarArchivoMovimientoEmpresa', 'ProveedoresController@eliminarArchivoMovimientoEmpresa');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');
+Route::get('getMenus', 'ProveedoresController@getMenus');
+Route::post('agregarPerfilGlobal', 'ProveedoresController@agregarPerfilGlobal');

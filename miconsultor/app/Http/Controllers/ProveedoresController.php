@@ -640,4 +640,59 @@ class ProveedoresController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function getMenus(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $modulos = DB::connection("General")->select("SELECT * FROM mc1003");
+            for ($i=0; $i < count($modulos); $i++) {
+                $idmodulo =  $modulos[$i]->idmodulo;
+                $menus = DB::connection("General")->select("SELECT * FROM mc1004 
+                                            WHERE idmodulo=$idmodulo");
+                $modulos[$i]->menus = $menus;
+                for ($x=0; $x < count($menus); $x++) {
+                    $idmenu = $menus[$x]->idmenu;
+                    $submenus = DB::connection("General")->select("SELECT * FROM mc1005 
+                                    WHERE idmenu=$idmenu");
+                    $menus[$x]->submenus = $submenus;
+                }
+                $array["modulos"][$i] = $modulos[$i];
+            }
+            
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function agregarPerfilGlobal(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permisosDatos = $request->permisosdatos;
+            $nombre = $request->nombre;
+            $descripcion = $request->descripcion;
+            $fecha = $request->fecha;
+
+            $perfil = DB::connection("General")->select('select * from mc1006 order by idperfil desc limit 1');
+            $idperfil = $perfil[0]->idperfil + 1;
+
+            DB::connection("General")->table("mc1006")->insert(["idperfil" => $idperfil,"nombre" => $nombre, "descripcion" => $descripcion, "fecha" => $fecha, "status" => 1]);
+
+            for($x=0 ; $x<count($permisosDatos) ; $x++) {
+                DB::connection("General")->table("mc1007")->insert(["idperfil" => $idperfil,"idmodulo" => $permisosDatos[$x]["idModulo"], "tipopermiso" => $permisosDatos[$x]["permisos"]]);
+                for($y=0; $y<count($permisosDatos[$x]["menus"]) ; $y++) {
+                    DB::connection("General")->table("mc1008")->insert(["idperfil" => $idperfil,"idmodulo" => $permisosDatos[$x]["menus"][$y]["idModulo"], "idmenu" => $permisosDatos[$x]["menus"][$y]["idMenu"], "tipopermiso" => $permisosDatos[$x]["menus"][$y]["permisos"]]);
+                    for($z=0; $z<count($permisosDatos[$x]["menus"][$y]["submenus"]) ; $z++) {
+                        DB::connection("General")->table("mc1009")->insert(["idperfil" => $idperfil, "idmenu" => $permisosDatos[$x]["menus"][$y]["submenus"][$z]["idMenu"], "idsubmenu" => $permisosDatos[$x]["menus"][$y]["submenus"][$z]["idSubmenu"], "tipopermiso" => $permisosDatos[$x]["menus"][$y]["submenus"][$z]["permisos"], "notificaciones" => $permisosDatos[$x]["menus"][$y]["submenus"][$z]["permisosNotificaciones"]]);
+                    }
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

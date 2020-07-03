@@ -695,4 +695,75 @@ class ProveedoresController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function datosPerfilGlobal(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idPerfil = $request->idperfil;
+            $perfil = DB::connection("General")->select("select * from mc1006 where idperfil = $idPerfil");
+            $array["perfil"] = $perfil;
+
+            $modulos = DB::connection("General")->select("SELECT g.*, (SELECT m.tipopermiso FROM mc1007 m WHERE m.idperfil = $idPerfil AND m.idmodulo = g.idmodulo) AS permisos FROM mc1003 g");
+            for ($i=0; $i < count($modulos); $i++) {
+                $idmodulo =  $modulos[$i]->idmodulo;
+                $menus = DB::connection("General")->select("SELECT g.*, (SELECT m.tipopermiso FROM mc1008 m WHERE m.idperfil = 5 AND m.idmenu = g.idmenu) AS permisos FROM mc1004 g WHERE g.idmodulo = $idmodulo");
+                $modulos[$i]->menus = $menus;
+                for ($x=0; $x < count($menus); $x++) {
+                    $idmenu = $menus[$x]->idmenu;
+                    $submenus = DB::connection("General")->select("SELECT g.*, (SELECT m.tipopermiso FROM mc1009 m WHERE m.idperfil = $idPerfil AND m.idsubmenu = g.idsubmenu) AS permisos, 
+                    (SELECT m.notificaciones FROM mc1009 m WHERE m.idperfil = $idPerfil AND m.idsubmenu = g.idsubmenu) AS permisosNotificaciones FROM mc1005 g WHERE g.idmenu = $idmenu");
+                    $menus[$x]->submenus = $submenus;
+                }
+                $array["modulos"][$i] = $modulos[$i];
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function editarPerfilGlobal(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $permisosDatos = $request->permisosdatos;
+            $nombre = $request->nombre;
+            $descripcion = $request->descripcion;
+            $idperfil = $request->idperfil;
+            DB::connection("General")->table('mc1006')->where("idperfil", $idperfil)->update(["nombre" => $nombre, "descripcion" => $descripcion]);
+            for($x=0 ; $x<count($permisosDatos) ; $x++) {
+                DB::connection("General")->table('mc1007')->where("idperfil", $idperfil)->where("idmodulo", $permisosDatos[$x]["idModulo"])->update(["tipopermiso" => $permisosDatos[$x]["permisos"]]);
+                for($y=0; $y<count($permisosDatos[$x]["menus"]) ; $y++) {
+                    DB::connection("General")->table('mc1008')->where("idperfil", $idperfil)->where("idmenu", $permisosDatos[$x]["menus"][$y]["idMenu"])->update(["tipopermiso" => $permisosDatos[$x]["menus"][$y]["permisos"]]);
+                    for($z=0; $z<count($permisosDatos[$x]["menus"][$y]["submenus"]) ; $z++) {
+                        DB::connection("General")->table('mc1009')->where("idperfil", $idperfil)->where("idsubmenu", $permisosDatos[$x]["menus"][$y]["submenus"][$z]["idSubmenu"])->update(["tipopermiso" => $permisosDatos[$x]["menus"][$y]["submenus"][$z]["permisos"], "notificaciones" => $permisosDatos[$x]["menus"][$y]["submenus"][$z]["permisosNotificaciones"]]);
+                    }
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function eliminarPerfilGlobal(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idPerfil = $request->idperfil;
+            if($idPerfil > 4) {
+                DB::table('mc1006')->where("idperfil", $idPerfil)->delete();
+                DB::table('mc1007')->where("idperfil", $idPerfil)->delete();
+                DB::table('mc1008')->where("idperfil", $idPerfil)->delete();
+                DB::table('mc1009')->where("idperfil", $idPerfil)->delete();
+            }
+            else {
+                $array["error"] = 56;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

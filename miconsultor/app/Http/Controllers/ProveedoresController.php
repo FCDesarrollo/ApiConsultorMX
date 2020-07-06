@@ -766,4 +766,15 @@ class ProveedoresController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    function getServicios(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $servicios = DB::connection("General")->select("SELECT * FROM mc0001");
+            $array["servicios"] = $servicios;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

@@ -356,3 +356,6 @@ Route::get('datosPerfilGlobal', 'ProveedoresController@datosPerfilGlobal');
 Route::put('editarPerfilGlobal', 'ProveedoresController@editarPerfilGlobal');
 Route::delete('eliminarPerfilGlobal', 'ProveedoresController@eliminarPerfilGlobal');
 Route::get('getServicios', 'ProveedoresController@getServicios');
+Route::get('getServicio', 'ProveedoresController@getServicio');
+Route::post('guardarServicio', 'ProveedoresController@guardarServicio');
+Route::put('cambiarStatusServicio', 'ProveedoresController@cambiarStatusServicio');

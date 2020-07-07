@@ -777,4 +777,52 @@ class ProveedoresController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    function getServicio(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $idservicio = $request->idservicio;
+            $servicio = DB::connection("General")->select("SELECT * FROM mc0001 WHERE id = $idservicio");
+            $array["servicio"] = $servicio;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function guardarServicio(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $codigo = $request->codigo;
+            $nombre = $request->nombre;
+            $precio = $request->precio;
+            $descripcion = $request->descripcion;
+            $tipo = $request->tipo;
+            $actualizable = $request->actualizable;
+            $fecha = $request->fecha;
+            $idservicio = $request->idservicio;
+            if($idservicio == 0) {
+                DB::connection("General")->table("mc0001")->insert(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha, "status" => 1]);
+            }
+            else {
+                DB::connection("General")->table('mc0001')->where("id", $idservicio)->update(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha]);
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function cambiarStatusServicio(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $idservicio = $request->idservicio;
+            $status = $request->status;
+            DB::connection("General")->table('mc0001')->where("id", $idservicio)->update(["status" => $status]);
+            $array["status"] = $status;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

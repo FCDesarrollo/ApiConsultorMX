@@ -880,7 +880,8 @@ class AutorizacionyGastosController extends Controller
                         $archivo = DB::select("SELECT  codigo_documento, documento FROM mc_requerimientos_doc WHERE id = $idarchivo AND id_req=$idrequerimiento");
 
                         $type = explode(".", $archivo[0]->documento);
-                        $nombrearchivo = $ruta . "/" . $archivo[0]->codigo_documento . "." . $type[1];
+                        //$nombrearchivo = $ruta . "/" . $archivo[0]->codigo_documento . "." . $type[1];
+                        $nombrearchivo = $ruta . "/" . $archivo[0]->codigo_documento . "." . $type[count($type) - 1];
                         $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
 
                         if (empty($resp)) {
@@ -927,7 +928,8 @@ class AutorizacionyGastosController extends Controller
                                             WHERE id_req=$idrequerimiento");
                     for ($i = 0; $i < count($archivos); $i++) {
                         $type = explode(".", $archivos[$i]->documento);
-                        $nombrearchivo = $ruta . "/" . $archivos[$i]->codigo_documento . "." . $type[1];
+                        //$nombrearchivo = $ruta . "/" . $archivos[$i]->codigo_documento . "." . $type[1];
+                        $nombrearchivo = $ruta . "/" . $archivos[$i]->codigo_documento . "." . $type[count($type) - 1];
                         $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
                     }
                 }
@@ -983,7 +985,8 @@ class AutorizacionyGastosController extends Controller
                                                 WHERE id_req=$idrequerimiento");
                             for ($i = 0; $i < count($archivos); $i++) {
                                 $type = explode(".", $archivos[$i]->documento);
-                                $nombrearchivo = $ruta . "/" . $archivos[$i]->codigo_documento . "." . $type[1];
+                                //$nombrearchivo = $ruta . "/" . $archivos[$i]->codigo_documento . "." . $type[1];
+                                $nombrearchivo = $ruta . "/" . $archivos[$i]->codigo_documento . "." . $type[count($type) - 1];
                                 $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
                             }
                         }

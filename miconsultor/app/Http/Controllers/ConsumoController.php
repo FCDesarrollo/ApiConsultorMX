@@ -1196,7 +1196,8 @@ class ConsumoController extends Controller
                 $val = $archivo[0]->documento;
                 $documento = explode(".", $val);
                 $codigo = $archivo[0]->codigodocumento;
-                $namecloud = $codigo . "." . $documento[1];
+                //$namecloud = $codigo . "." . $documento[1];
+                $namecloud = $codigo . "." . $documento[count($documento) - 1];
                 DB::table('mc_almdigital_det')->where("idalmdigital", $idalmacen)->where("id", $idarchivo)->delete();
 
                 $totalr = DB::select("SELECT totalregistros FROM mc_almdigital WHERE id = $idalmacen");
@@ -1629,7 +1630,8 @@ class ConsumoController extends Controller
 
             if ($array["archivos"][$i]["status"] != 0) {
                 $type = explode(".", $archivo);
-                $archivo = $carpMenu . "/" . $codigodocumento . "." . $type[1];
+                //$archivo = $carpMenu . "/" . $codigodocumento . "." . $type[1];
+                $archivo = $carpMenu . "/" . $codigodocumento . "." . $type[count($type) - 1];
                 $resp = $this->delDocAPI($userSt, $pwdSt, $archivo, $idmenu, $carpIni);
             }
         }
@@ -1812,7 +1814,8 @@ class ConsumoController extends Controller
 
                     $idalmacen = $archivo[0]->idalmdigital;
                     $type = explode(".", $archivo[0]->documento);
-                    $arch = $carpSubMenu . "/" . $archivo[0]->codigodocumento . "." . $type[1];
+                    //$arch = $carpSubMenu . "/" . $archivo[0]->codigodocumento . "." . $type[1];
+                    $arch = $carpSubMenu . "/" . $archivo[0]->codigodocumento . "." . $type[count($type) - 1];
 
                     if ($archivo[0]->estatus == 0) {
 

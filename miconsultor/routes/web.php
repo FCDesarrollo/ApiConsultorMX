@@ -349,6 +349,10 @@ Route::post('editarMovimientoEmpresa', 'ProveedoresController@editarMovimientoEm
 Route::delete('eliminarMovimientoEmpresa', 'ProveedoresController@eliminarMovimientoEmpresa');
 Route::delete('eliminarAbonoMovimientoEmpresa', 'ProveedoresController@eliminarAbonoMovimientoEmpresa');
 Route::delete('eliminarArchivoMovimientoEmpresa', 'ProveedoresController@eliminarArchivoMovimientoEmpresa');
+Route::get('getServiciosEmpresa', 'ProveedoresController@getServiciosEmpresa');
+Route::get('getServiciosNoContratadosEmpresa', 'ProveedoresController@getServiciosNoContratadosEmpresa');
+Route::post('agregarServiciosEmpresa', 'ProveedoresController@agregarServiciosEmpresa');
+Route::delete('eliminarServicioEmpresa', 'ProveedoresController@eliminarServicioEmpresa');
 Route::get('getPerfiles', 'ProveedoresController@getPerfiles');
 Route::get('getMenus', 'ProveedoresController@getMenus');
 Route::post('agregarPerfilGlobal', 'ProveedoresController@agregarPerfilGlobal');

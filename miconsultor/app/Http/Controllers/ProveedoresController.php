@@ -630,6 +630,69 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function getServiciosEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $servicios = DB::connection("General")->select("SELECT mc0001.* FROM mc0001 INNER JOIN mc0002 ON mc0001.id = mc0002.idservicio WHERE mc0002.idempresa = $idempresa");
+
+            $array["servicios"] = $servicios;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getServiciosNoContratadosEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $servicios = DB::connection("General")->select("SELECT mc0001.* FROM mc0001 WHERE mc0001.id NOT IN (SELECT mc0002.idservicio FROM mc0002 WHERE idempresa = $idempresa) AND mc0001.status = 1 GROUP BY mc0001.id");
+
+            $array["servicios"] = $servicios;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function eliminarServicioEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $idservicio = $request->idservicio;
+            DB::connection("General")->table('mc0002')->where("idempresa", $idempresa)->where("idservicio", $idservicio)->delete();
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function agregarServiciosEmpresa(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $servicios = $request->servicios;
+            $fecha = $request->fecha;
+            $array["servicios"] = $servicios;
+            $array["count"] = count($servicios);
+            for($x=0 ; $x<count($servicios) ; $x++) {
+                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $servicios[$x], "fecha" => $fecha]);
+            }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function getPerfiles(Request $request)
     {
         $valida = verificarProveedor($request->usuario, $request->pwd);

@@ -268,6 +268,8 @@ Route::post('validaEmpresa', 'EmpresaController@validaEmpresa');
 Route::get('enviaCorreoEmpresa', 'EmpresaController@enviaCorreoEmpresa');
 Route::post('registraEmpresa', 'EmpresaController@registraEmpresa');
 Route::get('datosEmpresa', 'EmpresaController@datosEmpresa');
+Route::get('getServiciosEmpresaCliente', 'EmpresaController@getServiciosEmpresaCliente');
+Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpresaCliente');
 
 
 //ACTUALIZA PERFILES GENERALES

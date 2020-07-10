@@ -894,4 +894,36 @@ class EmpresaController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    function getServiciosEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $servicios = DB::connection("General")->select("SELECT mc0001.* FROM mc0001 INNER JOIN mc0002 ON mc0001.id = mc0002.idservicio WHERE mc0002.idempresa = $idempresa");
+
+            $array["servicios"] = $servicios;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getMovimientosEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $tabla = $request->tabla;
+            $movimientos = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario, (SELECT SUM(importe) FROM mc1018 WHERE iddoccargo = mc1017.idmovimiento) AS abonos
+            FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa = $idempresa ORDER BY mc1017.fecha ASC, mc1017.idmovimiento ASC");
+
+            $array["movimientos"] = $movimientos;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

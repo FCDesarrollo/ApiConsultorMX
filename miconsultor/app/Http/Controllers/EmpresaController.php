@@ -895,6 +895,30 @@ class EmpresaController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function editarDatosFacturacionEmpresa(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idempresa = $request->idempresa;
+            $calle = $request->calle;
+            $colonia = $request->colonia;
+            $num_ext = $request->num_ext;
+            $num_int = $request->num_int;
+            $codigopostal = $request->codigopostal;
+            $municipio = $request->municipio;
+            $ciudad = $request->ciudad;
+            $estado = $request->estado;
+            $telefono = $request->telefono;
+            DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["calle" => $calle, "colonia" => $colonia, "num_ext" => $num_ext, "num_int" => $num_int, "codigopostal" => $codigopostal, "municipio" => $municipio, "ciudad" => $ciudad, "estado" => $estado, "telefono" => $telefono]);
+
+            $datosempresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa = $idempresa");
+            $array["datosempresa"] = $datosempresa;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function getServiciosEmpresaCliente(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);

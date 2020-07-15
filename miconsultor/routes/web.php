@@ -271,6 +271,7 @@ Route::get('datosEmpresa', 'EmpresaController@datosEmpresa');
 Route::put('editarDatosFacturacionEmpresa', 'EmpresaController@editarDatosFacturacionEmpresa');
 Route::get('getServiciosEmpresaCliente', 'EmpresaController@getServiciosEmpresaCliente');
 Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpresaCliente');
+Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
 
 
 //ACTUALIZA PERFILES GENERALES

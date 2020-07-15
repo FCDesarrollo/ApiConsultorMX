@@ -914,6 +914,21 @@ class EmpresaController extends Controller
             DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["calle" => $calle, "colonia" => $colonia, "num_ext" => $num_ext, "num_int" => $num_int, "codigopostal" => $codigopostal, "municipio" => $municipio, "ciudad" => $ciudad, "estado" => $estado, "telefono" => $telefono]);
 
             $datosempresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa = $idempresa");
+
+            $usuario = $valida[0]['usuario'];
+            $iduser = $usuario[0]->idusuario;
+
+            $empresaBD = $datosempresa[0]->rutaempresa;
+            ConnectaEmpresaDatabase($empresaBD);
+
+            $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles ON mc_userprofile.idperfil = mc_profiles.idperfil
+                            where idusuario = ?', [$iduser]);
+            $datosempresa[0]->perfil = $perfil[0]->nombre;
+
+            $sucursales = DB::select('select * from mc_catsucursales');
+
+            $datosempresa[0]->sucursales = $sucursales;
+
             $array["datosempresa"] = $datosempresa;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -926,7 +941,8 @@ class EmpresaController extends Controller
 
         if($valida[0]['error'] === 0) {
             $idempresa = $request->idempresa;
-            $servicios = DB::connection("General")->select("SELECT mc0001.* FROM mc0001 INNER JOIN mc0002 ON mc0001.id = mc0002.idservicio WHERE mc0002.idempresa = $idempresa");
+           /*  $servicios = DB::connection("General")->select("SELECT mc0001.* FROM mc0001 INNER JOIN mc0002 ON mc0001.id = mc0002.idservicio WHERE mc0002.idempresa = $idempresa"); */
+           $servicios = DB::connection("General")->select("SELECT mc0001.*, (SELECT mc0002.id FROM mc0002 WHERE mc0002.idservicio = mc0001.id AND mc0002.idempresa = $idempresa) AS serviciocontratado FROM mc0001");
 
             $array["servicios"] = $servicios;
         }
@@ -946,6 +962,27 @@ class EmpresaController extends Controller
             FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa = $idempresa ORDER BY mc1017.fecha ASC, mc1017.idmovimiento ASC");
 
             $array["movimientos"] = $movimientos;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getMovimientoEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idmovimiento = $request->idmovimiento;
+            $movimiento = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idmovimiento =  $idmovimiento");
+            $abonos = DB::connection("General")->select("SELECT mc1018.*, mc1017.documento FROM mc1018 INNER JOIN mc1017 ON mc1018.iddoc = mc1017.idmovimiento WHERE iddoccargo = $idmovimiento ORDER BY mc1018.fecha DESC, mc1018.iddocabono DESC");
+            $cargos = DB::connection("General")->select("SELECT mc1017.*, mc1018.iddocabono, mc1018.importe AS abono FROM mc1017 INNER JOIN mc1018 ON mc1017.idmovimiento = mc1018.iddoccargo WHERE mc1018.iddoc = $idmovimiento ORDER BY mc1017.fecha DESC, mc1017.idmovimiento DESC");
+            $archivos = DB::connection("General")->select("SELECT mc1019.* FROM mc1019 INNER JOIN mc1017 ON mc1019.idmovimiento = mc1017.idmovimiento WHERE mc1019.idmovimiento = $idmovimiento UNION SELECT mc1019.* FROM mc1019 LEFT JOIN mc1018 ON mc1019.idmovimiento = mc1018.iddoc WHERE mc1018.iddoccargo = $idmovimiento");
+
+            $array["movimiento"] = $movimiento;
+            $array["abonos"] = $abonos;
+            $array["cargos"] = $cargos;
+            $array["archivos"] = $archivos;
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

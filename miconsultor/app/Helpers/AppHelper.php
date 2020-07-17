@@ -222,6 +222,49 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $array;
     }
 
+    function subirNuevoCertificadoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password, $filename)
+    {
+
+        set_time_limit(0);
+        $directorio = $rfcempresa;
+
+        $ch = curl_init();
+        $file = $archivo_name;
+        $source = $ruta_temp; //Obtenemos un nombre temporal del archivo 
+        $target_path = $directorio . '/' . $filename;
+
+        $gestor = fopen($source, "r");
+
+        if (filesize($source) > 0){
+            $contenido = fread($gestor, filesize($source));
+
+            curl_setopt_array(
+                $ch,
+                array(
+                    CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuario . '/CRM/' . $target_path,
+                    CURLOPT_VERBOSE => 1,
+                    CURLOPT_USERPWD => $usuario . ':' . $password,
+                    CURLOPT_POSTFIELDS => $contenido,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_BINARYTRANSFER => true,
+                    CURLOPT_CUSTOMREQUEST => 'PUT',
+                )
+            );
+            $resp = curl_exec($ch);
+            $error_no = curl_errno($ch);
+        }else{
+            $error_no = 3;
+        }
+        fclose($gestor);
+        curl_close($ch);
+
+        $array["archivo"]["target"] = $target_path;
+        $array["archivo"]["codigo"] = $filename;
+        $array["archivo"]["error"] = $error_no;
+
+        return $array;
+    }
+
     function GetLinkArchivo($link, $server, $user, $pass){
         set_time_limit(0);
         $ch = curl_init();

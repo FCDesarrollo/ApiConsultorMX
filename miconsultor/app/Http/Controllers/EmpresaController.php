@@ -934,7 +934,51 @@ class EmpresaController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    function getServiciosEmpresaCliente(Request $request)
+    public function renovarCertificadoEmpresa(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+          
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $conexionFTP = conectaFTP();
+            if ($conexionFTP != '') {
+                $archivocer = $request->file('certificado');
+                $archivokey = $request->file('key');
+                $passwordcer = $request->passwordcertificado;
+                $resSubirArchivos = $this->subeCertificados($conexionFTP, $archivocer, $archivokey);
+                $array["error"] = $resSubirArchivos;
+                
+                ftp_close($conexionFTP);
+
+                $resDatos = $this->verificaDatosCertificados($archivocer->getClientOriginalName(), $archivokey->getClientOriginalName(),$passwordcer);
+                $array["error"] = $resDatos[0]["error"];
+
+                $datosEmpresa = $resDatos[0]["datos"];
+                $fechavencimiento = $datosEmpresa["fechavencimiento"];
+                
+                $idempresa = $request->idempresa;
+                DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["vigencia" => $fechavencimiento]);
+
+                $rfc = $request->rfc;
+                $fecha = $request->fecha;
+                $servidor = getServidorNextcloud();
+                $usuariostorage = $request->usuariostorage;
+                $passwordstorage = $request->passwordstorage;
+                $filenamecer = $fecha."_".$archivocer->getClientOriginalName();
+                $filenamekey = $fecha."_".$archivokey->getClientOriginalName();
+
+                subirNuevoCertificadoNextcloud($archivocer->getClientOriginalName(), $archivocer, $rfc, $servidor, $usuariostorage, $passwordstorage, $filenamecer);
+                subirNuevoCertificadoNextcloud($archivokey->getClientOriginalName(), $archivokey, $rfc, $servidor, $usuariostorage, $passwordstorage, $filenamekey);
+                
+            }
+            else {
+                $array["error"] = 30;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getServiciosEmpresaCliente(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
@@ -950,7 +994,22 @@ class EmpresaController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    function getMovimientosEmpresaCliente(Request $request)
+    public function agregarServicioEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $idservicio = $request->idservicio;
+            $fecha = $request->fecha;
+            DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicio, "fecha" => $fecha]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getMovimientosEmpresaCliente(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
@@ -967,7 +1026,7 @@ class EmpresaController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    function getMovimientoEmpresaCliente(Request $request)
+    public function getMovimientoEmpresaCliente(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];

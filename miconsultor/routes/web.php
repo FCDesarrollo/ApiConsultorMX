@@ -269,7 +269,9 @@ Route::get('enviaCorreoEmpresa', 'EmpresaController@enviaCorreoEmpresa');
 Route::post('registraEmpresa', 'EmpresaController@registraEmpresa');
 Route::get('datosEmpresa', 'EmpresaController@datosEmpresa');
 Route::put('editarDatosFacturacionEmpresa', 'EmpresaController@editarDatosFacturacionEmpresa');
+Route::post('renovarCertificadoEmpresa', 'EmpresaController@renovarCertificadoEmpresa');
 Route::get('getServiciosEmpresaCliente', 'EmpresaController@getServiciosEmpresaCliente');
+Route::post('agregarServicioEmpresaCliente', 'EmpresaController@agregarServicioEmpresaCliente');
 Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpresaCliente');
 Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
 

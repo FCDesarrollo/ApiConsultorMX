@@ -966,9 +966,32 @@ class EmpresaController extends Controller
                 $passwordstorage = $request->passwordstorage;
                 $filenamecer = $fecha."_".$archivocer->getClientOriginalName();
                 $filenamekey = $fecha."_".$archivokey->getClientOriginalName();
+                $filenamepassword = $fecha."_".$rfc;
 
                 subirNuevoCertificadoNextcloud($archivocer->getClientOriginalName(), $archivocer, $rfc, $servidor, $usuariostorage, $passwordstorage, $filenamecer);
                 subirNuevoCertificadoNextcloud($archivokey->getClientOriginalName(), $archivokey, $rfc, $servidor, $usuariostorage, $passwordstorage, $filenamekey);
+                
+                set_time_limit(0);
+
+                $ch = curl_init();
+                $target_path = $rfc . '/' . $filenamepassword . '.txt';
+
+                curl_setopt_array(
+                    $ch,
+                    array(
+                        CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuariostorage . '/CRM/' . $target_path,
+                        CURLOPT_VERBOSE => 1,
+                        CURLOPT_USERPWD => $usuariostorage . ':' . $passwordstorage,
+                        CURLOPT_POSTFIELDS => $passwordcer,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_BINARYTRANSFER => true,
+                        CURLOPT_CUSTOMREQUEST => 'PUT',
+                    )
+                );
+                $resp = curl_exec($ch);
+                $error_no = curl_errno($ch);
+                
+                curl_close($ch);
                 
             }
             else {

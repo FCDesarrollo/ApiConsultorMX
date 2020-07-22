@@ -866,7 +866,44 @@ class ProveedoresController extends Controller
             $actualizable = $request->actualizable;
             $fecha = $request->fecha;
             $idservicio = $request->idservicio;
+            $imagen = $request->file();
             if($idservicio == 0) {
+                foreach ($imagen as $key => $file) {
+                    $img = $file->getClientOriginalName();
+                    $array["img"] = $img;
+
+                    set_time_limit(300);
+                    $error = 0;
+                    $datosParam = getParametros();
+                    if ($datosParam != "") {
+                        $servercloud = $datosParam[0]->servidor_storage;
+                        $usercloud = $datosParam[0]->usuario_storage;
+                        $passcloud = $datosParam[0]->password_storage;
+
+                        $ch = curl_init();
+                        $contenido = $img;
+                        curl_setopt_array($ch,
+                            array(
+                                CURLOPT_URL => 'https://'.$servercloud.'/remote.php/dav/files/'.$usercloud.'/CRM/Archivos Generales/'. $img.'.jpg',
+                                CURLOPT_VERBOSE => 1,
+                                CURLOPT_USERPWD => $usercloud.':'.$passcloud,
+                                CURLOPT_POSTFIELDS => $contenido,
+                                CURLOPT_RETURNTRANSFER => true,
+                                CURLOPT_BINARYTRANSFER => true,
+                                CURLOPT_CUSTOMREQUEST => 'PUT',
+                                )
+                        );
+                        $response = curl_exec($ch);
+                        $array["response"] = $response;
+
+                        $array["error"] = ($response != '' ? 46 : 0 );
+                        curl_close($ch);
+                    }
+                    else{
+                        $array["error"] = 45;
+                    }
+                    return json_encode($array, JSON_UNESCAPED_UNICODE);
+                }
                 DB::connection("General")->table("mc0001")->insert(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha, "status" => 1]);
             }
             else {

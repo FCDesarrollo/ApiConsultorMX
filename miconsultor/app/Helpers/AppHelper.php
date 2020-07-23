@@ -287,6 +287,27 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
          return $url;
      }
 
+     function GetLinkArchivoAdmin($link, $server, $user, $pass){
+        set_time_limit(0);
+        $ch = curl_init();
+     //curl_setopt($ch, CURLOPT_URL, "https://".$user.":".$pass."@".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");
+         curl_setopt($ch, CURLOPT_URL, "https://".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");
+         curl_setopt($ch, CURLOPT_VERBOSE, 1);       
+         curl_setopt($ch, CURLOPT_USERPWD, $user.":".$pass);
+         curl_setopt($ch, CURLOPT_POSTFIELDS, "path=Archivos Generales/".$link."&shareType=3");
+         curl_setopt($ch, CURLOPT_HTTPHEADER, array('OCS-APIRequest:true'));
+         curl_setopt($ch, CURLOPT_HEADER, true);
+         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+         curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+         $httpResponse = curl_exec($ch);
+         $httpResponse = explode("\n\r\n", $httpResponse);
+         $body = $httpResponse[1];
+         $Respuesta = simplexml_load_string($body);
+         $url = ((string) $Respuesta[0]->data->url);
+         curl_close($ch);
+         return $url;
+     }
 
 
 

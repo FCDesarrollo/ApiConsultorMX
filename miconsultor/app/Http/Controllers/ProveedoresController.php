@@ -866,7 +866,10 @@ class ProveedoresController extends Controller
             $actualizable = $request->actualizable;
             $fecha = $request->fecha;
             $idservicio = $request->idservicio;
+            $fecharegistro = $request->fecharegistro;
             $imagen = $request->file();
+            $nombreImagen = '';
+            $link = '';
             if($idservicio == 0) {
                 foreach ($imagen as $key => $file) {
                     $img = $file->getClientOriginalName();
@@ -881,10 +884,12 @@ class ProveedoresController extends Controller
                         $passcloud = $datosParam[0]->password_storage;
 
                         $ch = curl_init();
-                        $contenido = $img;
+                        $gestor = fopen($file, "r");
+                        $contenido = fread($gestor, filesize($file));
+                        $nombreImagen = $fecharegistro."_".$img;
                         curl_setopt_array($ch,
                             array(
-                                CURLOPT_URL => 'https://'.$servercloud.'/remote.php/dav/files/'.$usercloud.'/CRM/Archivos Generales/'. $img.'.jpg',
+                                CURLOPT_URL => 'https://'.$servercloud.'/remote.php/dav/files/'.$usercloud.'/Archivos Generales/'. $nombreImagen,
                                 CURLOPT_VERBOSE => 1,
                                 CURLOPT_USERPWD => $usercloud.':'.$passcloud,
                                 CURLOPT_POSTFIELDS => $contenido,
@@ -894,17 +899,22 @@ class ProveedoresController extends Controller
                                 )
                         );
                         $response = curl_exec($ch);
-                        $array["response"] = $response;
+                        //$array["response"] = $response;
 
-                        $array["error"] = ($response != '' ? 46 : 0 );
+                        $array["error"] = ($response != '' ? 57 : 0 );
                         curl_close($ch);
+
+                        if($response == '') {
+                            $link = GetLinkArchivoAdmin($nombreImagen, $servercloud, $usercloud, $passcloud);
+                        }
+                        //$array["link"] = $link;
                     }
                     else{
                         $array["error"] = 45;
                     }
-                    return json_encode($array, JSON_UNESCAPED_UNICODE);
+                    //return json_encode($array, JSON_UNESCAPED_UNICODE);
                 }
-                DB::connection("General")->table("mc0001")->insert(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha, "status" => 1]);
+                DB::connection("General")->table("mc0001")->insert(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha, "status" => 1, "imagen" => $nombreImagen, "download" => $link]);
             }
             else {
                 DB::connection("General")->table('mc0001')->where("id", $idservicio)->update(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha]);

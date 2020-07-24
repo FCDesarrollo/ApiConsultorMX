@@ -177,6 +177,94 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $array;
     }
 
+    function subirMovimientoEmpresaNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password, $codarchivo, $consecutivo)
+    {
+
+        set_time_limit(0);
+        $directorio = $rfcempresa . '/Cuenta/Empresa/EstadoCuenta';
+
+        $ch = curl_init();
+        $file = $archivo_name;
+        $filename = $codarchivo . $consecutivo;
+        $source = $ruta_temp; //Obtenemos un nombre temporal del archivo        
+        $type = explode(".", $file);
+        $target_path = $directorio . '/' . $filename . "." . $type[count($type) - 1];
+
+        $gestor = fopen($source, "r");
+
+        if (filesize($source) > 0){
+            $contenido = fread($gestor, filesize($source));
+
+            curl_setopt_array(
+                $ch,
+                array(
+                    CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuario . '/CRM/' . $target_path,
+                    CURLOPT_VERBOSE => 1,
+                    CURLOPT_USERPWD => $usuario . ':' . $password,
+                    CURLOPT_POSTFIELDS => $contenido,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_BINARYTRANSFER => true,
+                    CURLOPT_CUSTOMREQUEST => 'PUT',
+                )
+            );
+            $resp = curl_exec($ch);
+            $error_no = curl_errno($ch);
+        }else{
+            $error_no = 3;
+        }
+        fclose($gestor);
+        curl_close($ch);
+
+        $array["archivo"]["target"] = $target_path;
+        $array["archivo"]["codigo"] = $filename;
+        $array["archivo"]["error"] = $error_no;
+
+        return $array;
+    }
+
+    function subirNuevoCertificadoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor, $usuario, $password, $filename)
+    {
+
+        set_time_limit(0);
+        $directorio = $rfcempresa;
+
+        $ch = curl_init();
+        $file = $archivo_name;
+        $source = $ruta_temp; //Obtenemos un nombre temporal del archivo 
+        $target_path = $directorio . '/' . $filename;
+
+        $gestor = fopen($source, "r");
+
+        if (filesize($source) > 0){
+            $contenido = fread($gestor, filesize($source));
+
+            curl_setopt_array(
+                $ch,
+                array(
+                    CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuario . '/CRM/' . $target_path,
+                    CURLOPT_VERBOSE => 1,
+                    CURLOPT_USERPWD => $usuario . ':' . $password,
+                    CURLOPT_POSTFIELDS => $contenido,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_BINARYTRANSFER => true,
+                    CURLOPT_CUSTOMREQUEST => 'PUT',
+                )
+            );
+            $resp = curl_exec($ch);
+            $error_no = curl_errno($ch);
+        }else{
+            $error_no = 3;
+        }
+        fclose($gestor);
+        curl_close($ch);
+
+        $array["archivo"]["target"] = $target_path;
+        $array["archivo"]["codigo"] = $filename;
+        $array["archivo"]["error"] = $error_no;
+
+        return $array;
+    }
+
     function GetLinkArchivo($link, $server, $user, $pass){
         set_time_limit(0);
         $ch = curl_init();
@@ -199,6 +287,27 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
          return $url;
      }
 
+     function GetLinkArchivoAdmin($link, $server, $user, $pass){
+        set_time_limit(0);
+        $ch = curl_init();
+     //curl_setopt($ch, CURLOPT_URL, "https://".$user.":".$pass."@".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");
+         curl_setopt($ch, CURLOPT_URL, "https://".$server."/ocs/v2.php/apps/files_sharing/api/v1/shares");
+         curl_setopt($ch, CURLOPT_VERBOSE, 1);       
+         curl_setopt($ch, CURLOPT_USERPWD, $user.":".$pass);
+         curl_setopt($ch, CURLOPT_POSTFIELDS, "path=Archivos Generales/".$link."&shareType=3");
+         curl_setopt($ch, CURLOPT_HTTPHEADER, array('OCS-APIRequest:true'));
+         curl_setopt($ch, CURLOPT_HEADER, true);
+         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+         curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+         $httpResponse = curl_exec($ch);
+         $httpResponse = explode("\n\r\n", $httpResponse);
+         $body = $httpResponse[1];
+         $Respuesta = simplexml_load_string($body);
+         $url = ((string) $Respuesta[0]->data->url);
+         curl_close($ch);
+         return $url;
+     }
 
 
 
@@ -224,7 +333,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
 
     function verificaLogin($user, $pass){
         $datos[0]['error'] = 0;
-        $usuario = DB::select("SELECT * FROM mc1001 WHERE correo='$user' or cel='$user' AND status=1");
+        $usuario = DB::select("SELECT * FROM mc1001 WHERE (correo='$user' or cel='$user') AND status = 1");
         if (!empty($usuario)){
             $hash_BD = $usuario[0]->password;
 
@@ -293,6 +402,24 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         }
 
         return $permiso;
+    }
+
+    function verificarProveedor($user, $pass)
+    {
+        $datos[0]['error'] = 0;
+        $usuario = DB::select("SELECT * FROM mc1001 WHERE (correo='$user' or cel='$user') AND status=1 AND tipo = 4");
+        if (!empty($usuario)){
+            $hash_BD = $usuario[0]->password;
+
+            if ($pass == $hash_BD) {
+                $datos[0]['usuario'] = $usuario;
+            } else {
+                $datos[0]['error'] = 3;
+            } 
+        }else {
+            $datos[0]['error'] = 2;
+        }
+        return $datos;
     }
 
     function verificaPermisos($usuario, $pwd, $rfc, $idsubmenu)
@@ -457,6 +584,27 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $regresa;
     }
 
+    function eliminaImagenServicioNextcloud(String $servidor, String $userSto, String $passSto,  string $imagen)
+    {
+        $ch = curl_init();
+        $url = 'https://' . $servidor . '/remote.php/dav/files/' . $userSto . '/Archivos Generales/' . $imagen;
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL => $url,
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => $userSto . ':' . $passSto,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'DELETE',
+            )
+        );
+        $regresa = curl_exec($ch);
+        //print_r($regresa);   
+        curl_close($ch);
+        return $regresa;
+    }
+
     function conectaFTP()
     {
         try {
@@ -568,4 +716,17 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         }
         return 0;
 
+    }
+
+    function ValidarFolio($variable) {
+        
+        $permitidos = "0123456789"; 
+        $flag = true;
+        for ($i=0; $i<strlen($variable); $i++){ 
+            if (strpos($permitidos, substr($variable,$i,1))===false){ 
+                $flag = false;
+                break;
+            } 
+        }
+        return $flag;  		
     }

@@ -158,12 +158,15 @@ Route::post('EliminarLote', 'GeneralesController@EliminarLote');
 Route::delete('eliminaLote', 'GeneralesController@eliminaLote');
 Route::post('EliminarDocto', 'GeneralesController@EliminarDocto');
 Route::delete('eliminaDocto', 'GeneralesController@eliminaDocto');
+Route::delete('eliminaDocumentoLote', 'GeneralesController@eliminaDocumentoLote');
 Route::post('VerificarLote', 'GeneralesController@VerificarLote');
 Route::post('ChecarCatalogos', 'GeneralesController@ChecarCatalogos');
 Route::post('RegistrarElemento', 'GeneralesController@RegistrarElemento');
 Route::get('Paginador', 'GeneralesController@Paginador');
 Route::post('VerificarClave', 'GeneralesController@VerificarClave');
 Route::post('validarDocumentoLote', 'GeneralesController@validarDocumentoLote');
+Route::post('guardarLote', 'GeneralesController@guardarLote');
+Route::post('registrarElementos', 'GeneralesController@registrarElementos');
 
 //PARA CONSUMO DEL MODULO DE INVENTARIOS
 Route::post('LoteCargado', 'GeneralesController@LoteCargado');
@@ -237,6 +240,7 @@ Route::get('listaempresas', 'AdministradorController@listaempresas');
 
 //MENU 2020
 Route::get('menuWeb', 'MenuController@menuWeb');
+Route::get('getEmpresaValidacion', 'MenuController@getEmpresaValidacion');
 
 //USUARIO 2020
 Route::post('inicioUsuario', 'UsuarioController@inicioUsuario');
@@ -264,6 +268,12 @@ Route::post('validaEmpresa', 'EmpresaController@validaEmpresa');
 Route::get('enviaCorreoEmpresa', 'EmpresaController@enviaCorreoEmpresa');
 Route::post('registraEmpresa', 'EmpresaController@registraEmpresa');
 Route::get('datosEmpresa', 'EmpresaController@datosEmpresa');
+Route::put('editarDatosFacturacionEmpresa', 'EmpresaController@editarDatosFacturacionEmpresa');
+Route::post('renovarCertificadoEmpresa', 'EmpresaController@renovarCertificadoEmpresa');
+Route::get('getServiciosEmpresaCliente', 'EmpresaController@getServiciosEmpresaCliente');
+Route::post('agregarServicioEmpresaCliente', 'EmpresaController@agregarServicioEmpresaCliente');
+Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpresaCliente');
+Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
 
 
 //ACTUALIZA PERFILES GENERALES
@@ -321,3 +331,45 @@ Route::post('agregarPerfil', 'PerfilesController@agregarPerfil');
 Route::delete('eliminarPerfil', 'PerfilesController@eliminarPerfil');
 Route::get('datosPerfil', 'PerfilesController@datosPerfil');
 Route::put('editarPerfil', 'PerfilesController@editarPerfil');
+
+//PROVEEDORES
+Route::get('getUsuarios', 'ProveedoresController@getUsuarios');
+Route::get('getUsuario', 'ProveedoresController@getUsuario');
+Route::post('guardarUsuario', 'ProveedoresController@guardarUsuario');
+Route::put('cambiarEstatusUsuario', 'ProveedoresController@cambiarEstatusUsuario');
+Route::put('cambioContraUsuario', 'ProveedoresController@cambioContraUsuario');
+Route::get('getEmpresas', 'ProveedoresController@getEmpresas');
+Route::get('getEmpresa', 'ProveedoresController@getEmpresa');
+Route::get('getUsuariosPorEmpresa', 'ProveedoresController@getUsuariosPorEmpresa');
+Route::put('guardarFechaLimitePagoEmpresa', 'ProveedoresController@guardarFechaLimitePagoEmpresa');
+Route::put('guardarFechaPeriodoPruebaEmpresa', 'ProveedoresController@guardarFechaPeriodoPruebaEmpresa');
+Route::put('cambiarEstatusEmpresa', 'ProveedoresController@cambiarEstatusEmpresa');
+Route::get('getNotificacionesEmpresa', 'ProveedoresController@getNotificacionesEmpresa');
+Route::post('guardarNotificacionEmpresa', 'ProveedoresController@guardarNotificacionEmpresa');
+Route::get('getMovimientosEmpresa', 'ProveedoresController@getMovimientosEmpresa');
+Route::get('getMovimientoEmpresa', 'ProveedoresController@getMovimientoEmpresa');
+Route::get('getAbonosPorMovimientoEmpresa', 'ProveedoresController@getAbonosPorMovimientoEmpresa');
+Route::post('guardarMovimientoEmpresa', 'ProveedoresController@guardarMovimientoEmpresa');
+Route::get('getArchivosEmpresa', 'ProveedoresController@getArchivosEmpresa');
+Route::post('editarMovimientoEmpresa', 'ProveedoresController@editarMovimientoEmpresa');
+Route::delete('eliminarMovimientoEmpresa', 'ProveedoresController@eliminarMovimientoEmpresa');
+Route::delete('eliminarAbonoMovimientoEmpresa', 'ProveedoresController@eliminarAbonoMovimientoEmpresa');
+Route::delete('eliminarArchivoMovimientoEmpresa', 'ProveedoresController@eliminarArchivoMovimientoEmpresa');
+Route::get('getServiciosEmpresa', 'ProveedoresController@getServiciosEmpresa');
+Route::get('getServiciosNoContratadosEmpresa', 'ProveedoresController@getServiciosNoContratadosEmpresa');
+Route::post('agregarServiciosEmpresa', 'ProveedoresController@agregarServiciosEmpresa');
+Route::delete('eliminarServicioEmpresa', 'ProveedoresController@eliminarServicioEmpresa');
+Route::get('getPerfiles', 'ProveedoresController@getPerfiles');
+Route::get('getMenus', 'ProveedoresController@getMenus');
+Route::post('agregarPerfilGlobal', 'ProveedoresController@agregarPerfilGlobal');
+Route::get('datosPerfilGlobal', 'ProveedoresController@datosPerfilGlobal');
+Route::put('editarPerfilGlobal', 'ProveedoresController@editarPerfilGlobal');
+Route::delete('eliminarPerfilGlobal', 'ProveedoresController@eliminarPerfilGlobal');
+Route::get('getServicios', 'ProveedoresController@getServicios');
+Route::get('getServicio', 'ProveedoresController@getServicio');
+Route::post('guardarServicio', 'ProveedoresController@guardarServicio');
+Route::post('cambiarImagenServicio', 'ProveedoresController@cambiarImagenServicio');
+Route::get('getContenidoServicio', 'ProveedoresController@getContenidoServicio');
+Route::post('guardarContenidoServicio', 'ProveedoresController@guardarContenidoServicio');
+Route::delete('borrarContenidoServicio', 'ProveedoresController@borrarContenidoServicio');
+Route::put('cambiarStatusServicio', 'ProveedoresController@cambiarStatusServicio');

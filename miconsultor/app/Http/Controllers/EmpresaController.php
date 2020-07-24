@@ -29,7 +29,7 @@ class EmpresaController extends Controller
                 $empresaBD = $empresas[$i]->rutaempresa;
                 ConnectaEmpresaDatabase($empresaBD);
 
-                $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles 
+                $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles ON mc_userprofile.idperfil = mc_profiles.idperfil
                                 where idusuario = ?', [$iduser]);
                 $empresas[$i]->perfil = $perfil[0]->nombre;
 
@@ -349,6 +349,20 @@ class EmpresaController extends Controller
         ConnectaEmpresaDatabase($empresaBD);                
         if ($empresaBD != "") {    
 
+            $mc_agente_entregas = "create table if not exists mc_agente_entregas (
+                id int(11) NOT NULL AUTO_INCREMENT,
+                idusuario int(11) DEFAULT NULL,
+                idservicio int(11) DEFAULT NULL,
+                tipodocumento VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                fecha timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+                ejercicio int(11) DEFAULT NULL,
+                periodo int(11) DEFAULT NULL,
+                fechacorte DATE DEFAULT NULL,
+                status int(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_agente_entregas);
+
             $mc_almdigital = "create table if not exists mc_almdigital (
                 id INT(11) NOT NULL AUTO_INCREMENT,
                 fechadecarga DATETIME DEFAULT NULL,
@@ -398,6 +412,8 @@ class EmpresaController extends Controller
               nombrearchivoE VARCHAR(255) DEFAULT NULL,
               fechacorte DATE DEFAULT NULL,
               fechaentregado DATE DEFAULT NULL,
+              idservicio INT(11) DEFAULT NULL,
+              url VARCHAR(250) DEFAULT NULL,
               PRIMARY KEY (id)
             ) ENGINE=MYISAM DEFAULT CHARSET=latin1;";
             DB::statement($mc_bitcontabilidad);            
@@ -452,6 +468,15 @@ class EmpresaController extends Controller
               PRIMARY KEY (id)
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catproductos); 
+
+            $mc_catproveedores = "create table if not exists mc_catproveedores (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                codigo VARCHAR(100) COLLATE latin1_spanish_ci DEFAULT NULL,
+                rfc VARCHAR(70) COLLATE latin1_spanish_ci DEFAULT NULL,
+                razonsocial VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_catproveedores); 
             
             $mc_catsucursales = "create table if not exists mc_catsucursales (
               idsucursal INT(11) NOT NULL AUTO_INCREMENT,
@@ -656,6 +681,19 @@ class EmpresaController extends Controller
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
                 DB::statement($mc_requerimientos);
 
+            $mc_requerimientos_aso = "create table if not exists mc_requerimientos_aso (
+                id int(11) NOT NULL AUTO_INCREMENT,
+                idrequerimiento int(11) NOT NULL,
+                id_bit int(11) DEFAULT NULL,
+                idgasto int(11) NOT NULL,
+                importe double NOT NULL,
+                rfc varchar(255) COLLATE latin1_spanish_ci NOT NULL,
+                nombre varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                creado timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+                PRIMARY KEY (id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+                DB::statement($mc_requerimientos_aso);
+
               $mc_requerimientos_bit = "create table if not exists mc_requerimientos_bit (
                 id_bit int(11) NOT NULL AUTO_INCREMENT,
                 id_req int(11) DEFAULT NULL,
@@ -678,6 +716,17 @@ class EmpresaController extends Controller
                 PRIMARY KEY (id)
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_requerimientos_doc);
+
+              $mc_requerimientos_rel = "create table if not exists mc_requerimientos_rel (
+                idgasto int(11) NOT NULL,
+                iddocadw int(11) NOT NULL,
+                idmodulo int(11) DEFAULT NULL,
+                conceptoadw varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                folioadw int(11) DEFAULT NULL,
+                serieadw varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                UUID varchar(250) COLLATE latin1_spanish_ci DEFAULT NULL
+              ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_requerimientos_rel);
 
               $mc_usuarios_concepto = "create table if not exists mc_usuarios_concepto(
                 id_usuario int(11) DEFAULT NULL,
@@ -915,6 +964,181 @@ class EmpresaController extends Controller
             $empresa = DB::select('select * from mc1000 where rfc = ?', [$rfc]);
             $array[0]['empresa'] = $empresa;
         }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function editarDatosFacturacionEmpresa(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0){
+            $idempresa = $request->idempresa;
+            $calle = $request->calle;
+            $colonia = $request->colonia;
+            $num_ext = $request->num_ext;
+            $num_int = $request->num_int;
+            $codigopostal = $request->codigopostal;
+            $municipio = $request->municipio;
+            $ciudad = $request->ciudad;
+            $estado = $request->estado;
+            $telefono = $request->telefono;
+            DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["calle" => $calle, "colonia" => $colonia, "num_ext" => $num_ext, "num_int" => $num_int, "codigopostal" => $codigopostal, "municipio" => $municipio, "ciudad" => $ciudad, "estado" => $estado, "telefono" => $telefono]);
+
+            $datosempresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa = $idempresa");
+
+            $usuario = $valida[0]['usuario'];
+            $iduser = $usuario[0]->idusuario;
+
+            $empresaBD = $datosempresa[0]->rutaempresa;
+            ConnectaEmpresaDatabase($empresaBD);
+
+            $perfil = DB::select('select nombre from mc_userprofile INNER JOIN mc_profiles ON mc_userprofile.idperfil = mc_profiles.idperfil
+                            where idusuario = ?', [$iduser]);
+            $datosempresa[0]->perfil = $perfil[0]->nombre;
+
+            $sucursales = DB::select('select * from mc_catsucursales');
+
+            $datosempresa[0]->sucursales = $sucursales;
+
+            $array["datosempresa"] = $datosempresa;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function renovarCertificadoEmpresa(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+          
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $conexionFTP = conectaFTP();
+            if ($conexionFTP != '') {
+                $archivocer = $request->file('certificado');
+                $archivokey = $request->file('key');
+                $passwordcer = $request->passwordcertificado;
+                $resSubirArchivos = $this->subeCertificados($conexionFTP, $archivocer, $archivokey);
+                $array["error"] = $resSubirArchivos;
+                
+                ftp_close($conexionFTP);
+
+                $resDatos = $this->verificaDatosCertificados($archivocer->getClientOriginalName(), $archivokey->getClientOriginalName(),$passwordcer);
+                $array["error"] = $resDatos[0]["error"];
+
+                $datosEmpresa = $resDatos[0]["datos"];
+                $fechavencimiento = $datosEmpresa["fechavencimiento"];
+                
+                $idempresa = $request->idempresa;
+                DB::connection("General")->table('mc1000')->where("idempresa", $idempresa)->update(["vigencia" => $fechavencimiento]);
+
+                $rfc = $request->rfc;
+                $fecha = $request->fecha;
+                $servidor = getServidorNextcloud();
+                $usuariostorage = $request->usuariostorage;
+                $passwordstorage = $request->passwordstorage;
+                $filenamecer = $fecha."_".$archivocer->getClientOriginalName();
+                $filenamekey = $fecha."_".$archivokey->getClientOriginalName();
+                $filenamepassword = $fecha."_".$rfc;
+
+                subirNuevoCertificadoNextcloud($archivocer->getClientOriginalName(), $archivocer, $rfc, $servidor, $usuariostorage, $passwordstorage, $filenamecer);
+                subirNuevoCertificadoNextcloud($archivokey->getClientOriginalName(), $archivokey, $rfc, $servidor, $usuariostorage, $passwordstorage, $filenamekey);
+                
+                set_time_limit(0);
+
+                $ch = curl_init();
+                $target_path = $rfc . '/' . $filenamepassword . '.txt';
+
+                curl_setopt_array(
+                    $ch,
+                    array(
+                        CURLOPT_URL => 'https://' . $servidor . '/remote.php/dav/files/' . $usuariostorage . '/CRM/' . $target_path,
+                        CURLOPT_VERBOSE => 1,
+                        CURLOPT_USERPWD => $usuariostorage . ':' . $passwordstorage,
+                        CURLOPT_POSTFIELDS => $passwordcer,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_BINARYTRANSFER => true,
+                        CURLOPT_CUSTOMREQUEST => 'PUT',
+                    )
+                );
+                $resp = curl_exec($ch);
+                $error_no = curl_errno($ch);
+                
+                curl_close($ch);
+                
+            }
+            else {
+                $array["error"] = 30;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getServiciosEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+           /*  $servicios = DB::connection("General")->select("SELECT mc0001.* FROM mc0001 INNER JOIN mc0002 ON mc0001.id = mc0002.idservicio WHERE mc0002.idempresa = $idempresa"); */
+           $servicios = DB::connection("General")->select("SELECT mc0001.*, (SELECT mc0002.id FROM mc0002 WHERE mc0002.idservicio = mc0001.id AND mc0002.idempresa = $idempresa) AS serviciocontratado FROM mc0001");
+
+            $array["servicios"] = $servicios;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function agregarServicioEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $idservicio = $request->idservicio;
+            $fecha = $request->fecha;
+            DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicio, "fecha" => $fecha]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getMovimientosEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $tabla = $request->tabla;
+            $movimientos = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario, (SELECT SUM(importe) FROM mc1018 WHERE iddoccargo = mc1017.idmovimiento) AS abonos
+            FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idempresa = $idempresa ORDER BY mc1017.fecha ASC, mc1017.idmovimiento ASC");
+
+            $array["movimientos"] = $movimientos;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getMovimientoEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if($valida[0]['error'] === 0) {
+            $idmovimiento = $request->idmovimiento;
+            $movimiento = DB::connection("General")->select("SELECT mc1017.*, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario FROM mc1017 INNER JOIN mc1001 ON mc1017.idusuario = mc1001.idusuario WHERE idmovimiento =  $idmovimiento");
+            $abonos = DB::connection("General")->select("SELECT mc1018.*, mc1017.documento FROM mc1018 INNER JOIN mc1017 ON mc1018.iddoc = mc1017.idmovimiento WHERE iddoccargo = $idmovimiento ORDER BY mc1018.fecha DESC, mc1018.iddocabono DESC");
+            $cargos = DB::connection("General")->select("SELECT mc1017.*, mc1018.iddocabono, mc1018.importe AS abono FROM mc1017 INNER JOIN mc1018 ON mc1017.idmovimiento = mc1018.iddoccargo WHERE mc1018.iddoc = $idmovimiento ORDER BY mc1017.fecha DESC, mc1017.idmovimiento DESC");
+            $archivos = DB::connection("General")->select("SELECT mc1019.* FROM mc1019 INNER JOIN mc1017 ON mc1019.idmovimiento = mc1017.idmovimiento WHERE mc1019.idmovimiento = $idmovimiento UNION SELECT mc1019.* FROM mc1019 LEFT JOIN mc1018 ON mc1019.idmovimiento = mc1018.iddoc WHERE mc1018.iddoccargo = $idmovimiento");
+
+            $array["movimiento"] = $movimiento;
+            $array["abonos"] = $abonos;
+            $array["cargos"] = $cargos;
+            $array["archivos"] = $archivos;
+        }
+
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

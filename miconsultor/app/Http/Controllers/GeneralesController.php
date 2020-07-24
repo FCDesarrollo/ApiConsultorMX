@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 use App\Http\Controller\LoteCargadoExt;
 
@@ -563,21 +565,15 @@ class GeneralesController extends Controller
 
     function eliminaLote(Request $request)
     {
-        $idempresa = $request->idempresa;
-        $idlote = $request->idlote;
-
-        ConnectDatabase($idempresa);
-
-        $doctos = DB::select("SELECT * FROM mc_lotesdocto WHERE idlote = $idlote And estatus = 1");
-
-        if (empty($doctos)) {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $idlote = $request->idlote;
             DB::table('mc_lotes')->where("id", $idlote)->delete();
             DB::table('mc_lotesdocto')->where("idlote", $idlote)->delete();
             DB::table('mc_lotesmovtos')->where("idlote", $idlote)->delete();
         }
 
-        $array["doctos"] = $doctos;
-        $array["error"] = 0;
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
@@ -646,18 +642,6 @@ class GeneralesController extends Controller
 
         $array["docto"] = $docto;
         $array["error"] = 0;
-        return json_encode($array, JSON_UNESCAPED_UNICODE);
-    }
-
-    function validarDocumentoLote(Request $request)
-    {
-        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
-        $array["error"] = $valida[0]["error"];
-
-        if ($valida[0]['error'] == 0){
-            $documento = $request->file('documento');
-            return $documento->getClientOriginalName();
-        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
@@ -905,6 +889,65 @@ class GeneralesController extends Controller
         }
         return $idlote[0]->id; 
     }    */
+
+    function guardarLote(Request $request) {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $idusuario = $request->idusuario;
+            $tipodocto = $request->tipodocto;
+            $movimientos = $request->movimientos;
+            $movimientos = $this->ValidarDatos($movimientos, $tipodocto, count($movimientos));
+
+            for($x=0 ; $x<count($movimientos) ; $x++) {
+                $fechac = date("Ymd");
+                $sucursal = $movimientos[$x]["sucursal"];
+                $estatus = $movimientos[$x]["estatus"];
+                $codigolote = $fechac . $idusuario . $tipodocto . $sucursal;
+                $idlote = DB::select("SELECT id FROM mc_lotes WHERE codigolote = '$codigolote'");
+                if (empty($idlote)) {
+                    $idlote = DB::table('mc_lotes')->insertGetId(['fechadecarga' => $fechac, 'codigolote' => $codigolote, 'usuario' => $idusuario, 'tipo' => $tipodocto, 'totalregistros' => count($movimientos)]);
+                }
+                else {
+                    $idlote = $idlote[0]->id;
+                }
+                if($tipodocto == 2 && $estatus == "False") {
+                    //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["cantidad"] . $movimientos[$x]["unidad"];
+
+                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'codigo' => $movimientos[$x]["codigo"], 'sucursal' => $movimientos[$x]["sucursal"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'total' => $movimientos[$x]["total"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
+                    
+                    DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "kilometros" => $movimientos[$x]["kilometro"], "horometro" => $movimientos[$x]["horometro"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"], "total" => $movimientos[$x]["total"]]);
+                }
+                else if($tipodocto == 3 && $estatus == "False") {
+                    //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["folio"];
+
+                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], "folio" => $movimientos[$x]["folio"], "serie" => $movimientos[$x]["serie"], "subtotal" => $movimientos[$x]["subtotal"], "descuento" => $movimientos[$x]["descuento"], "iva" => $movimientos[$x]["iva"], 'total' => $movimientos[$x]["total"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
+                    
+                    for($y=0 ; $y<count($movimientos[$x]["movimientos"]) ; $y++) {
+                        DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["movimientos"][$y]["fecha"], "producto" => $movimientos[$x]["movimientos"][$y]["codigoproducto"], "cantidad" => $movimientos[$x]["movimientos"][$y]["cantidad"], "subtotal" => $movimientos[$x]["movimientos"][$y]["subtotal"], "descuento" => $movimientos[$x]["movimientos"][$y]["descuento"], "iva" => $movimientos[$x]["movimientos"][$y]["iva"], "total" => $movimientos[$x]["movimientos"][$y]["total"]]);
+                    }
+                }
+                else if($tipodocto == 4 && $estatus == "False") {
+                    //$codigo = str_replace("-", "", $movimientos[$x]["fecha"]) . $tipodocto . $movimientos[$x]["cantidad"] . $movimientos[$x]["unidad"] . $movimientos[$x]["total"];
+
+                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'total' => $movimientos[$x]["total"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
+
+                    DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"], "total" => $movimientos[$x]["total"]]);
+                }
+                else if($tipodocto == 5 && $estatus == "False") {
+                    $iddocto = DB::table('mc_lotesdocto')->insertGetId(['idlote' => $idlote, 'sucursal' => $movimientos[$x]["sucursal"], 'codigo' => $movimientos[$x]["codigo"], 'concepto' => $movimientos[$x]["codigoconcepto"], 'proveedor' => $movimientos[$x]["rfc"], 'fecha' => $movimientos[$x]["fecha"], 'campoextra1' => $movimientos[$x]["cantidad"], 'campoextra2' => $movimientos[$x]["almacen"], 'error' => $movimientos[$x]["error"],  'detalle_error' => $movimientos[$x]["error_det"]]);
+
+                    DB::table('mc_lotesmovtos')->insert(['iddocto' => $iddocto, 'idlote' => $idlote, "fechamov" => $movimientos[$x]["fecha"], "producto" => $movimientos[$x]["codigoproducto"], "almacen" => $movimientos[$x]["almacen"], "unidad" => $movimientos[$x]["unidad"], "cantidad" => $movimientos[$x]["cantidad"]]);
+                }
+                $totalcargados = DB::select("SELECT count(id) AS reg FROM mc_lotesdocto WHERE idlote = '$idlote' And error <> 1");
+                DB::table('mc_lotes')->where("id", $idlote)->update(['totalcargados' => $totalcargados[0]->reg]);
+            }
+            
+            $array["movimientos"] = $movimientos;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 
     function LoteCargado(Request $request)
     {
@@ -1245,6 +1288,8 @@ class GeneralesController extends Controller
                     $datos[$i]['idmenu'] = $concepto[0]->idmenu;
                     $datos[$i]['idsubmenu'] = $concepto[0]->idsubmenu;
                     $datos[$i]['clave'] = $concepto[0]->claveplantilla;
+                }else{
+                    $datos[$i]['clave'] = $concepto[0]->claveplantilla;
                 }
             }
 
@@ -1259,6 +1304,67 @@ class GeneralesController extends Controller
         $dato[0] = $datos;
 
         return $dato;
+    }
+
+    function registrarElementos(Request $request) {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $tipodocumento = $request->tipodocumento;
+
+            switch ($tipodocumento) {
+                case 2:
+                case 4:
+                case 5:
+                    $tipocliente = 2;
+                    break;
+                case 3:
+                    $tipocliente = 1;
+                    break;
+            }
+
+            $productosnuevos = $request->productosnuevos;
+            //$array["productosnuevos"] = $productosnuevos;
+            $clientesnuevos = $request->clientesnuevos;
+            //$array["clientesnuevos"] = $clientesnuevos;
+            
+            for($x=0 ; $x<count($productosnuevos["codigoProductos"]) ; $x++) {
+                $codigoproducto = strtoupper($productosnuevos["codigoProductos"][$x]);
+                $elementoproducto = strtoupper($productosnuevos["elementos"][$x]);
+                $nombreproducto = strtoupper($productosnuevos["nombreProductos"][$x]);
+                $ele = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$codigoproducto' OR codigoadw = '$codigoproducto'");
+                if (empty($ele)) {
+                    DB::table('mc_catproductos')->insertGetId(['codigoprod' => $elementoproducto, 'nombreprod' => $nombreproducto, 'codigoadw' => $codigoproducto, 'nombreadw' => $nombreproducto, 'fechaalta' => now()]);
+                } 
+            }
+
+            for($x=0 ; $x<count($clientesnuevos["codigos"]) ; $x++) {
+                $codigo = strtoupper($clientesnuevos["codigos"][$x]);
+                $elemento = strtoupper($clientesnuevos["elementos"][$x]);
+                $razonsocial = strtoupper($clientesnuevos["razonesSociales"][$x]);
+                $rfc = strtoupper($clientesnuevos["rfcs"][$x]);
+
+                if ($rfc == "XAXX010101000") {
+                    $codigoclienteproveedor = strtoupper($elemento);
+                    $ele = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$codigoclienteproveedor'");
+                } else {
+                    $codigoclienteproveedor = ($elemento == "" ? $rfc : strtoupper($elemento));
+                    $ele = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$rfc'");
+                }
+
+                if (empty($ele)) {
+                    DB::table('mc_catclienprov')->insertGetId(['codigoc' => $codigoclienteproveedor, 'rfc' => $rfc, 'razonsocial' => $razonsocial, 'tipocli' => $tipocliente]);
+                } else {
+                    if ($ele[0]->tipocli != 3) {
+                        if ($ele[0]->razonsocial == $razonsocial || $ele[0]->codigoc == $codigoclienteproveedor) {
+                            DB::table('mc_catclienprov')->where("id", $ele[0]->id)->update(['tipocli' => 3, 'razonsocial' => $razonsocial]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function RegistrarElemento(Request $request)
@@ -1359,6 +1465,343 @@ class GeneralesController extends Controller
         return $datos;
         //return $respuesta;
 
+    }
+
+    function eliminaDocumentoLote(Request $request) {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["index"] = $request->index;
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $iddocumento = $request->iddocumento;
+            DB::table('mc_lotesdocto')->where("id", $iddocumento)->delete();
+            DB::table('mc_lotesmovtos')->where("iddocto", $iddocumento)->delete();
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function validarDocumentoLote(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0) {
+            //subir_archivo.php
+            $carpetaDestino="archivostemp/";
+            $documento = $request->file('documento');
+            $nombreDocumento = $documento->getClientOriginalName();
+            $extencionDocumento = $documento->getClientOriginalExtension();
+            $soloNombreDocumento = explode('.'.$extencionDocumento,$nombreDocumento);
+            if(file_exists($carpetaDestino) || mkdir($carpetaDestino)) {
+                $now = date('YmdHis');
+                $destino=$carpetaDestino.$soloNombreDocumento[0].$now.".".$extencionDocumento;
+                if(move_uploaded_file($documento, $destino))
+                {
+                    //leer_plantilla.php
+                    //validación 1
+                    $archivoExcel = IOFactory::load($destino);
+                    $tipodocto = $archivoExcel->getActiveSheet()->getCell("Z1")->getValue();
+                    $tipodoctodet = $archivoExcel->getActiveSheet()->getCell("Z2")->getValue();
+                    $array["tipodocto"] = $tipodocto;
+                    $array["tipodoctodet"] = $tipodoctodet;
+                    if($tipodocto == "" || $tipodoctodet == "") {
+                        $array["error"] = 50;
+                        //eliminar el documento aqui
+                    }
+                    else {
+                        //VerificarClave
+                        $rubros = DB::select('select * from mc_rubros where claveplantilla = ? and idmenu = ? and idsubmenu = ?', [$tipodocto, $request->idmenu, $request->idsubmenu]);
+                        if(count($rubros) === 0) {
+                            $array["error"] = 51;
+                        }
+                        else {
+                            //$array["rubros"] = $rubros;
+                            //validación 2
+                            $y = 0;
+                            switch($tipodocto) {
+                                case "2":
+                                    for($x=7 ; $archivoExcel->getActiveSheet()->getCell("A".$x) != "" ; $x++) {
+                                        $suc = $archivoExcel->getActiveSheet()->getCell("A".$x)->getValue();	
+                                        $fecha = $archivoExcel->getActiveSheet()->getCell("B".$x)->getFormattedValue();
+                                        $fechaPartes = explode('/',$fecha);
+                                        $dia = $fechaPartes[1] < 10 ? "0".$fechaPartes[1] : $fechaPartes[1];
+                                        $mes = $fechaPartes[0] < 10 ? "0".$fechaPartes[0] : $fechaPartes[0];
+                                        $fecha = $fechaPartes[2]."-".$mes."-".$dia;
+                                        $codigoconcepto = $archivoExcel->getActiveSheet()->getCell("C".$x)->getValue();
+                                        $concepto = $archivoExcel->getActiveSheet()->getCell("D".$x)->getValue();
+                                        $codcliprov = $archivoExcel->getActiveSheet()->getCell("E".$x)->getValue();
+                                        $rfc = $archivoExcel->getActiveSheet()->getCell("F".$x)->getValue();
+                                        $razonsocial = $archivoExcel->getActiveSheet()->getCell("G".$x)->getValue();
+                                        $codigoproducto = $archivoExcel->getActiveSheet()->getCell("H".$x)->getValue();
+                                        $producto = $archivoExcel->getActiveSheet()->getCell("I".$x)->getValue();
+                                        $almacen = $archivoExcel->getActiveSheet()->getCell("J".$x)->getValue();
+                                        $litros = $archivoExcel->getActiveSheet()->getCell("K".$x)->getValue();
+                                        $importe = $archivoExcel->getActiveSheet()->getCell("L".$x)->getValue();
+                                        $kilometros = $archivoExcel->getActiveSheet()->getCell("M".$x)->getValue();
+                                        $horometros = $archivoExcel->getActiveSheet()->getCell("N".$x)->getValue();
+                                        $unidad = $archivoExcel->getActiveSheet()->getCell("O".$x)->getValue();
+                                        									
+
+                                        $movtos[$y] = array("fecha" => $fecha, "codigoconcepto" => $codigoconcepto, "nombreconcepto" => $concepto, "codigocliprov" => $codcliprov, "rfc" => $rfc, "razonsocial" => $razonsocial, "codigoproducto" => $codigoproducto, "nombreproducto" => $producto, "almacen" => $almacen, "cantidad" => $litros, "total" => $importe, "kilometro" => $kilometros, "horometro" => $horometros, "unidad" => $unidad, "sucursal" => $suc, "idconce" => $tipodocto, "estatus" => "", "codigo" => "", "movimientos" => []);
+                                        $movtos[$y]["movimientos"][0]= $movtos[$y];
+                                        $y++;
+                                        
+                                    }
+                                    break;
+                                case "3":
+                                    $y = 0;
+                                    for($x=7 ; $archivoExcel->getActiveSheet()->getCell("A".$x) != "" ; $x++) {
+                                        $suc = $archivoExcel->getActiveSheet()->getCell("A".$x)->getValue();	
+                                        $fecha = $archivoExcel->getActiveSheet()->getCell("B".$x)->getFormattedValue();
+                                        $fechaPartes = explode('/',$fecha);
+                                        $dia = $fechaPartes[1] < 10 ? "0".$fechaPartes[1] : $fechaPartes[1];
+                                        $mes = $fechaPartes[0] < 10 ? "0".$fechaPartes[0] : $fechaPartes[0];
+                                        $fecha = $fechaPartes[2]."-".$mes."-".$dia;
+                                        $folio = $archivoExcel->getActiveSheet()->getCell("C".$x)->getValue();
+                                        $serie = $archivoExcel->getActiveSheet()->getCell("D".$x)->getValue();
+                                        $codcliprov = $archivoExcel->getActiveSheet()->getCell("E".$x)->getValue();
+                                        $rfc = $archivoExcel->getActiveSheet()->getCell("F".$x)->getValue();
+                                        $razonsocial = $archivoExcel->getActiveSheet()->getCell("G".$x)->getValue();
+                                        $codigoconcepto = $archivoExcel->getActiveSheet()->getCell("H".$x)->getValue();
+                                        $concepto = $archivoExcel->getActiveSheet()->getCell("I".$x)->getValue();
+                                        $codigoproducto = $archivoExcel->getActiveSheet()->getCell("J".$x)->getValue();
+                                        $producto = $archivoExcel->getActiveSheet()->getCell("K".$x)->getValue();
+                                        $cantidad = $archivoExcel->getActiveSheet()->getCell("L".$x)->getValue();
+                                        $subtotal = $archivoExcel->getActiveSheet()->getCell("M".$x)->getValue();
+                                        $descuento = $archivoExcel->getActiveSheet()->getCell("N".$x)->getValue();
+                                        $iva = $archivoExcel->getActiveSheet()->getCell("O".$x)->getValue();
+                                        $total = $archivoExcel->getActiveSheet()->getCell("P".$x)->getValue();						
+
+                                        $movtos[$y] = array("fecha" => $fecha, "codigoconcepto" => $codigoconcepto, "nombreconcepto" => $concepto, "codigocliprov" => $codcliprov, "rfc" => $rfc, "razonsocial" => $razonsocial, "codigoproducto" => $codigoproducto, "nombreproducto" => $producto, "folio" => $folio, "serie" => $serie, "cantidad" => $cantidad, "subtotal" => $subtotal, "descuento" => $descuento, "iva" => $iva, "total" => $total, "sucursal" => $suc ,"idconce" => $tipodocto, "estatus" => "", "codigo" => "", "movimientos" => []);
+                                        $movtos[$y]["movimientos"][0]= $movtos[$y];
+                                        $y++;
+                                    }
+
+                                        //$array["documentostemp"] = $movtos;
+                                        
+                                        for($a=0 ; $a < count($movtos) - 1 ; $a++) {
+                                            for($b= $a + 1 ; $b < count($movtos) ; $b++) {
+                                                if(is_null($movtos[$b]["total"]) == false && is_null($movtos[$b]["subtotal"]) == false) {
+                                                    
+                                                    if(ValidarFolio($movtos[$b]["folio"]) == true) {
+                                                        if($movtos[$a]["folio"] == $movtos[$b]["folio"] && $movtos[$a]["fecha"] == $movtos[$b]["fecha"] && $movtos[$a]["sucursal"] == $movtos[$b]["sucursal"]) {
+                                                            unset($movtos[$b]["movimientos"]);
+                                                            array_push($movtos[$a]["movimientos"], $movtos[$b]);
+                                                            $movtos[$a]["cantidad"] = $movtos[$a]["cantidad"] + $movtos[$b]["cantidad"];
+                                                            $movtos[$a]["subtotal"] = $movtos[$a]["subtotal"] + $movtos[$b]["subtotal"];
+                                                            $movtos[$a]["descuento"] = $movtos[$a]["descuento"] + $movtos[$b]["descuento"];
+                                                            $movtos[$a]["iva"] = $movtos[$a]["iva"] + $movtos[$b]["iva"];
+                                                            $movtos[$a]["total"] = $movtos[$a]["total"] + $movtos[$b]["total"];
+
+                                                            unset($movtos[$b]);
+                                                            $movtos = array_values($movtos);
+                                                            $b--;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    break;
+                                case "4":
+                                    $y = 0;
+                                    for($x=7 ; $archivoExcel->getActiveSheet()->getCell("A".$x) != "" ; $x++) {
+                                        $suc = $archivoExcel->getActiveSheet()->getCell("A".$x)->getValue();	
+                                        $fecha = $archivoExcel->getActiveSheet()->getCell("B".$x)->getFormattedValue();
+                                        $fechaPartes = explode('/',$fecha);
+                                        $dia = $fechaPartes[1] < 10 ? "0".$fechaPartes[1] : $fechaPartes[1];
+                                        $mes = $fechaPartes[0] < 10 ? "0".$fechaPartes[0] : $fechaPartes[0];
+                                        $fecha = $fechaPartes[2]."-".$mes."-".$dia;
+                                        $codigoconcepto = $archivoExcel->getActiveSheet()->getCell("C".$x)->getValue();
+                                        $concepto = $archivoExcel->getActiveSheet()->getCell("D".$x)->getValue();
+                                        $codcliprov = $archivoExcel->getActiveSheet()->getCell("E".$x)->getValue();
+                                        $rfc = $archivoExcel->getActiveSheet()->getCell("F".$x)->getValue();
+                                        $razonsocial = $archivoExcel->getActiveSheet()->getCell("G".$x)->getValue();
+                                        $codigoproducto = $archivoExcel->getActiveSheet()->getCell("H".$x)->getValue();
+                                        $producto = $archivoExcel->getActiveSheet()->getCell("I".$x)->getValue();
+                                        $factor = $archivoExcel->getActiveSheet()->getCell("J".$x)->getValue();
+                                        $almacen = $archivoExcel->getActiveSheet()->getCell("K".$x)->getValue();
+                                        $cantidad = $archivoExcel->getActiveSheet()->getCell("L".$x)->getValue();
+                                        $unidad = $archivoExcel->getActiveSheet()->getCell("M".$x)->getValue();
+                                        $precio = $archivoExcel->getActiveSheet()->getCell("N".$x)->getValue();					
+
+                                        $movtos[$y] = array("fecha" => $fecha, "codigoconcepto" => $codigoconcepto, "nombreconcepto" => $concepto, "codigocliprov" => $codcliprov, "rfc" => $rfc, "razonsocial" => $razonsocial, "codigoproducto" => $codigoproducto, "nombreproducto" => $producto, "factor" => $factor, "almacen" => $almacen, "cantidad" => $cantidad, "unidad" => $unidad, "total" => $precio, "sucursal" => $suc, "idconce" => $tipodocto, "estatus" => "", "codigo" => "", "movimientos" => []);
+                                        $movtos[$y]["movimientos"][0]= $movtos[$y];
+                                        $y++;
+                                    }
+                                    break;
+                                case "5":
+                                    $y = 0;
+                                    for($x=7 ; $archivoExcel->getActiveSheet()->getCell("A".$x) != "" ; $x++) {
+                                        $suc = $archivoExcel->getActiveSheet()->getCell("A".$x)->getValue();	
+                                        $fecha = $archivoExcel->getActiveSheet()->getCell("B".$x)->getFormattedValue();
+                                        $fechaPartes = explode('/',$fecha);
+                                        $dia = $fechaPartes[1] < 10 ? "0".$fechaPartes[1] : $fechaPartes[1];
+                                        $mes = $fechaPartes[0] < 10 ? "0".$fechaPartes[0] : $fechaPartes[0];
+                                        $fecha = $fechaPartes[2]."-".$mes."-".$dia;
+                                        $codigoconcepto = $archivoExcel->getActiveSheet()->getCell("C".$x)->getValue();
+                                        $concepto = $archivoExcel->getActiveSheet()->getCell("D".$x)->getValue();
+                                        $codcliprov = $archivoExcel->getActiveSheet()->getCell("E".$x)->getValue();
+                                        $rfc = $archivoExcel->getActiveSheet()->getCell("F".$x)->getValue();
+                                        $razonsocial = $archivoExcel->getActiveSheet()->getCell("G".$x)->getValue();
+                                        $codigoproducto = $archivoExcel->getActiveSheet()->getCell("H".$x)->getValue();
+                                        $producto = $archivoExcel->getActiveSheet()->getCell("I".$x)->getValue();
+                                        $factor = $archivoExcel->getActiveSheet()->getCell("J".$x)->getValue();
+                                        $almacen = $archivoExcel->getActiveSheet()->getCell("K".$x)->getValue();
+                                        $cantidad = $archivoExcel->getActiveSheet()->getCell("L".$x)->getValue();
+                                        $unidad = $archivoExcel->getActiveSheet()->getCell("M".$x)->getValue();				
+
+                                        $movtos[$y] = array("fecha" => $fecha, "codigoconcepto" => $codigoconcepto, "nombreconcepto" => $concepto, "codigocliprov" => $codcliprov, "rfc" => $rfc, "razonsocial" => $razonsocial, "codigoproducto" => $codigoproducto, "nombreproducto" => $producto, "almacen" => $almacen, "factor" => $factor, "cantidad" => $cantidad, "unidad" => $unidad, "sucursal" => $suc, "idconce" => $tipodocto, "estatus" => "", "codigo" => "", "movimientos" => []);
+                                        $movtos[$y]["movimientos"][0]= $movtos[$y];
+                                        $y++;
+                                    }
+                                    break;
+                                default:
+                                    $array["error"] = 49;
+                                    break;
+                            }
+                            //ChecarCatalogos
+                            if($y == 0) {
+                                $array["error"] = 52;
+                            }
+                            else {
+                                //$array["movtos"] = $movtos;
+                                $datos = $movtos;
+                                $count = count($datos);
+                                //$dato[1]['status'] = 0;                            
+                                
+                                $RFCGenerico = "XAXX010101000";
+
+                                for ($i = 0; $i < $count; $i++) {
+                                    $codprod = $datos[$i]['codigoproducto'];
+                                    $codigocliprov = $datos[$i]['codigocliprov'];
+                                    $rfc = $datos[$i]['rfc'];
+                                    $codconcepto = $datos[$i]['codigoconcepto'];
+                                    $razonsocial = $datos[$i]['razonsocial'];
+
+
+                                    $suc = $datos[$i]['sucursal'];
+                                    $tipodocto = $datos[$i]['idconce'];
+
+                                    $datos[$i]['productoreg'] = 0;
+                                    $datos[$i]['clienprovreg'] = 0;
+                                    $datos[$i]['conceptoreg'] = 0;
+                                    $datos[$i]['sucursalreg'] = 0;
+
+                                    switch ($tipodocto) { //Tipo de Cliente/Proveedor
+                                        case 2: //DIESEL
+                                        case 4:
+                                        case 5:
+                                            $tipocli = 2; //Proveedor
+                                            break;
+                                        case 3: //REMISION
+                                            $tipocli = 1; //Cliente
+                                            break;
+                                    }
+
+                                    $producto = DB::select("SELECT * FROM mc_catproductos WHERE codigoprod = '$codprod'");
+                                    if (empty($producto)) {
+                                        //$dato[1]['status'] = 1;
+                                        $datos[$i]['productoreg'] = 1;
+                                    } else {
+                                        if (is_null($datos[$i]['nombreproducto'])) {
+                                            $datos[$i]['nombreproducto'] = $producto[0]->nombreprod;
+                                        }
+                                    }
+
+                                    if ($rfc == $RFCGenerico) {
+                                        $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE codigoc = '$codigocliprov' And (tipocli = '$tipocli' OR tipocli = 3)");
+                                    } else {
+                                        $proveedor = DB::select("SELECT * FROM mc_catclienprov WHERE rfc = '$rfc' And (tipocli = '$tipocli' OR tipocli = 3)");
+                                    }
+                                    if (empty($proveedor)) {
+                                        //$dato[1]['status'] = 1;
+                                        $datos[$i]['clienprovreg'] = 1;
+                                    } else {
+                                    }
+
+                                    //$concepto = DB::select("SELECT * FROM mc_catconceptos WHERE codigoconcepto = '$codconcepto'");
+                                    $concepto = DB::select("SELECT * FROM mc_rubros WHERE clave = '$codconcepto'");
+                                    if (empty($concepto)) {
+                                        //$dato[1]['status'] = 1;
+                                        $datos[$i]['conceptoreg'] = 1;
+                                        $array["error"] = 53;
+                                    } else {
+                                        if (is_null($datos[$i]['nombreconcepto'])) {
+                                            $datos[$i]['nombreconcepto'] = $concepto[0]->nombre;
+                                            $datos[$i]['idmenu'] = $concepto[0]->idmenu;
+                                            $datos[$i]['idsubmenu'] = $concepto[0]->idsubmenu;
+                                            $datos[$i]['clave'] = $concepto[0]->claveplantilla;
+                                        }
+                                    }
+
+                                    $sucursal = DB::select("SELECT * FROM mc_catsucursales WHERE sucursal = '$suc'");
+                                    if (empty($sucursal)) {
+                                        //$dato[1]['status'] = 1;
+                                        $datos[$i]['sucursalreg'] = 1;
+                                        $array["error"] = 54;
+                                    } else {
+                                    }
+                                }
+                                /* if($dato[1]['status'] == 0) {
+                                    $array["error"] = 53;
+                                } */
+                                /* $dato[0] = $datos;
+                                $array["dato"] = $dato; */
+
+                                //VerificarLote
+
+                                for ($i = 0; $i < count($datos); $i++) {
+                                    $fecha = $datos[$i]['fecha'];
+                                    $fecha = str_replace("-", "", $fecha);
+                        
+                        
+                                    if ($datos[$i]['idconce'] == 3) {
+                                        $folio = $datos[$i]['folio'];
+                                        //$estatus = $request->movtos[$i];
+                                        $codigo = $fecha . $tipodocto . $folio;
+                                    } else if ($datos[$i]['idconce'] == 2) {
+                                        $unidad = $datos[$i]['unidad'];
+                                        //$estatus = $request->movtos[$i];
+                                        $litros = $datos[$i]['cantidad'];
+                                        $codigo = $fecha . $tipodocto . $litros . $unidad;
+                                    } else if ($datos[$i]['idconce'] == 4) {
+                                        $cantidad = $datos[$i]['cantidad'];
+                                        $unidad = $datos[$i]['unidad'];
+                                        $precio = $datos[$i]['total'];
+                                        $codigo = $fecha . $tipodocto . $cantidad . $unidad . $precio;
+                                    } else if ($datos[$i]['idconce'] == 5) {
+                                        $cantidad = $datos[$i]['cantidad'];
+                                        $unidad = $datos[$i]['unidad'];
+                                        //$estatus = $request->movtos[$i];                
+                                        $codigo = $fecha . $tipodocto . $cantidad . $unidad;
+                                    }
+                        
+                                    $result = DB::select("SELECT * FROM mc_lotesdocto WHERE codigo = '$codigo' And error <> 1");
+                        
+                                    if (empty($result)) {
+                                        $datos[$i]['estatus'] = "False";
+                                    } else {
+                                        $datos[$i]['estatus'] = "True";
+                                        $datos[$i]['iddocto'] = $result[0]->id;
+                                        $datos[$i]['procesado'] = $result[0]->estatus;
+                                    }
+                        
+                                    $datos[$i]['codigo'] = $codigo;
+                                }
+                                $array["documentos"] = $datos;
+                            }
+                        }
+                    }
+                    unlink($destino);
+                }else{
+                	$array["error"] = 49;
+                }
+            }
+            else {
+                $array["error"] = 49;
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function VerificarClave(Request $request)

@@ -317,8 +317,8 @@ class AlmacenDigitalOperacionesController extends Controller
     
                         $idalmacen = $archivo[0]->idalmdigital;
                         $type = explode(".", $archivo[0]->documento);
-                        $nombrearchivo = $ruta . "/" . $archivo[0]->codigodocumento . "." . $type[1];
-    
+                        //$nombrearchivo = $ruta . "/" . $archivo[0]->codigodocumento . "." . $type[1];
+                        $nombrearchivo = $ruta . "/" . $archivo[0]->codigodocumento . "." . $type[count($type) - 1];
                         if ($archivo[0]->estatus == 0) {
                             $resp = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $nombrearchivo);
 

@@ -923,6 +923,111 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function cambiarImagenServicio(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $idservicio = $request->idservicio;
+            $fecharegistro = $request->fecharegistro;
+            $nombreimagenantigua = $request->nombreimagenantigua;
+            $imagen = $request->file();
+            $nombreImagen = '';
+            $link = '';
+            $servercloud = '';
+            $usercloud = '';
+            $passcloud = '';
+            foreach ($imagen as $key => $file) {
+                $img = $file->getClientOriginalName();
+
+                set_time_limit(300);
+                $error = 0;
+                $datosParam = getParametros();
+                if ($datosParam != "") {
+                    $servercloud = $datosParam[0]->servidor_storage;
+                    $usercloud = $datosParam[0]->usuario_storage;
+                    $passcloud = $datosParam[0]->password_storage;
+                    $ch = curl_init();
+                    $gestor = fopen($file, "r");
+                    $contenido = fread($gestor, filesize($file));
+                    $nombreImagen = $fecharegistro."_".$img;
+                    curl_setopt_array($ch,
+                        array(
+                            CURLOPT_URL => 'https://'.$servercloud.'/remote.php/dav/files/'.$usercloud.'/Archivos Generales/'. $nombreImagen,
+                            CURLOPT_VERBOSE => 1,
+                            CURLOPT_USERPWD => $usercloud.':'.$passcloud,
+                            CURLOPT_POSTFIELDS => $contenido,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_BINARYTRANSFER => true,
+                            CURLOPT_CUSTOMREQUEST => 'PUT',
+                            )
+                    );
+                    $response = curl_exec($ch);
+
+                    $array["error"] = ($response != '' ? 57 : 0 );
+                    curl_close($ch);
+
+                    if($response == '') {
+                        $link = GetLinkArchivoAdmin($nombreImagen, $servercloud, $usercloud, $passcloud);
+                    }                    
+                }
+                else{
+                    $array["error"] = 45;
+                }
+            }
+
+            if($nombreimagenantigua != null) {
+                $resp = eliminaImagenServicioNextcloud($servercloud, $usercloud, $passcloud, $nombreimagenantigua);
+                //$array["resp"] = $resp;
+            }
+            
+            DB::connection("General")->table('mc0001')->where("id", $idservicio)->update(["imagen" => $nombreImagen, "download" => $link]);
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getContenidoServicio(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $idservicio = $request->idservicio;
+            $contenido = DB::connection("General")->select("SELECT * FROM mc0004 WHERE idservicio = $idservicio");
+            $array["contenido"] = $contenido;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function guardarContenidoServicio(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $idcontenido = $request->idcontenido;
+            $idservicio = $request->idservicio;
+            $nombre = $request->nombre;
+            $url = $request->url;
+            if($idcontenido == 0) {
+                DB::connection("General")->table("mc0004")->insert(["idservicio" => $idservicio,"nombre" => $nombre, "url" => $url]);
+            }
+            else {
+                DB::connection("General")->table('mc0004')->where("id", $idcontenido)->update(["nombre" => $nombre, "url" => $url]);
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function borrarContenidoServicio(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $idcontenido = $request->idcontenido;
+            DB::connection("General")->table('mc0004')->where("id", $idcontenido)->delete();
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function cambiarStatusServicio(Request $request)
     {
         $valida = verificarProveedor($request->usuario, $request->pwd);

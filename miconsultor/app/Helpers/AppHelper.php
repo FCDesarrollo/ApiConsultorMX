@@ -584,6 +584,27 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $regresa;
     }
 
+    function eliminaImagenServicioNextcloud(String $servidor, String $userSto, String $passSto,  string $imagen)
+    {
+        $ch = curl_init();
+        $url = 'https://' . $servidor . '/remote.php/dav/files/' . $userSto . '/Archivos Generales/' . $imagen;
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL => $url,
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => $userSto . ':' . $passSto,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'DELETE',
+            )
+        );
+        $regresa = curl_exec($ch);
+        //print_r($regresa);   
+        curl_close($ch);
+        return $regresa;
+    }
+
     function conectaFTP()
     {
         try {

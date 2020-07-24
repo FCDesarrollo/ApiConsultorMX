@@ -368,4 +368,8 @@ Route::delete('eliminarPerfilGlobal', 'ProveedoresController@eliminarPerfilGloba
 Route::get('getServicios', 'ProveedoresController@getServicios');
 Route::get('getServicio', 'ProveedoresController@getServicio');
 Route::post('guardarServicio', 'ProveedoresController@guardarServicio');
+Route::post('cambiarImagenServicio', 'ProveedoresController@cambiarImagenServicio');
+Route::get('getContenidoServicio', 'ProveedoresController@getContenidoServicio');
+Route::post('guardarContenidoServicio', 'ProveedoresController@guardarContenidoServicio');
+Route::delete('borrarContenidoServicio', 'ProveedoresController@borrarContenidoServicio');
 Route::put('cambiarStatusServicio', 'ProveedoresController@cambiarStatusServicio');

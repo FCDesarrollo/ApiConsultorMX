@@ -1107,9 +1107,13 @@ class EmpresaController extends Controller
 
         if($valida[0]['error'] === 0) {
             $idempresa = $request->idempresa;
-            $idservicio = $request->idservicio;
+            $idservicios = $request->idservicios;
+            /* $array["idservicios"] = $idservicios;
+            $array["idservicioslength"] = count($idservicios); */
             $fecha = $request->fecha;
-            DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicio, "fecha" => $fecha]);
+            for($x=0 ; $x<count($idservicios) ; $x++) {
+                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicios[$x], "fecha" => $fecha]);
+            }
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

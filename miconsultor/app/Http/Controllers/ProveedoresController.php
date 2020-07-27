@@ -853,6 +853,19 @@ class ProveedoresController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function getModulosAndSubmenus(Request $request)
+    {
+        $valida = verificarProveedor($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $modulos = DB::connection("General")->select("SELECT * FROM mc1003");
+            $array["servicio"] = $modulos;
+            $submenus = DB::connection("General")->select("SELECT * FROM mc1005");
+            $array["servicio"] = $submenus;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function guardarServicio(Request $request)
     {
         $valida = verificarProveedor($request->usuario, $request->pwd);

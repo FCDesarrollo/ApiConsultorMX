@@ -104,6 +104,31 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function servicioscontratadosRFC(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->correo, $request->contra);
+        if ($valida != "2" and $valida != "3"){
+            $rfcempresa = $request->Rfc;
+            $ejercicio = $request->Ejercicio;
+            $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfcempresa]);
+            if (!empty($empresa)) {
+                $bdd = $empresa[0]->rutaempresa;
+                $servicio = DB::select("select s.*,e.rfc,b.periodo,b.ejercicio,b.fecha from " . env('DB_DATABASE_GENERAL') . ".mc0002 s 
+                inner join " . env('DB_DATABASE_GENERAL') . ".mc1000 e on s.idempresa=e.idempresa
+                inner join $bdd.mc_bitcontabilidad b on s.idservicio=b.idservicio
+                where RFC = ? and ejercicio= ?", [$rfcempresa, $ejercicio]);
+                    $datos = array(
+                    "serviciocon" => $servicio,
+                    );
+            }else{
+                $valida = "2"; 
+            }
+        }else{
+            $datos = $valida;
+        }
+        return $datos;
+    }
+
     public function bitacoraservicios(Request $request){
         $valida = $this->usuarioadmin($request->correo, $request->contra);
         if ($valida != "2" and $valida != "3"){
@@ -143,11 +168,17 @@ class AdministradorController extends Controller
                     $ejercicio = $registros[$i]['Ejercicio']; 
                     $archivo = $registros[$i]['Archivo'];
                     $nomarchi = $registros[$i]['Nombrearchivo'];
-                    
+                    $url = $registros[$i]['Url'];
                     $idusersub = $usuario[0]->idusuario;
                     
                     $status=  0;
                     $iduserentrega = 0;
+                    $servi = DB::connection("General")->select('select id from mc0001 where codigoservicio = ?', [$request->Tipodocumento]);
+                    if (!empty($servi)) {
+                        $idser = $servi[0]->id;
+                    }else{
+                       $idser = 0; 
+                    }
                     $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE idsubmenu = $request->Idsubmenu
                                                         AND tipodocumento= '$request->Tipodocumento'
                                                         AND periodo= $periodo
@@ -159,12 +190,12 @@ class AdministradorController extends Controller
                             'fecha' => $now, 'fechamodificacion' => $fechamod,
                             'archivo' => $archivo, 'nombrearchivoG' => $nomarchi,
                             'status' => $status,'idusuarioE' => $iduserentrega,
-                            'idusuarioG' => $idusersub]);
+                            'idusuarioG' => $idusersub,'url' => $url, 'idservicio' => $idser ]);
                     }else{
                         DB::table('mc_bitcontabilidad')->where("idsubmenu", $request->Idsubmenu)->
                             where("tipodocumento", $request->Tipodocumento)->
                             where("periodo", $periodo)->where('ejercicio', $ejercicio)->
-                            update(['fechamodificacion' => $fechamod, 'fecha' => $now]);
+                            update(['fechamodificacion' => $fechamod, 'fecha' => $now,'url' => $url,'idservicio' => $idser ]);
                     } 
                 }
                 $reg = "true";
@@ -194,7 +225,7 @@ class AdministradorController extends Controller
                 DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
                         update(['status' => $request->Status, 'idusuarioE' => $iduserent,'fechacorte' => $fechacor,
-                             'fechaentregado' => $now]);
+                             'fechaentregado' => $now, 'idservicio' => $idservicio]);
                             
                 DB::table('mc_bitcontabilidad_det')->where('idbitacora', $result[0]->id)->delete();
                 for ($i=0; $i < $num_registros; $i++) {
@@ -217,12 +248,14 @@ class AdministradorController extends Controller
     {
         $now = $request->Fechaentregado;
         $datos="false";
+        $fechacor = $request->FechaCorte;
         $valida = $this->usuarioadmin($request->Correo, $request->Contra);
         if ($valida != "2" and $valida != "3"){
             ConnectDatabaseRFC($request->Rfc);
             $usuario = $valida['usuario'];
             $iduserent = $usuario[0]->idusuario;
             $idservicio = $request->Idservicio;
+            $archivoen = $request->Archivoentrega;
             $result = DB::select("SELECT id FROM mc_bitcontabilidad WHERE tipodocumento= '$request->Tipodocumento'
                                                 AND periodo= $request->Periodo
                                                 AND ejercicio=$request->Ejercicio");
@@ -230,7 +263,8 @@ class AdministradorController extends Controller
                 DB::table('mc_bitcontabilidad')->where("tipodocumento", $request->Tipodocumento)->
                         where("periodo", $request->Periodo)->where('ejercicio', $request->Ejercicio)->
                         update(['status' => $request->Status, 'idusuarioE' => $iduserent,
-                             'fechaentregado' => $now]);
+                             'fechaentregado' => $now, 'fechacorte' => $fechacor, 
+                             'idservicio' => $idservicio, 'nombrearchivoE' => $archivoen]);
                 $datos="true";
                 DB::insert('insert into mc_agente_entregas (idusuario, idservicio, tipodocumento, 
                         ejercicio, periodo, fechacorte, status) values (?, ?, ?, ?, ?, ?, ?)', [$iduserent,

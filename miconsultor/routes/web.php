@@ -373,3 +373,5 @@ Route::get('getContenidoServicio', 'ProveedoresController@getContenidoServicio')
 Route::post('guardarContenidoServicio', 'ProveedoresController@guardarContenidoServicio');
 Route::delete('borrarContenidoServicio', 'ProveedoresController@borrarContenidoServicio');
 Route::put('cambiarStatusServicio', 'ProveedoresController@cambiarStatusServicio');
+
+Route::post('servicioscontratadosRFC', 'AdministradorController@servicioscontratadosRFC');

@@ -274,6 +274,7 @@ Route::get('getServiciosEmpresaCliente', 'EmpresaController@getServiciosEmpresaC
 Route::post('agregarServicioEmpresaCliente', 'EmpresaController@agregarServicioEmpresaCliente');
 Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpresaCliente');
 Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
+Route::get('getContenidoServicioClientes', 'EmpresaController@getContenidoServicioClientes');
 
 
 //ACTUALIZA PERFILES GENERALES
@@ -331,6 +332,9 @@ Route::post('agregarPerfil', 'PerfilesController@agregarPerfil');
 Route::delete('eliminarPerfil', 'PerfilesController@eliminarPerfil');
 Route::get('datosPerfil', 'PerfilesController@datosPerfil');
 Route::put('editarPerfil', 'PerfilesController@editarPerfil');
+
+//CONTABILIDAD
+Route::get('getBitContabilidad', 'FcPremiumController@getBitContabilidad');
 
 //PROVEEDORES
 Route::get('getUsuarios', 'ProveedoresController@getUsuarios');

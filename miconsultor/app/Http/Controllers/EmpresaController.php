@@ -1156,4 +1156,16 @@ class EmpresaController extends Controller
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    function getContenidoServicioClientes(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $idservicio = $request->idservicio;
+            $contenido = DB::connection("General")->select("SELECT * FROM mc0004 WHERE idservicio = $idservicio");
+            $array["contenido"] = $contenido;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

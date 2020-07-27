@@ -773,28 +773,39 @@ class EmpresaController extends Controller
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_config_time);
 
-              $mc_cat_proveedores = "create table if not exists mc_catproveedores(
-                id INT(11) NOT NULL AUTO_INCREMENT,
-                codigo VARCHAR(100) COLLATE latin1_spanish_ci DEFAULT NULL,
-                rfc VARCHAR(70) COLLATE latin1_spanish_ci DEFAULT NULL,
-                razonsocial VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL,
-                PRIMARY KEY (id)
+              $mc_almdigital_exp = "create table if not exists mc_almdigital_exp(
+                idalmdigitaldet int(11) NOT NULL,
+                idmodulo int(11) NOT NULL,
+                cuenta varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                tipodoc varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
+                ejercicio int(11) DEFAULT NULL,
+                periodo int(11) DEFAULT NULL
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-              DB::statement($mc_cat_proveedores);
+              DB::statement($mc_almdigital_exp);
 
-              $mc_cat_proveedores = "create table if not exists mc_agente_entregas(
+              $mc_modulos_exped = "create table if not exists mc_modulos_exped(
                 id int(11) NOT NULL AUTO_INCREMENT,
                 idusuario int(11) DEFAULT NULL,
-                idservicio int(11) DEFAULT NULL,
-                tipodocumento varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
-                fecha timestamp NOT NULL DEFAULT current_timestamp(),
-                ejercicio int(11) DEFAULT NULL,
+                idmodulo int(11) DEFAULT NULL,
+                idcuenta int(11) DEFAULT NULL,
                 periodo int(11) DEFAULT NULL,
-                fechacorte date DEFAULT NULL,
-                status int(11) DEFAULT NULL,
-                PRIMARY KEY (`id`)
+                ejercicio int(11) DEFAULT NULL,
+                tipo_doc varchar(250) COLLATE latin1_spanish_ci DEFAULT NULL,
+                ruta varchar(250) COLLATE latin1_spanish_ci DEFAULT NULL,
+                fecha_reg varchar(30) COLLATE latin1_spanish_ci DEFAULT NULL,
+                fecha varchar(30) COLLATE latin1_spanish_ci DEFAULT NULL,
+                descripcion text NOT NULL,
+                numero1 int(11) DEFAULT NULL,
+                numero2 int(11) DEFAULT NULL,
+                numero3 int(11) DEFAULT NULL,
+                texto1 varchar(250) COLLATE latin1_spanish_ci DEFAULT NULL,
+                texto2 varchar(250) COLLATE latin1_spanish_ci DEFAULT NULL,
+                texto3 varchar(250) COLLATE latin1_spanish_ci DEFAULT NULL,
+                iddigital int(11) DEFAULT 0,
+                version varchar(30) COLLATE latin1_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (id)
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-              DB::statement($mc_cat_proveedores);
+              DB::statement($mc_modulos_exped);
               
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
@@ -1096,9 +1107,13 @@ class EmpresaController extends Controller
 
         if($valida[0]['error'] === 0) {
             $idempresa = $request->idempresa;
-            $idservicio = $request->idservicio;
+            $idservicios = $request->idservicios;
+            /* $array["idservicios"] = $idservicios;
+            $array["idservicioslength"] = count($idservicios); */
             $fecha = $request->fecha;
-            DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicio, "fecha" => $fecha]);
+            for($x=0 ; $x<count($idservicios) ; $x++) {
+                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicios[$x], "fecha" => $fecha]);
+            }
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1139,6 +1154,18 @@ class EmpresaController extends Controller
             $array["archivos"] = $archivos;
         }
 
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getContenidoServicioClientes(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $idservicio = $request->idservicio;
+            $contenido = DB::connection("General")->select("SELECT * FROM mc0004 WHERE idservicio = $idservicio");
+            $array["contenido"] = $contenido;
+        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

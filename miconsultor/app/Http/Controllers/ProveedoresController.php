@@ -49,6 +49,7 @@ class ProveedoresController extends Controller
             $correo = $request->correo;
             $password = password_hash($request->password, PASSWORD_BCRYPT);
             $tipo = $request->tipo;
+            $notificaciondb = $request->notificaciondb;
             $accion = $request->accion;
             $validacioncel = $request->validacioncel;
             $validacioncorreo = $request->validacioncorreo;
@@ -64,10 +65,10 @@ class ProveedoresController extends Controller
                             $validaridentificador = DB::connection("General")->select("SELECT * FROM mc1001 WHERE identificador = '$identificador'");
                         }while($validaridentificador == 0);
                 
-                        DB::connection("General")->table("mc1001")->insert(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "status" => 1 , "tipo" => $tipo, "identificador" => $identificador]);
+                        DB::connection("General")->table("mc1001")->insert(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "password" => $password, "status" => 1 , "tipo" => $tipo, "identificador" => $identificador, "notificaciondb" => $notificaciondb]);
                     }
                     else {
-                        DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "tipo" => $tipo]);
+                        DB::connection("General")->table('mc1001')->where("idusuario", $idusuario)->update(["nombre" => $nombre, "apellidop" => $apellidop, "apellidom" => $apellidom, "cel" => $cel, "correo" => $correo, "tipo" => $tipo, "notificaciondb" => $notificaciondb]);
                     }
                 }
                 else {
@@ -858,10 +859,14 @@ class ProveedoresController extends Controller
         $valida = verificarProveedor($request->usuario, $request->pwd);
         $array["error"] = $valida[0]["error"];
         if($valida[0]['error'] === 0) {
-            $modulos = DB::connection("General")->select("SELECT * FROM mc1003");
-            $array["servicio"] = $modulos;
-            $submenus = DB::connection("General")->select("SELECT * FROM mc1005");
-            $array["servicio"] = $submenus;
+            $fcmodulos = DB::connection("General")->select("SELECT * FROM fcmodulos ORDER BY nombre_modulo");
+            $array["fcmodulos"] = $fcmodulos;
+            $modulos = DB::connection("General")->select("SELECT * FROM mc1003 ORDER BY nombre_modulo");
+            $array["modulos"] = $modulos;
+            $menus = DB::connection("General")->select("SELECT * FROM mc1004 ORDER BY nombre_menu");
+            $array["menus"] = $menus;
+            $submenus = DB::connection("General")->select("SELECT * FROM mc1005 ORDER BY mc1005.nombre_submenu");
+            $array["submenus"] = $submenus;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
@@ -880,6 +885,10 @@ class ProveedoresController extends Controller
             $fecha = $request->fecha;
             $idservicio = $request->idservicio;
             $fecharegistro = $request->fecharegistro;
+            $fcmodulo = $request->fcmodulo;
+            $modulo = $request->modulo;
+            $menu = $request->menu;
+            $submenu = $request->submenu;
             $imagen = $request->file();
             $nombreImagen = '';
             $link = '';
@@ -927,10 +936,10 @@ class ProveedoresController extends Controller
                     }
                     //return json_encode($array, JSON_UNESCAPED_UNICODE);
                 }
-                DB::connection("General")->table("mc0001")->insert(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha, "status" => 1, "imagen" => $nombreImagen, "download" => $link]);
+                DB::connection("General")->table("mc0001")->insert(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha, "status" => 1, "imagen" => $nombreImagen, "download" => $link, "idfcmodulo" => $fcmodulo, "idmodulo" => $modulo, "idmenu" => $menu, "idsubmenu" => $submenu]);
             }
             else {
-                DB::connection("General")->table('mc0001')->where("id", $idservicio)->update(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha]);
+                DB::connection("General")->table('mc0001')->where("id", $idservicio)->update(["codigoservicio" => $codigo, "nombreservicio" => $nombre, "precio" => $precio, "descripcion" => $descripcion, "tipo" => $tipo, "actualizable" => $actualizable, "fecha" => $fecha, "idfcmodulo" => $fcmodulo, "idmodulo" => $modulo, "idmenu" => $menu, "idsubmenu" => $submenu]);
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

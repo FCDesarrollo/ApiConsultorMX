@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Mail;
 use App\Mail\MensajesValidacion;
+use App\Mail\MensajesGenerales;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -311,6 +312,16 @@ class EmpresaController extends Controller
 
                             $validacarpetas = $this->creaCarpetas($rfc, $archivocer, $archivokey, $passwordstorage);
                             $array["error"] = $validacarpetas;
+
+                            $dbvacias = DB::connection("General")->select("SELECT id FROM mc1010 WHERE rfc='' AND estatus=0");
+                            $proveedores = DB::connection("General")->select("SELECT * FROM mc1001 WHERE tipo = 4 AND notificaciondb = 1");
+                            for ($i=0; $i < count($proveedores); $i++) { 
+                                $data["titulo"] = "Nueva base de datos ocupada";
+                                $data["cabecera"] = "Nueva base de datos ocupada";
+                                $data["mensaje"] = "La base de datos ".$bdd." ha sido ocupada por la empresa ".$empresa.". Base de datos diponibles: ".count($dbvacias).".";
+                                Mail::to($proveedores[$i]->correo)->send(new MensajesGenerales($data));
+                            } 
+
                         }else{
                             $array["error"] = 44; //ERROR AL REGISTRAR
                         }

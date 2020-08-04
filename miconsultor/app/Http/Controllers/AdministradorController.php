@@ -90,6 +90,20 @@ class AdministradorController extends Controller
         return $datos;
     }
 
+    public function serviciosfcmodulo(Request $request)
+    {
+        $valida = $this->usuarioadmin($request->correo, $request->contra);
+        if ($valida != "2" and $valida != "3"){
+            $servicio = DB::connection("General")->select("SELECT * FROM mc0001 WHERE idfcmodulo=$request->idmodulo");
+                $datos = array(
+                   "servicio" => $servicio,
+                );
+        }else{
+            $datos = $valida;
+        }
+        return $datos;
+    }
+
     public function servicioscontratados(Request $request)
     {
         $valida = $this->usuarioadmin($request->correo, $request->contra);

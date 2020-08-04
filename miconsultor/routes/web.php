@@ -380,3 +380,4 @@ Route::delete('borrarContenidoServicio', 'ProveedoresController@borrarContenidoS
 Route::put('cambiarStatusServicio', 'ProveedoresController@cambiarStatusServicio');
 
 Route::post('servicioscontratadosRFC', 'AdministradorController@servicioscontratadosRFC');
+Route::post('serviciosfcmodulo', 'AdministradorController@serviciosfcmodulo');

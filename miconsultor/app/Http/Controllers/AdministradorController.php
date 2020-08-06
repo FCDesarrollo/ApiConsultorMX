@@ -289,23 +289,22 @@ class AdministradorController extends Controller
                     $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfcempresa]);
                     if (!empty($empresa)) {
                         $bdd = $empresa[0]->rutaempresa;
-                        $resultser = DB::select("SELECT idmodulo,idmenu,idsubmenu,nombreservicio FROM mc0001 WHERE id=$idservicio");
+                        $resultser = DB::connection("General")->select("SELECT idmodulo,idmenu,idsubmenu,nombreservicio FROM mc0001 WHERE id=$idservicio");
                         if(!empty($resultser)){
+                            $idsub= $resultser[0]->idsubmenu;
                             $datosNoti[0]["idusuario"] = $iduserent;
-                            $datosNoti[0]["encabezado"] = "Entrega del servicio CRM ".$resultser[0]->idmodulo;
+                            $datosNoti[0]["encabezado"] = "Entrega del servicio CRM ".$resultser[0]->nombreservicio;
                             $datosNoti[0]["mensaje"] = "Prueba servcio";
                             $datosNoti[0]["fecha"] = now();
                             $datosNoti[0]["idmodulo"] = $resultser[0]->idmodulo;
                             $datosNoti[0]["idmenu"] = $resultser[0]->idmenu;
                             $datosNoti[0]["idsubmenu"] = $resultser[0]->idsubmenu;
-                            $datosNoti[0]["idregistro"] = 5;
-                            $usuarios = DB::select("select s.notificaciones,u.correo from  $bdd.mc_usersubmenu s 
+                            $datosNoti[0]["idregistro"] = 0;
+                            $usuarios = DB::select("select s.notificaciones,u.correo,s.idusuario as id_usuario from  $bdd.mc_usersubmenu s 
                                         inner join " . env('DB_DATABASE_GENERAL') . ".mc1001 u on s.idusuario=u.idusuario
-                                        where  s.idsubmenu= ?", [$resultser[0]->idsubmenu]);
+                                        where  s.idsubmenu= ?", [$idsub]);
                             if (!empty($usuarios)) {
                                 $datosNoti[0]["usuarios"] = $usuarios;
-                            }
-                            if ($datosNoti[0]["usuarios"] != "") {
                                 $resp = enviaNotificacion($datosNoti);
                             }
                         }

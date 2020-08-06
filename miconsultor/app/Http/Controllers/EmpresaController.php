@@ -1179,4 +1179,60 @@ class EmpresaController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    function getDatosHome(Request $request)
+    {
+        $db = $request->db;
+
+        $documento = DB::connection("General")->select("SELECT $db.mc_requerimientos.idreq AS id , $db.mc_requerimientos.fecha, 
+        mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, 
+        CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
+        FROM $db.mc_requerimientos INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_requerimientos.id_departamento 
+        INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu INNER JOIN mc1003 ON mc1003.idmodulo = mc1004.idmodulo
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_requerimientos.id_usuario UNION        
+        SELECT $db.mc_almdigital.id , $db.mc_almdigital.fechadocto AS fecha, 
+        mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, 
+        CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
+        FROM $db.mc_almdigital INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_almdigital.idmodulo 
+        INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu INNER JOIN mc1003 ON mc1003.idmodulo = mc1004.idmodulo
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_almdigital.idusuario UNION        
+        SELECT $db.mc_bitcontabilidad.id , $db.mc_bitcontabilidad.fecha, 
+        mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, 
+        CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
+        FROM $db.mc_bitcontabilidad INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_bitcontabilidad.idsubmenu 
+        INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu INNER JOIN mc1003 ON mc1003.idmodulo = mc1004.idmodulo
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_bitcontabilidad.idusuarioE WHERE $db.mc_bitcontabilidad.status <> 0");
+
+        $array["documento"] = $documento;
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    /* function getDatosHome(Request $request)
+    {
+        $db = $request->db;
+
+        $requerimientos = DB::connection("General")->select("SELECT $db.mc_requerimientos.idreq AS id , $db.mc_requerimientos.fecha, 
+        mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1001.idusuario, CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
+        FROM $db.mc_requerimientos INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_requerimientos.id_departamento INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu 
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_requerimientos.id_usuario");
+
+        $array["requerimientos"] = $requerimientos;
+
+        $almacenes = DB::connection("General")->select("SELECT $db.mc_almdigital.id , $db.mc_almdigital.fechadocto AS fecha, 
+        mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1001.idusuario, CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
+        FROM $db.mc_almdigital INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_almdigital.idmodulo INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu 
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_almdigital.idusuario");
+
+        $array["almacenes"] = $almacenes;
+
+        $bitacoras = DB::connection("General")->select("SELECT $db.mc_bitcontabilidad.id , $db.mc_bitcontabilidad.fecha, 
+        mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1001.idusuario, CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
+        FROM $db.mc_bitcontabilidad INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_bitcontabilidad.idsubmenu INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu 
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_bitcontabilidad.idusuarioE WHERE $db.mc_bitcontabilidad.status <> 0");
+
+        $array["bitacoras"] = $bitacoras;
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    } */
 }

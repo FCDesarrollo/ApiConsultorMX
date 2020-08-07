@@ -11,6 +11,7 @@ class MensajesEntregas extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $datosNotificacion;
     /**
      * Create a new message instance.
      *

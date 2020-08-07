@@ -1,7 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Mail;
+use App\Mail\MensajesValidacion;
+use App\Mail\MensajesGenerales;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
@@ -284,28 +286,39 @@ class AdministradorController extends Controller
                         ejercicio, periodo, fechacorte, status) values (?, ?, ?, ?, ?, ?, ?)', [$iduserent,
                              $idservicio, $request->Tipodocumento, $request->Ejercicio, $request->Periodo,
                              $now, $request->Status]); 
-                if($request->Status =1){
+                if($request->Status == 1){
                     $rfcempresa = $request->Rfc;
                     $empresa = DB::connection("General")->select('select * from mc1000 where rfc = ?', [$rfcempresa]);
                     if (!empty($empresa)) {
                         $bdd = $empresa[0]->rutaempresa;
+                        $nomempresa = $empresa[0]->nombreempresa;
                         $resultser = DB::connection("General")->select("SELECT idmodulo,idmenu,idsubmenu,nombreservicio FROM mc0001 WHERE id=$idservicio");
                         if(!empty($resultser)){
+                            $link = "http://crm2.dublock.com/#/?ruta=estadosFinancieros&idempresa=35&idmodulo="
+                            .$resultser[0]->idmodulo.'&idmenu='.$resultser[0]->idmenu.'&idsubmenu='.$resultser[0]->idsubmenu;
                             $idsub= $resultser[0]->idsubmenu;
+                            $salto = chr(13).chr(10);
                             $datosNoti[0]["idusuario"] = $iduserent;
                             $datosNoti[0]["encabezado"] = "Entrega del servicio CRM ".$resultser[0]->nombreservicio;
-                            $datosNoti[0]["mensaje"] = "Prueba servcio";
+                            
                             $datosNoti[0]["fecha"] = now();
                             $datosNoti[0]["idmodulo"] = $resultser[0]->idmodulo;
                             $datosNoti[0]["idmenu"] = $resultser[0]->idmenu;
                             $datosNoti[0]["idsubmenu"] = $resultser[0]->idsubmenu;
                             $datosNoti[0]["idregistro"] = 0;
+                            
+                            $datosNoti[0]["usuarioent"] = "Usuario Entrego: ";
+                            $datosNoti[0]["empresa"] = "De la Empresa: ".$nomempresa;
+                            $datosNoti[0]["modulo"] = "Del Modulo: ";
+                            $datosNoti[0]["menu"] = "Del Menu: ";
+                            $datosNoti[0]["submenu"] = "Del SubMenu: ";
+                            $datosNoti[0]["mensaje"] = $link;
                             $usuarios = DB::select("select s.notificaciones,u.correo,s.idusuario as id_usuario from  $bdd.mc_usersubmenu s 
                                         inner join " . env('DB_DATABASE_GENERAL') . ".mc1001 u on s.idusuario=u.idusuario
                                         where  s.idsubmenu= ?", [$idsub]);
                             if (!empty($usuarios)) {
                                 $datosNoti[0]["usuarios"] = $usuarios;
-                                $resp = enviaNotificacion($datosNoti);
+                                $resp = enviaNotificacionEntre($datosNoti);
                             }
                         }
                     }

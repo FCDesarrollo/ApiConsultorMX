@@ -306,12 +306,12 @@ class AdministradorController extends Controller
                             $datosNoti[0]["idmenu"] = $resultser[0]->idmenu;
                             $datosNoti[0]["idsubmenu"] = $resultser[0]->idsubmenu;
                             $datosNoti[0]["idregistro"] = 0;
-                            
+
                             $datosNoti[0]["usuarioent"] = "Usuario Entrego: ";
                             $datosNoti[0]["empresa"] = "De la Empresa: ".$nomempresa;
-                            $datosNoti[0]["modulo"] = "Del Modulo: ";
-                            $datosNoti[0]["menu"] = "Del Menu: ";
-                            $datosNoti[0]["submenu"] = "Del SubMenu: ";
+                            $datosNoti[0]["modulo"] = "Del Modulo: ".GetNomModulo($resultser[0]->idmodulo);
+                            $datosNoti[0]["menu"] = "Del Menu: ".GetNommenu($resultser[0]->idmenu);
+                            $datosNoti[0]["submenu"] = "Del SubMenu: ".GetNomSubMenu($resultser[0]->idsubmenu);
                             $datosNoti[0]["mensaje"] = $link;
                             $usuarios = DB::select("select s.notificaciones,u.correo,s.idusuario as id_usuario from  $bdd.mc_usersubmenu s 
                                         inner join " . env('DB_DATABASE_GENERAL') . ".mc1001 u on s.idusuario=u.idusuario

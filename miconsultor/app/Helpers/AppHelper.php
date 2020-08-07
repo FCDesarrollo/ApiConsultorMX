@@ -113,6 +113,17 @@ function GetNomCarpetaModulo($idmodulo)
     return $carpeta;
 }
 
+function GetNomModulo($idmodulo)
+{
+    $carpeta ="";
+    $result = DB::connection("General")->select("SELECT nombre_modulo FROM mc1003 WHERE idmodulo=$idmodulo");
+    if (!empty($result)) {
+        $carpeta = $result[0]->nombre_carpeta;
+    }
+    
+    return $carpeta;
+}
+
 function GetNomCarpetaMenu($idmenu)
 {
     $carpeta ="";
@@ -124,10 +135,32 @@ function GetNomCarpetaMenu($idmenu)
     return $carpeta;
 }
 
+function GetNomMenu($idmenu)
+{
+    $carpeta ="";
+    $result = DB::connection("General")->select("SELECT nombre_menu FROM mc1004 WHERE idmenu=$idmenu");
+    if (!empty($result)) {
+        $carpeta = $result[0]->nombre_carpeta;
+    }
+    
+    return $carpeta;
+}
+
 function GetNomCarpetaSubMenu($idsubmenu)
 {
     $carpeta ="";
     $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1005 WHERE idsubmenu=$idsubmenu");
+    if (!empty($result)) {
+        $carpeta = $result[0]->nombre_carpeta;
+    }
+    
+    return $carpeta;
+}
+
+function GetNomSubMenu($idsubmenu)
+{
+    $carpeta ="";
+    $result = DB::connection("General")->select("SELECT nombre_submenu FROM mc1005 WHERE idsubmenu=$idsubmenu");
     if (!empty($result)) {
         $carpeta = $result[0]->nombre_carpeta;
     }

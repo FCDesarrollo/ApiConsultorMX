@@ -1,7 +1,10 @@
 <?php
 namespace App\Http\Controllers;
+
+use App\Mail\MensajesEntregas;
 use Illuminate\Support\Facades\DB;
 use App\Mail\MensajesNotificacion;
+
 use Mail;
 use Config;
 
@@ -710,7 +713,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
 
             if ($tipo == 1 or $tipo == 3 or $tipo == 5 or $tipo == 7) {
                 $correo = $usuarios[$i]->correo;
-                Mail::to($correo)->send(new MensajesNotificacion($datos));
+                Mail::to($correo)->send(new MensajesEntregas($datos));
             }
         }
         return 0;

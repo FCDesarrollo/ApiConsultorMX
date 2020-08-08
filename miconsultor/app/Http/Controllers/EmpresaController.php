@@ -1184,19 +1184,22 @@ class EmpresaController extends Controller
     {
         $db = $request->db;
 
-        $documento = DB::connection("General")->select("SELECT $db.mc_requerimientos.idreq AS id , $db.mc_requerimientos.fecha, 
+        $documento = DB::connection("General")->select("SELECT $db.mc_requerimientos.idreq AS id , $db.mc_requerimientos.fecha AS fecharegistro, $db.mc_requerimientos.fecha AS fechadocumento, 
+        DATE_FORMAT($db.mc_requerimientos.fecha, '%m') AS periodo, DATE_FORMAT($db.mc_requerimientos.fecha, '%Y') AS ejercicio,
         mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, 
         CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
         FROM $db.mc_requerimientos INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_requerimientos.id_departamento 
         INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu INNER JOIN mc1003 ON mc1003.idmodulo = mc1004.idmodulo
         INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_requerimientos.id_usuario UNION        
-        SELECT $db.mc_almdigital.id , $db.mc_almdigital.fechadocto AS fecha, 
+        SELECT $db.mc_almdigital.id , DATE_FORMAT($db.mc_almdigital.fechadecarga, '%Y-%m-%d') AS fecharegistro, $db.mc_almdigital.fechadocto AS fechadocumento, 
+        DATE_FORMAT($db.mc_almdigital.fechadocto, '%m') AS periodo, DATE_FORMAT($db.mc_almdigital.fechadocto, '%Y') AS ejercicio,
         mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, 
         CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
         FROM $db.mc_almdigital INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_almdigital.idmodulo 
         INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu INNER JOIN mc1003 ON mc1003.idmodulo = mc1004.idmodulo
         INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_almdigital.idusuario UNION        
-        SELECT $db.mc_bitcontabilidad.id , $db.mc_bitcontabilidad.fecha, 
+        SELECT $db.mc_bitcontabilidad.id , $db.mc_bitcontabilidad.fecha AS fecharegistro, $db.mc_bitcontabilidad.fecha AS fechadocumento, 
+        DATE_FORMAT($db.mc_bitcontabilidad.fecha, '%m') AS periodo, DATE_FORMAT($db.mc_bitcontabilidad.fecha, '%Y') AS ejercicio,
         mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, 
         CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
         FROM $db.mc_bitcontabilidad INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_bitcontabilidad.idsubmenu 

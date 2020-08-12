@@ -1183,6 +1183,7 @@ class EmpresaController extends Controller
     function getDatosHome(Request $request)
     {
         $db = $request->db;
+        $idusuario = $request->idusuario;
 
         $documento = DB::connection("General")->select("SELECT $db.mc_requerimientos.idreq AS id , $db.mc_requerimientos.fecha AS fecharegistro, $db.mc_requerimientos.fecha AS fechadocumento, 
         DATE_FORMAT($db.mc_requerimientos.fecha, '%m') AS periodo, DATE_FORMAT($db.mc_requerimientos.fecha, '%Y') AS ejercicio,
@@ -1190,21 +1191,39 @@ class EmpresaController extends Controller
         CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
         FROM $db.mc_requerimientos INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_requerimientos.id_departamento 
         INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu INNER JOIN mc1003 ON mc1003.idmodulo = mc1004.idmodulo
-        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_requerimientos.id_usuario UNION        
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_requerimientos.id_usuario
+        WHERE (SELECT $db.mc_usermod.tipopermiso FROM $db.mc_usermod 
+        WHERE $db.mc_usermod.idusuario = $idusuario AND $db.mc_usermod.idmodulo = mc1003.idmodulo) <> 0 
+        AND (SELECT $db.mc_usermenu.tipopermiso FROM $db.mc_usermenu 
+        WHERE $db.mc_usermenu.idusuario = $idusuario AND $db.mc_usermenu.idmenu = mc1004.idmenu) <> 0 
+        AND (SELECT $db.mc_usersubmenu.tipopermiso FROM $db.mc_usersubmenu 
+        WHERE $db.mc_usersubmenu.idusuario = $idusuario AND $db.mc_usersubmenu.idsubmenu = mc1005.idsubmenu) <> 0 UNION        
         SELECT $db.mc_almdigital.id , DATE_FORMAT($db.mc_almdigital.fechadecarga, '%Y-%m-%d') AS fecharegistro, $db.mc_almdigital.fechadocto AS fechadocumento, 
         DATE_FORMAT($db.mc_almdigital.fechadocto, '%m') AS periodo, DATE_FORMAT($db.mc_almdigital.fechadocto, '%Y') AS ejercicio,
         mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, 
         CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
         FROM $db.mc_almdigital INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_almdigital.idmodulo 
         INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu INNER JOIN mc1003 ON mc1003.idmodulo = mc1004.idmodulo
-        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_almdigital.idusuario UNION        
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_almdigital.idusuario
+        WHERE (SELECT $db.mc_usermod.tipopermiso FROM $db.mc_usermod 
+        WHERE $db.mc_usermod.idusuario = $idusuario AND $db.mc_usermod.idmodulo = mc1003.idmodulo) <> 0 
+        AND (SELECT $db.mc_usermenu.tipopermiso FROM $db.mc_usermenu 
+        WHERE $db.mc_usermenu.idusuario = $idusuario AND $db.mc_usermenu.idmenu = mc1004.idmenu) <> 0 
+        AND (SELECT $db.mc_usersubmenu.tipopermiso FROM $db.mc_usersubmenu 
+        WHERE $db.mc_usersubmenu.idusuario = $idusuario AND $db.mc_usersubmenu.idsubmenu = mc1005.idsubmenu) <> 0 UNION        
         SELECT $db.mc_bitcontabilidad.id , $db.mc_bitcontabilidad.fecha AS fecharegistro, $db.mc_bitcontabilidad.fecha AS fechadocumento, 
         DATE_FORMAT($db.mc_bitcontabilidad.fecha, '%m') AS periodo, DATE_FORMAT($db.mc_bitcontabilidad.fecha, '%Y') AS ejercicio,
         mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, 
         CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario 
         FROM $db.mc_bitcontabilidad INNER JOIN mc1005 ON mc1005.idsubmenu = $db.mc_bitcontabilidad.idsubmenu 
         INNER JOIN mc1004 ON mc1004.idmenu = mc1005.idmenu INNER JOIN mc1003 ON mc1003.idmodulo = mc1004.idmodulo
-        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_bitcontabilidad.idusuarioE WHERE $db.mc_bitcontabilidad.status <> 0");
+        INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_bitcontabilidad.idusuarioE WHERE $db.mc_bitcontabilidad.status <> 0
+        AND (SELECT $db.mc_usermod.tipopermiso FROM $db.mc_usermod 
+        WHERE $db.mc_usermod.idusuario = $idusuario AND $db.mc_usermod.idmodulo = mc1003.idmodulo) <> 0 
+        AND (SELECT $db.mc_usermenu.tipopermiso FROM $db.mc_usermenu 
+        WHERE $db.mc_usermenu.idusuario = $idusuario AND $db.mc_usermenu.idmenu = mc1004.idmenu) <> 0 
+        AND (SELECT $db.mc_usersubmenu.tipopermiso FROM $db.mc_usersubmenu 
+        WHERE $db.mc_usersubmenu.idusuario = $idusuario AND $db.mc_usersubmenu.idsubmenu = mc1005.idsubmenu) <> 0");
 
         $array["documento"] = $documento;
 

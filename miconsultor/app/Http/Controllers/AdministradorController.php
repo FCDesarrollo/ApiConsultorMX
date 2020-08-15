@@ -82,7 +82,7 @@ class AdministradorController extends Controller
     {
         $valida = $this->usuarioadmin($request->correo, $request->contra);
         if ($valida != "2" and $valida != "3"){
-            $servicio = DB::connection("General")->select("SELECT * FROM mc0001");
+            $servicio = DB::connection("General")->select("SELECT * FROM mc0001 WHERE status=1");
                 $datos = array(
                    "servicio" => $servicio,
                 );

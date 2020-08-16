@@ -1224,7 +1224,17 @@ class EmpresaController extends Controller
         AND (SELECT $db.mc_usermenu.tipopermiso FROM $db.mc_usermenu 
         WHERE $db.mc_usermenu.idusuario = $idusuario AND $db.mc_usermenu.idmenu = mc1004.idmenu) <> 0 
         AND (SELECT $db.mc_usersubmenu.tipopermiso FROM $db.mc_usersubmenu 
-        WHERE $db.mc_usersubmenu.idusuario = $idusuario AND $db.mc_usersubmenu.idsubmenu = mc1005.idsubmenu) <> 0");
+        WHERE $db.mc_usersubmenu.idusuario = $idusuario AND $db.mc_usersubmenu.idsubmenu = mc1005.idsubmenu) <> 0 UNION 
+        SELECT $db.mc_lotes.id , $db.mc_lotes.fechadecarga AS fecharegistro, $db.mc_lotes.fechadecarga AS fechadocumento, 
+        DATE_FORMAT($db.mc_lotes.fechadecarga, '%m') AS periodo, DATE_FORMAT($db.mc_lotes.fechadecarga, '%Y') AS ejercicio,
+        mc1005.idsubmenu, mc1005.nombre_submenu, mc1004.idmenu, mc1004.nombre_menu, mc1004.ref AS refmenu, mc1003.idmodulo, mc1003.nombre_modulo, mc1001.idusuario, CONCAT(mc1001.nombre, ' ',mc1001.apellidop, ' ',mc1001.apellidom) AS usuario,
+        (CONCAT('Registros: ', $db.mc_lotes.totalregistros, ' Cargados: ', $db.mc_lotes.totalcargados, ' Error: ', 
+        (SELECT SUM(IF($db.mc_lotesdocto.error>0, $db.mc_lotesdocto.error, 0)) FROM $db.mc_lotes ))) AS extra1
+        FROM $db.mc_lotes INNER JOIN mc1005 ON mc1005.idsubmenu = 
+        (SELECT $db.mc_rubros.idsubmenu FROM $db.mc_rubros WHERE $db.mc_rubros.idmenu = 6 AND $db.mc_rubros.claveplantilla = $db.mc_lotes.tipo LIMIT 1)
+        INNER JOIN mc1004 ON mc1004.idmenu = 6 INNER JOIN mc1003 ON mc1003.idmodulo = 2 INNER JOIN mc1001 ON mc1001.idusuario = $db.mc_lotes.usuario
+        LEFT JOIN $db.mc_lotesdocto ON $db.mc_lotes.id = $db.mc_lotesdocto.idlote 
+        WHERE $db.mc_lotes.totalregistros <> 0 AND $db.mc_lotes.totalcargados <> 0 AND $db.mc_lotesdocto.estatus <> 2 GROUP BY $db.mc_lotes.id");
 
         $array["documento"] = $documento;
 

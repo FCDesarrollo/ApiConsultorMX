@@ -817,6 +817,25 @@ class EmpresaController extends Controller
                 PRIMARY KEY (id)
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_modulos_exped);
+
+              $mc_flujosefectivo = "create table if not exists mc_flujosefectivo(
+                IdDoc INT(11) DEFAULT NULL,
+                Idcon INT(11) DEFAULT NULL,
+                Fecha DATE DEFAULT NULL,
+                Vence DATE DEFAULT NULL,
+                Idclien INT(11) DEFAULT NULL,
+                Razon VARCHAR(200) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Concepto VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Serie VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Folio NUMERIC(18, 0) DEFAULT NULL,
+                Total NUMERIC(18, 2) DEFAULT NULL,
+                Pendiente NUMERIC(18, 2) DEFAULT NULL,
+                Tipo VARCHAR(10) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Suc VARCHAR(5) COLLATE utf8_spanish_ci DEFAULT NULL,
+                cRFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
+                SaldoInt NUMERIC(18, 2) DEFAULT NULL
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_flujosefectivo);
               
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";

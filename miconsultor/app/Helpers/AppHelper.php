@@ -317,7 +317,22 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
          $httpResponse = curl_exec($ch);
          $httpResponse = explode("\n\r\n", $httpResponse);
          $body = $httpResponse[1];
+
+         libxml_use_internal_errors(true);
          $Respuesta = simplexml_load_string($body);
+         $xml = explode("\n", $body);
+
+        if (!$Respuesta) {
+            /* $errors = libxml_get_errors();
+
+            foreach ($errors as $error) {
+                echo display_xml_error($error, $xml);
+            }
+
+            libxml_clear_errors();
+            return $errors; */
+            return "";
+        }
          $url = ((string) $Respuesta[0]->data->url);
          curl_close($ch);
          return $url;

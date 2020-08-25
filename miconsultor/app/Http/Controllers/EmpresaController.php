@@ -1263,37 +1263,34 @@ class EmpresaController extends Controller
     function cargarFlujosEfectivo(Request $request)
     {
         $permisos = $request->permisos;
-        $array["permisos"] = $permisos;
         $valida = verificaPermisos($permisos["usuario"], $permisos["pwd"],$permisos["rfc"], $permisos["idsubmenu"]);
-        /* $array["usuario"] = $datos["usuario"];
-        $array["pwd"] = $datos["pwd"];
-        $array["rfc"] = $datos["rfc"];
-        $array["idsubmenu"] = $datos["idsubmenu"]; */
         $array["error"] = $valida[0]["error"];
-        $flujos = $request->flujos;
-        /* $array["flujos"] = $flujos;
-        $array["countflujos"] = count($flujos); */
-        $flujostotales = DB::select('select * from mc_flujosefectivo');
-        
-        for($x=0 ; $x<count($flujos) ; $x++) {
-            /* $flujoencontrado = DB::table('mc_flujosefectivo')->where("IdDoC", $flujos[$x]["IdDoC"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"]]); */
+        if($valida[0]['error'] === 0) {
+            $flujos = $request->flujos;
+            $flujostotales = DB::select('select * from mc_flujosefectivo');
             
-            $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoC = ? and Suc = ?', [$flujos[$x]["IdDoC"], $flujos[$x]["Suc"]]);
-            //$array["flujoencontrado"][$x] = $flujoencontrado;
-            if(count($flujoencontrado[$x]) > 0) {
-                //existe en la base de datos el documento
-            }
-            else {
-                //no existe en la base de datos el documento
-            }
-            /* for($y=0 ; $y<count($flujostotales) ; $y++) {
-                if($flujos[$x]["IdDoC"] == $flujostotales[$y]->IdDoc) {
-                    unset($flujostotales[$y]);
-                    $flujostotales = array_values($flujostotales);
+            for($x=0 ; $x<count($flujos) ; $x++) {            
+                $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoC = ? and Suc = ?', [$flujos[$x]["IdDoC"], $flujos[$x]["Suc"]]);
+                if(count($flujoencontrado) > 0) {
+                    DB::table('mc_flujosefectivo')->where("IdDoC", $flujos[$x]["IdDoC"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"]]);
+                    $IdDoc = $flujos[$x]["IdDoC"];
                 }
-            } */
+                else {
+                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoC"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => $flujos[$x]["Razon"], "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => $flujos[$x]["Tipo"], "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"]]);
+                    $IdDoc = 0;
+                }
+                for($y=0 ; $y<count($flujostotales) && $IdDoc != 0 ; $y++) {
+                    if($IdDoc == $flujostotales[$y]->IdDoc) {
+                        unset($flujostotales[$y]);
+                        $flujostotales = array_values($flujostotales);
+                    }
+                }
+            }
+
+            for($x=0 ; $x<count($flujostotales) ; $x++) {
+                DB::table('mc_flujosefectivo')->where("IdDoC", $flujostotales[$x]->IdDoc)->where("Suc", $flujostotales[$x]->Suc)->delete();
+            }
         }
-        /* $array["flujostotales"] = $flujostotales; */
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

@@ -275,6 +275,7 @@ Route::post('agregarServicioEmpresaCliente', 'EmpresaController@agregarServicioE
 Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpresaCliente');
 Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
 Route::get('getContenidoServicioClientes', 'EmpresaController@getContenidoServicioClientes');
+Route::get('traerFlujosEfectivo', 'EmpresaController@traerFlujosEfectivo');
 Route::post('cargarFlujosEfectivo', 'EmpresaController@cargarFlujosEfectivo');
 
 

@@ -1260,6 +1260,18 @@ class EmpresaController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function traerFlujosEfectivo(Request $request)
+    {
+        $permisos = $request->permisos;
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $flujosefectivo = DB::select("SELECT Razon, SUM(Pendiente) AS Pendiente, Tipo FROM mc_flujosefectivo GROUP BY Razon, Tipo");
+            $array["flujosefectivo"] = $flujosefectivo;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function cargarFlujosEfectivo(Request $request)
     {
         $permisos = $request->permisos;

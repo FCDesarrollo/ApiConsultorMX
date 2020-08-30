@@ -1272,6 +1272,34 @@ class EmpresaController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function traerFlujosEfectivoFiltrados(Request $request)
+    {
+        $permisos = $request->permisos;
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $query = "SELECT * FROM mc_flujosefectivo";
+            $forma = $request->forma;
+            switch($forma) {
+                case 1:
+                    $query.= " WHERE Razon = '$request->razon'";
+                    break;
+                case 2:
+                    $query.= " WHERE Tipo = '$request->tipo'";
+                    break;
+                case 3:
+                    $query.= " WHERE Razon = '$request->razon' AND Tipo = '$request->tipo'";
+                    break;
+                default:
+                    break;
+            }
+            $array["query"] = $query;
+            $flujosefectivo = DB::select($query);
+            $array["flujosefectivo"] = $flujosefectivo;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function cargarFlujosEfectivo(Request $request)
     {
         $permisos = $request->permisos;

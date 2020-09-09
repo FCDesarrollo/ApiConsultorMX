@@ -1290,10 +1290,15 @@ class EmpresaController extends Controller
                 case 3:
                     $query.= " WHERE Razon = '$request->razon' AND Tipo = '$request->tipo'";
                     break;
+                case 4:
+                    $query.= " WHERE id = ".$request->ids[0];
+                    for($x=1 ; $x<count($request->ids) ; $x++) {
+                        $query.= " OR id = ".$request->ids[$x];
+                    }
                 default:
                     break;
             }
-            $array["query"] = $query;
+            /* $array["query"] = $query; */
             $flujosefectivo = DB::select($query);
             $array["flujosefectivo"] = $flujosefectivo;
         }

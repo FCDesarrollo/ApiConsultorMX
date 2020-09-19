@@ -841,34 +841,45 @@ class EmpresaController extends Controller
               DB::statement($mc_flujosefectivo);
 
               $mc_flow_cliproctas = "create table if not exists mc_flow_cliproctas(
-                Id int(11) DEFAULT NULL,
-                IdClien01 INT(11) DEFAULT NULL,
+                Id int(11) NOT NULL AUTO_INCREMENT,
                 RFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
-                CveBanco VARCHAR(5) COLLATE utf8_spanish_ci DEFAULT NULL,
-                CveSuc VARCHAR(10) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Cuenta VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Clabe VARCHAR(20) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Ref VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Asumida INT(11) DEFAULT NULL,
-                Escliente INT(11) DEFAULT NULL
+                Escliente INT(11) DEFAULT NULL,
+                PRIMARY KEY (Id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_flow_cliproctas);
 
               $mc_flow_bancuentas = "create table if not exists mc_flow_bancuentas(
-                idCuentaBanco int(11) DEFAULT NULL,
+                idcuenta int(11) DEFAULT NULL,
                 Clabe VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Sucursal VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Cuenta VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
-                strLayout VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
-                FecIni DATE DEFAULT NULL,
-                NoSaldo int(11) DEFAULT NULL,
-                SaldoIni NUMERIC(16, 2) DEFAULT NULL,
-                FecUltMov DATE DEFAULT NULL,
-                Saldo NUMERIC(16, 2) DEFAULT NULL,
-                FecUltCon DATE DEFAULT NULL,
+                Nombre VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Activa bit DEFAULT NULL
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
               DB::statement($mc_flow_bancuentas);
+
+              $mc_flw_pagos = "create table if not exists mc_flw_pagos(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                IdDoc INT(11) DEFAULT NULL,
+                Idcon INT(11) DEFAULT NULL,
+                Fecha DATE DEFAULT NULL,
+                Vence DATE DEFAULT NULL,
+                Idclien INT(11) DEFAULT NULL,
+                Razon VARCHAR(200) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Concepto VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Serie VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Folio NUMERIC(18, 0) DEFAULT NULL,
+                Total NUMERIC(18, 2) DEFAULT NULL,
+                Pendiente NUMERIC(18, 2) DEFAULT NULL,
+                Tipo VARCHAR(10) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Suc VARCHAR(5) COLLATE utf8_spanish_ci DEFAULT NULL,
+                cRFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
+                SaldoInt NUMERIC(18, 2) DEFAULT NULL,
+                Layout INT(11) DEFAULT 0,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_flw_pagos);
               
 
             $mc1006 = "insert ".$empresaBD.".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
@@ -1295,7 +1306,6 @@ class EmpresaController extends Controller
 
     function traerFlujosEfectivo(Request $request)
     {
-        $permisos = $request->permisos;
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if($valida[0]['error'] === 0) {
@@ -1307,7 +1317,6 @@ class EmpresaController extends Controller
 
     function traerFlujosEfectivoFiltrados(Request $request)
     {
-        $permisos = $request->permisos;
         $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if($valida[0]['error'] === 0) {
@@ -1368,6 +1377,82 @@ class EmpresaController extends Controller
             for($x=0 ; $x<count($flujostotales) ; $x++) {
                 DB::table('mc_flujosefectivo')->where("IdDoC", $flujostotales[$x]->IdDoc)->where("Suc", $flujostotales[$x]->Suc)->delete();
             }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function cargarProveedores(Request $request)
+    {
+        $permisos = $request->permisos;
+        $valida = verificaPermisos($permisos["usuario"], $permisos["pwd"],$permisos["rfc"], $permisos["idsubmenu"]);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $proveedores = $request->proveedores;
+            
+            for($x=0 ; $x<count($proveedores) ; $x++) {
+                $proveedorencontrado = DB::select('select * from mc_catproveedores where rfc = ? ', [$proveedores[$x]["rfc"]]);
+                if(count($proveedorencontrado) == 0) {
+                    DB::table('mc_catproveedores')->insert(['codigo' => $proveedores[$x]["codigo"], 'rfc' => $proveedores[$x]["rfc"], "razonsocial" => $proveedores[$x]["razonsocial"], "sucursal" => $proveedores[$x]["sucursal"], "Escliente" => $proveedores[$x]["Escliente"]]);
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function cargarCuentasPropias(Request $request)
+    {
+        $permisos = $request->permisos;
+        $valida = verificaPermisos($permisos["usuario"], $permisos["pwd"],$permisos["rfc"], $permisos["idsubmenu"]);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $cuentas = $request->cuentas;
+            
+            for($x=0 ; $x<count($cuentas) ; $x++) {
+                $cuentaencontrada = DB::select('select * from mc_flow_bancuentas where Cuenta = ? ', [$cuentas[$x]["Cuenta"]]);
+                if(count($cuentaencontrada) == 0) {
+                    DB::table('mc_flow_bancuentas')->insert(['idcuenta' => $cuentas[$x]["idcuenta"], 'clabe' => $cuentas[$x]["clabe"], "Cuenta" => $cuentas[$x]["Cuenta"], "Nombre" => $cuentas[$x]["Nombre"], "Activa" => $cuentas[$x]["Activa"]]);
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function cargarCuentasClientesProveedores(Request $request)
+    {
+        $permisos = $request->permisos;
+        $valida = verificaPermisos($permisos["usuario"], $permisos["pwd"],$permisos["rfc"], $permisos["idsubmenu"]);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $cuentas = $request->cuentas;
+            
+            for($x=0 ; $x<count($cuentas) ; $x++) {
+                $cuentaencontrada = DB::select('select * from mc_flow_cliproctas where Cuenta = ? ', [$cuentas[$x]["Cuenta"]]);
+                if(count($cuentaencontrada) == 0) {
+                    DB::table('mc_flow_cliproctas')->insert(['RFC' => $cuentas[$x]["RFC"], 'Cuenta' => $cuentas[$x]["Cuenta"], "Clabe" => $cuentas[$x]["Clabe"], "Escliente" => $cuentas[$x]["Escliente"]]);
+                }
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getCuentasPropias(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $cuentas = DB::select("SELECT * FROM mc_flow_bancuentas");
+            $array["cuentas"] = $cuentas;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function getCuentasClientesProveedores(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if($valida[0]['error'] === 0) {
+            $cuentas = DB::select("SELECT * FROM mc_flow_cliproctas");
+            $array["cuentas"] = $cuentas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

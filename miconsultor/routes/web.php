@@ -278,6 +278,11 @@ Route::get('getContenidoServicioClientes', 'EmpresaController@getContenidoServic
 Route::get('traerFlujosEfectivo', 'EmpresaController@traerFlujosEfectivo');
 Route::post('traerFlujosEfectivoFiltrados', 'EmpresaController@traerFlujosEfectivoFiltrados');
 Route::post('cargarFlujosEfectivo', 'EmpresaController@cargarFlujosEfectivo');
+Route::post('cargarProveedores', 'EmpresaController@cargarProveedores');
+Route::post('cargarCuentasPropias', 'EmpresaController@cargarCuentasPropias');
+Route::post('cargarCuentasClientesProveedores', 'EmpresaController@cargarCuentasClientesProveedores');
+Route::get('getCuentasPropias', 'EmpresaController@getCuentasPropias');
+Route::get('getCuentasClientesProveedores', 'EmpresaController@getCuentasClientesProveedores');
 
 
 //ACTUALIZA PERFILES GENERALES

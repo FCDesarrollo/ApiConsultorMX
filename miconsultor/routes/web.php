@@ -283,6 +283,10 @@ Route::post('cargarCuentasPropias', 'EmpresaController@cargarCuentasPropias');
 Route::post('cargarCuentasClientesProveedores', 'EmpresaController@cargarCuentasClientesProveedores');
 Route::get('getCuentasPropias', 'EmpresaController@getCuentasPropias');
 Route::get('getCuentasClientesProveedores', 'EmpresaController@getCuentasClientesProveedores');
+Route::get('getFlwPagos', 'EmpresaController@getFlwPagos');
+Route::post('guardarFlwPagos', 'EmpresaController@guardarFlwPagos');
+Route::post('cambiarEstatusLayoutFlwPagos', 'EmpresaController@cambiarEstatusLayoutFlwPagos');
+Route::delete('borrarFlwPagosByLlaveMath', 'AutorizacionyGastosController@borrarFlwPagosByLlaveMath');
 
 
 //ACTUALIZA PERFILES GENERALES

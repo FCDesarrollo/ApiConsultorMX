@@ -837,7 +837,7 @@ class EmpresaController extends Controller
                 Total NUMERIC(18, 2) DEFAULT NULL,
                 Pendiente NUMERIC(18, 2) DEFAULT NULL,
                 Tipo VARCHAR(10) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Suc VARCHAR(5) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Suc VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 cRFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
                 SaldoInt NUMERIC(18, 2) DEFAULT NULL,
                 PRIMARY KEY (id)
@@ -849,7 +849,7 @@ class EmpresaController extends Controller
                 RFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Cuenta VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Clabe VARCHAR(20) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Sucursal INT(11) DEFAULT NULL,
+                Banco VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Escliente INT(11) DEFAULT NULL,
                 PRIMARY KEY (Id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
@@ -879,7 +879,7 @@ class EmpresaController extends Controller
                 Total NUMERIC(18, 2) DEFAULT NULL,
                 Pendiente NUMERIC(18, 2) DEFAULT NULL,
                 Tipo VARCHAR(10) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Suc VARCHAR(5) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Suc VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 cRFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
                 SaldoInt NUMERIC(18, 2) DEFAULT NULL,
                 Importe NUMERIC(18, 2) DEFAULT NULL,
@@ -1367,12 +1367,12 @@ class EmpresaController extends Controller
             $flujostotales = DB::select('select * from mc_flujosefectivo');
 
             for ($x = 0; $x < count($flujos); $x++) {
-                $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoC = ? and Suc = ?', [$flujos[$x]["IdDoC"], $flujos[$x]["Suc"]]);
+                $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoc = ? and Suc = ?', [$flujos[$x]["IdDoc"], $flujos[$x]["Suc"]]);
                 if (count($flujoencontrado) > 0) {
-                    DB::table('mc_flujosefectivo')->where("IdDoC", $flujos[$x]["IdDoC"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"]]);
-                    $IdDoc = $flujos[$x]["IdDoC"];
+                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"]]);
+                    $IdDoc = $flujos[$x]["IdDoc"];
                 } else {
-                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoC"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"]]);
+                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"]]);
                     $IdDoc = 0;
                 }
                 for ($y = 0; $y < count($flujostotales) && $IdDoc != 0; $y++) {
@@ -1384,7 +1384,7 @@ class EmpresaController extends Controller
             }
 
             for ($x = 0; $x < count($flujostotales); $x++) {
-                DB::table('mc_flujosefectivo')->where("IdDoC", $flujostotales[$x]->IdDoc)->where("Suc", $flujostotales[$x]->Suc)->delete();
+                DB::table('mc_flujosefectivo')->where("IdDoc", $flujostotales[$x]->IdDoc)->where("Suc", $flujostotales[$x]->Suc)->delete();
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1437,7 +1437,7 @@ class EmpresaController extends Controller
             for ($x = 0; $x < count($cuentas); $x++) {
                 $cuentaencontrada = DB::select('select * from mc_flow_cliproctas where Cuenta = ? ', [$cuentas[$x]["Cuenta"]]);
                 if (count($cuentaencontrada) == 0) {
-                    DB::table('mc_flow_cliproctas')->insert(['RFC' => $cuentas[$x]["RFC"], 'Cuenta' => $cuentas[$x]["Cuenta"], "Clabe" => $cuentas[$x]["Clabe"], "Sucursal" => $cuentas[$x]["Sucursal"], "Escliente" => $cuentas[$x]["Escliente"]]);
+                    DB::table('mc_flow_cliproctas')->insert(['RFC' => $cuentas[$x]["RFC"], 'Cuenta' => $cuentas[$x]["Cuenta"], "Clabe" => $cuentas[$x]["Clabe"], "Banco" => $cuentas[$x]["Banco"], "Escliente" => $cuentas[$x]["Escliente"]]);
                 }
             }
         }

@@ -860,7 +860,7 @@ class EmpresaController extends Controller
                 Clabe VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Cuenta VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Nombre VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Activa bit DEFAULT NULL
+                Activa int(11) DEFAULT NULL
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flow_bancuentas);
 

@@ -489,7 +489,8 @@ class EmpresaController extends Controller
                 codigo VARCHAR(100) COLLATE latin1_spanish_ci DEFAULT NULL,
                 rfc VARCHAR(70) COLLATE latin1_spanish_ci DEFAULT NULL,
                 razonsocial VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL,
-                sucursal VARCHAR(50) COLLATE latin1_spanish_ci DEFAULT NULL,
+                sucursal VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
+                Escliente INT(11) DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catproveedores);
@@ -850,6 +851,7 @@ class EmpresaController extends Controller
                 Cuenta VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Clabe VARCHAR(20) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Banco VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
+                IdBanco INT(11) DEFAULT NULL,
                 Escliente INT(11) DEFAULT NULL,
                 PRIMARY KEY (Id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
@@ -860,6 +862,7 @@ class EmpresaController extends Controller
                 Clabe VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Cuenta VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Nombre VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                IdBanco INT(11) DEFAULT NULL,
                 Activa int(11) DEFAULT NULL
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flow_bancuentas);
@@ -1399,9 +1402,12 @@ class EmpresaController extends Controller
             $proveedores = $request->proveedores;
 
             for ($x = 0; $x < count($proveedores); $x++) {
-                $proveedorencontrado = DB::select('select * from mc_catproveedores where rfc = ? ', [$proveedores[$x]["rfc"]]);
+                $proveedorencontrado = DB::select('select * from mc_catproveedores where codigo = ? ', [$proveedores[$x]["codigo"]]);
                 if (count($proveedorencontrado) == 0) {
                     DB::table('mc_catproveedores')->insert(['codigo' => $proveedores[$x]["codigo"], 'rfc' => $proveedores[$x]["rfc"], "razonsocial" => $proveedores[$x]["razonsocial"], "sucursal" => $proveedores[$x]["sucursal"], "Escliente" => $proveedores[$x]["Escliente"]]);
+                }
+                else {
+                    DB::table('mc_catproveedores')->where("codigo", $proveedores[$x]["codigo"])->update(['sucursal' => $proveedores[$x]["sucursal"], 'Escliente' => $proveedores[$x]["Escliente"]]);
                 }
             }
         }
@@ -1419,7 +1425,7 @@ class EmpresaController extends Controller
             for ($x = 0; $x < count($cuentas); $x++) {
                 $cuentaencontrada = DB::select('select * from mc_flow_bancuentas where Cuenta = ? ', [$cuentas[$x]["Cuenta"]]);
                 if (count($cuentaencontrada) == 0) {
-                    DB::table('mc_flow_bancuentas')->insert(['IdCuenta' => $cuentas[$x]["IdCuenta"], 'Clabe' => $cuentas[$x]["Clabe"], "Cuenta" => $cuentas[$x]["Cuenta"], "Nombre" => $cuentas[$x]["Nombre"], "Activa" => $cuentas[$x]["Activa"]]);
+                    DB::table('mc_flow_bancuentas')->insert(['IdCuenta' => $cuentas[$x]["IdCuenta"], 'Clabe' => $cuentas[$x]["Clabe"], "Cuenta" => $cuentas[$x]["Cuenta"], "Nombre" => $cuentas[$x]["Nombre"], "IdBanco" => $cuentas[$x]["IdBanco"], "Activa" => $cuentas[$x]["Activa"]]);
                 }
             }
         }
@@ -1437,7 +1443,7 @@ class EmpresaController extends Controller
             for ($x = 0; $x < count($cuentas); $x++) {
                 $cuentaencontrada = DB::select('select * from mc_flow_cliproctas where Cuenta = ? ', [$cuentas[$x]["Cuenta"]]);
                 if (count($cuentaencontrada) == 0) {
-                    DB::table('mc_flow_cliproctas')->insert(['RFC' => $cuentas[$x]["RFC"], 'Cuenta' => $cuentas[$x]["Cuenta"], "Clabe" => $cuentas[$x]["Clabe"], "Banco" => $cuentas[$x]["Banco"], "Escliente" => $cuentas[$x]["Escliente"]]);
+                    DB::table('mc_flow_cliproctas')->insert(['Id' => $cuentas[$x]["Id"], 'RFC' => $cuentas[$x]["RFC"], 'Cuenta' => $cuentas[$x]["Cuenta"], "Clabe" => $cuentas[$x]["Clabe"], "Banco" => $cuentas[$x]["Banco"], "IdBanco" => $cuentas[$x]["IdBanco"], "Escliente" => $cuentas[$x]["Escliente"]]);
                 }
             }
         }
@@ -1449,7 +1455,7 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $cuentas = DB::select("SELECT * FROM mc_flow_bancuentas");
+            $cuentas = DB::select("SELECT * FROM mc_flow_bancuentas WHERE Activa = 1");
             $array["cuentas"] = $cuentas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1460,7 +1466,7 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $cuentas = DB::select("SELECT * FROM mc_flow_cliproctas");
+            $cuentas = DB::select("SELECT mc_flow_cliproctas.*, IF(ISNULL(Clabe), Cuenta, Clabe) AS Num FROM mc_flow_cliproctas WHERE Cuenta IS NOT NULL OR Clabe IS NOT NULL");
             $array["cuentas"] = $cuentas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

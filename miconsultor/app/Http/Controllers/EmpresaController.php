@@ -841,6 +841,9 @@ class EmpresaController extends Controller
                 Suc VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 cRFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
                 SaldoInt NUMERIC(18, 2) DEFAULT NULL,
+                IdUsuario INT(11) DEFAULT NULL,
+                Comentarios VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Prioridad INT(11) DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flujosefectivo);
@@ -885,6 +888,9 @@ class EmpresaController extends Controller
                 Suc VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 cRFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
                 SaldoInt NUMERIC(18, 2) DEFAULT NULL,
+                IdUsuarioDocumento INT(11) DEFAULT NULL,
+                Comentarios VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Prioridad INT(11) DEFAULT NULL,
                 Importe NUMERIC(18, 2) DEFAULT NULL,
                 FechaPago DATE DEFAULT NULL,
                 LlaveMatch VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
@@ -1375,7 +1381,7 @@ class EmpresaController extends Controller
                     DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"]]);
                     $IdDoc = $flujos[$x]["IdDoc"];
                 } else {
-                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"]]);
+                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"]]);
                     $IdDoc = 0;
                 }
                 for ($y = 0; $y < count($flujostotales) && $IdDoc != 0; $y++) {
@@ -1512,6 +1518,9 @@ class EmpresaController extends Controller
                 $Suc = $request->Suc;
                 $cRFC = $request->cRFC;
                 $SaldoInt = $request->SaldoInt;
+                $IdUsuarioDocumento = $request->IdUsuarioDocumento;
+                $Comentarios = $request->Comentarios;
+                $Prioridad = $request->Prioridad;
                 $FechaPago = $request->FechaPago;
                 $Importe = $request->Importe;
                 $LlaveMatch = $request->LlaveMatch;
@@ -1524,6 +1533,7 @@ class EmpresaController extends Controller
                     'Concepto' => $Concepto, 'Serie' => $Serie, 'Folio' => $Folio,
                     'Total' => $Total, 'Pendiente' => $Pendiente, 'Tipo' => $Tipo,
                     'Suc' => $Suc, 'cRFC' => $cRFC, 'SaldoInt' => $SaldoInt,
+                    'IdUsuarioDocumento' => $IdUsuarioDocumento, 'Comentarios' => $Comentarios, 'Prioridad' => $Prioridad,
                     'FechaPago' => $FechaPago, "Importe" => $Importe, "LlaveMatch" => $LlaveMatch, "IdUsuario" => $IdUsuario
                 ]);
             } else {

@@ -491,6 +491,7 @@ class EmpresaController extends Controller
                 razonsocial VARCHAR(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 sucursal VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
                 Escliente INT(11) DEFAULT NULL,
+                Prioridad INT(11) DEFAULT 0,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catproveedores);
@@ -1328,7 +1329,11 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $flujosefectivo = DB::select("SELECT id, Razon, SUM(Pendiente) AS Pendiente, Tipo FROM mc_flujosefectivo GROUP BY Razon, Tipo, id");
+            /* $flujosefectivo = DB::select("SELECT id, Razon, SUM(Pendiente) AS Pendiente, Tipo FROM mc_flujosefectivo GROUP BY Razon, Tipo, id"); */
+            $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo,
+            (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
+            FROM mc_flujosefectivo GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC
+            ");
             $array["flujosefectivo"] = $flujosefectivo;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1461,7 +1466,7 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $cuentas = DB::select("SELECT * FROM mc_flow_bancuentas WHERE Activa = 1");
+            $cuentas = DB::select("SELECT * FROM mc_flow_bancuentas WHERE Activa = 1 ORDER BY Nombre");
             $array["cuentas"] = $cuentas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1472,7 +1477,9 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $cuentas = DB::select("SELECT mc_flow_cliproctas.*, IF(ISNULL(Clabe), Cuenta, Clabe) AS Num FROM mc_flow_cliproctas WHERE Cuenta IS NOT NULL OR Clabe IS NOT NULL");
+            $cuentas = DB::select("SELECT mc_flow_cliproctas.*,
+            IF(ISNULL(Clabe), CONCAT(REPLACE(Banco,', S.A.', ''),' ',SUBSTRING(Cuenta, -4)), CONCAT(REPLACE(Banco,', S.A.',''), ' ',SUBSTRING(Clabe, -4))) AS Layout
+            FROM mc_flow_cliproctas WHERE Cuenta IS NOT NULL OR Clabe IS NOT NULL ORDER BY Layout");
             $array["cuentas"] = $cuentas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1564,6 +1571,33 @@ class EmpresaController extends Controller
             $LlaveMatch = $request->LlaveMatch;
 
             DB::table('mc_flw_pagos')->where("LlaveMatch", $LlaveMatch)->delete();
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function traerProveedoresFiltro(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $proveedores = DB::select('SELECT * FROM mc_catproveedores WHERE rfc IS NOT NULL ORDER BY razonsocial');
+            $array["proveedores"] = $proveedores;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function cambiarPrioridadProveedor(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $idproveedor = $request->idproveedor;
+            $prioridad = $request->prioridad;
+            DB::table('mc_catproveedores')->where("id", $idproveedor)->update(['Prioridad' => $prioridad]);
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

@@ -287,6 +287,8 @@ Route::get('getFlwPagos', 'EmpresaController@getFlwPagos');
 Route::post('guardarFlwPagos', 'EmpresaController@guardarFlwPagos');
 Route::post('cambiarEstatusLayoutFlwPagos', 'EmpresaController@cambiarEstatusLayoutFlwPagos');
 Route::delete('borrarFlwPagosByLlaveMath', 'AutorizacionyGastosController@borrarFlwPagosByLlaveMath');
+Route::get('traerProveedoresFiltro', 'EmpresaController@traerProveedoresFiltro');
+Route::post('cambiarPrioridadProveedor', 'EmpresaController@cambiarPrioridadProveedor');
 
 
 //ACTUALIZA PERFILES GENERALES

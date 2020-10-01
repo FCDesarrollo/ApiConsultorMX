@@ -845,6 +845,7 @@ class EmpresaController extends Controller
                 IdUsuario INT(11) DEFAULT NULL,
                 Comentarios VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Prioridad INT(11) DEFAULT NULL,
+                Procesando INT(11) DEFAULT 0,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flujosefectivo);
@@ -1329,11 +1330,32 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
+            $filtro = $request->filtro;
+            $pendiente = $request->pendiente;
+            if ($filtro == 1) {
+                $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo, (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon FROM mc_flujosefectivo WHERE mc_flujosefectivo.Pendiente >= $pendiente GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC");
+            } else if($filtro == 3) {
+                $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo,
+                (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
+                FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
+                WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente
+                GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC
+                ");
+            } else if($filtro == 4) {
+                $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo,
+                (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon FROM mc_flujosefectivo WHERE Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente 
+                GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC");
+            }
+            else {
+                $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo,
+                (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
+                FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
+                WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id 
+                ORDER BY PendientePorRazon DESC
+                ");
+            }
             /* $flujosefectivo = DB::select("SELECT id, Razon, SUM(Pendiente) AS Pendiente, Tipo FROM mc_flujosefectivo GROUP BY Razon, Tipo, id"); */
-            $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo,
-            (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
-            FROM mc_flujosefectivo GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC
-            ");
+
             $array["flujosefectivo"] = $flujosefectivo;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1344,17 +1366,37 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $query = "SELECT * FROM mc_flujosefectivo";
-            $forma = $request->forma;
-            switch ($forma) {
+            $filtro = $request->filtro;
+            $query = "";
+            switch ($filtro) {
                 case 1:
-                    $query .= " WHERE Razon = '$request->razon'";
-                    break;
-                case 2:
-                    $query .= " WHERE Tipo = '$request->tipo'";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo";
                     break;
                 case 3:
-                    $query .= " WHERE Razon = '$request->razon' AND Tipo = '$request->tipo'";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1";
+                    break;
+                case 4:
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE Prioridad = 1";
+                    break;
+                case 6:
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1";
+                    break;
+                default:
+                    break;
+            }
+
+            $forma = $request->forma;
+            $separador = $filtro == 1 ? " WHERE" : " AND";
+
+            switch ($forma) {
+                case 1:
+                    $query .= $separador." mc_flujosefectivo.Razon = '$request->razon'";
+                    break;
+                case 2:
+                    $query .= $separador." mc_flujosefectivo.Tipo = '$request->tipo'";
+                    break;
+                case 3:
+                    $query .= $separador." mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo'";
                     break;
                 case 4:
                     $query .= " WHERE id = " . $request->ids[0];
@@ -1378,28 +1420,36 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             $flujos = $request->flujos;
-            $flujostotales = DB::select('select * from mc_flujosefectivo');
+            $procesando = $permisos["Procesando"];
+            /* $flujostotales = DB::select('select * from mc_flujosefectivo'); */
 
+            if ($procesando == 1) {
+                DB::table('mc_flujosefectivo')->update(['Procesando' => 0]);
+            }
             for ($x = 0; $x < count($flujos); $x++) {
                 $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoc = ? and Suc = ?', [$flujos[$x]["IdDoc"], $flujos[$x]["Suc"]]);
                 if (count($flujoencontrado) > 0) {
-                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"]]);
-                    $IdDoc = $flujos[$x]["IdDoc"];
+                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], 'Procesando' => 1]);
+                    //$IdDoc = $flujos[$x]["IdDoc"];
                 } else {
-                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"]]);
-                    $IdDoc = 0;
+                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], "Procesando" => 1]);
+                    //$IdDoc = 0;
                 }
-                for ($y = 0; $y < count($flujostotales) && $IdDoc != 0; $y++) {
+                /* for ($y = 0; $y < count($flujostotales) && $IdDoc != 0; $y++) {
                     if ($IdDoc == $flujostotales[$y]->IdDoc) {
                         unset($flujostotales[$y]);
                         $flujostotales = array_values($flujostotales);
                     }
-                }
+                } */
             }
 
-            for ($x = 0; $x < count($flujostotales); $x++) {
-                DB::table('mc_flujosefectivo')->where("IdDoc", $flujostotales[$x]->IdDoc)->where("Suc", $flujostotales[$x]->Suc)->delete();
+            if ($procesando == 2) {
+                DB::table('mc_flujosefectivo')->where("Procesando", 0)->delete();
             }
+
+            /* for ($x = 0; $x < count($flujostotales); $x++) {
+                DB::table('mc_flujosefectivo')->where("IdDoc", $flujostotales[$x]->IdDoc)->where("Suc", $flujostotales[$x]->Suc)->delete();
+            } */
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
@@ -1416,8 +1466,7 @@ class EmpresaController extends Controller
                 $proveedorencontrado = DB::select('select * from mc_catproveedores where codigo = ? ', [$proveedores[$x]["codigo"]]);
                 if (count($proveedorencontrado) == 0) {
                     DB::table('mc_catproveedores')->insert(['codigo' => $proveedores[$x]["codigo"], 'rfc' => $proveedores[$x]["rfc"], "razonsocial" => $proveedores[$x]["razonsocial"], "sucursal" => $proveedores[$x]["sucursal"], "Escliente" => $proveedores[$x]["Escliente"]]);
-                }
-                else {
+                } else {
                     DB::table('mc_catproveedores')->where("codigo", $proveedores[$x]["codigo"])->update(['sucursal' => $proveedores[$x]["sucursal"], 'Escliente' => $proveedores[$x]["Escliente"]]);
                 }
             }

@@ -1932,6 +1932,7 @@ class ConsumoController extends Controller
         $valida = verificaUsuario($request->usuario, $request->pwd);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] == 0) {
+            ConnectDatabaseRFC($request->rfc);
             $archivo = DB::select("SELECT * FROM mc_almdigital_det WHERE id = $request->iddigital");
             $array["archivo"] = $archivo;
         }

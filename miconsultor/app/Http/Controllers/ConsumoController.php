@@ -1928,4 +1928,14 @@ class ConsumoController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }   
 
+    public function getArchivoDigital(Request $request){
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $archivo = DB::select("SELECT * FROM mc_almdigital_det WHERE id = $request->iddigital");
+            $array["archivo"] = $archivo;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
 }

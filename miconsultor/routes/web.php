@@ -333,6 +333,7 @@ Route::post('eliminaArchivosDigital', 'AlmacenDigitalOperacionesController@elimi
 
 //API PARA LOS EXPEDIENTES DE LOS MODULOS
 Route::post('ClipMarcado', 'ConsumoController@ClipMarcado');
+Route::post('getArchivoDigital', 'ConsumoController@getArchivoDigital');
 
 //NOTIFICACIONES CRM
 Route::get('notificacionesCRM', 'NotificacionesController@notificacionesCRM');

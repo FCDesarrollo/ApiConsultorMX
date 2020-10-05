@@ -289,7 +289,7 @@ Route::post('cambiarEstatusLayoutFlwPagos', 'EmpresaController@cambiarEstatusLay
 Route::delete('borrarFlwPagosByLlaveMath', 'AutorizacionyGastosController@borrarFlwPagosByLlaveMath');
 Route::get('traerProveedoresFiltro', 'EmpresaController@traerProveedoresFiltro');
 Route::post('cambiarPrioridadProveedor', 'EmpresaController@cambiarPrioridadProveedor');
-
+Route::post('generarLayouts', 'EmpresaController@generarLayouts');
 
 //ACTUALIZA PERFILES GENERALES
 Route::put('actualizaPerfilesGeneral', 'ActualizarBaseDatosController@actualizaPerfilesGeneral'); // 14/02/2020

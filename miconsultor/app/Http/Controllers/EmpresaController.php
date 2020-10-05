@@ -1334,19 +1334,18 @@ class EmpresaController extends Controller
             $pendiente = $request->pendiente;
             if ($filtro == 1) {
                 $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo, (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon FROM mc_flujosefectivo WHERE mc_flujosefectivo.Pendiente >= $pendiente GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC");
-            } else if($filtro == 3) {
+            } else if ($filtro == 3) {
                 $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo,
                 (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
                 FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
                 WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente
                 GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC
                 ");
-            } else if($filtro == 4) {
+            } else if ($filtro == 4) {
                 $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo,
                 (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon FROM mc_flujosefectivo WHERE Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente 
                 GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC");
-            }
-            else {
+            } else {
                 $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo,
                 (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
                 FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
@@ -1367,39 +1366,39 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             $filtro = $request->filtro;
+            $pendiente = $request->pendiente;
             $query = "";
             switch ($filtro) {
                 case 1:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE mc_flujosefectivo.Pendiente >= $pendiente";
                     break;
                 case 3:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
                     break;
                 case 4:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE Prioridad = 1";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
                     break;
                 case 6:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
                     break;
                 default:
                     break;
             }
 
             $forma = $request->forma;
-            $separador = $filtro == 1 ? " WHERE" : " AND";
 
             switch ($forma) {
                 case 1:
-                    $query .= $separador." mc_flujosefectivo.Razon = '$request->razon'";
+                    $query .= " AND mc_flujosefectivo.Razon = '$request->razon'";
                     break;
                 case 2:
-                    $query .= $separador." mc_flujosefectivo.Tipo = '$request->tipo'";
+                    $query .= " AND mc_flujosefectivo.Tipo = '$request->tipo'";
                     break;
                 case 3:
-                    $query .= $separador." mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo'";
+                    $query .= " AND mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo'";
                     break;
                 case 4:
-                    $query .= " WHERE id = " . $request->ids[0];
+                    $query .= "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE id = " . $request->ids[0];
                     for ($x = 1; $x < count($request->ids); $x++) {
                         $query .= " OR id = " . $request->ids[$x];
                     }
@@ -1426,7 +1425,7 @@ class EmpresaController extends Controller
             if ($procesando == 1) {
                 DB::table('mc_flujosefectivo')->update(['Procesando' => 0]);
             }
-            for ($x = 0; $x < count($flujos); $x++) {
+            for ($x = 0; $x < count($flujos) && $procesando != 2; $x++) {
                 $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoc = ? and Suc = ?', [$flujos[$x]["IdDoc"], $flujos[$x]["Suc"]]);
                 if (count($flujoencontrado) > 0) {
                     DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], 'Procesando' => 1]);
@@ -1647,6 +1646,24 @@ class EmpresaController extends Controller
             $idproveedor = $request->idproveedor;
             $prioridad = $request->prioridad;
             DB::table('mc_catproveedores')->where("id", $idproveedor)->update(['Prioridad' => $prioridad]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function generarLayouts(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            //intentar primero descargar el archivo y modificarlo localmente para posteriormente subirlo.
+            $filename = "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download";
+            $fp = fopen($filename, 'w');
+            $contents = file_get_contents($filename);
+            $new_contents = str_replace('${cuentaBeneficiario}', '1234567890', $contents);
+            file_put_contents($filename, $new_contents);
+            fclose($fp);
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

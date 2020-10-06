@@ -1657,13 +1657,63 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            //intentar primero descargar el archivo y modificarlo localmente para posteriormente subirlo.
-            $filename = "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download";
-            $fp = fopen($filename, 'w');
-            $contents = file_get_contents($filename);
-            $new_contents = str_replace('${cuentaBeneficiario}', '1234567890', $contents);
-            file_put_contents($filename, $new_contents);
-            fclose($fp);
+            $layouturl = "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download";
+            $carpetadestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
+            $idusuario = $request->idusuario;
+            $rfc = $request->rfc;
+            $fecha = date("YmdHis");
+            $nombrearchivonuevo = "Layout_".$idusuario."_".$rfc."_".$fecha.".txt";
+            $urldestino = $carpetadestino . $nombrearchivonuevo;
+            $layout = fopen($layouturl, "rb");
+            if ($layout) {
+                $nuevolayout = fopen($urldestino, "a");
+
+                if ($nuevolayout) {
+                    while (!feof($layout)) {
+                        fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
+                    }
+                    $contenidolayout = file_get_contents($urldestino);
+                    $cuentaBeneficiario = '5508816';
+                    $importePagado = '1250.50';
+                    $importePagadoSinDecimal = str_replace(".", "", $importePagado);
+                    $referenciaAlfanumerica = 'AAAAA0000000000';
+                    $descripcion = 'XXXXX';
+                    $referenciaNumerica = '5555';
+                    $countcuentaBeneficiario = strlen($cuentaBeneficiario);
+                    $countimportePagado = strlen($importePagado);
+                    $countimportePagadoSinDecimal = strlen($importePagadoSinDecimal);
+                    $countreferenciaAlfanumerica = strlen($referenciaAlfanumerica);
+                    $countdescripcion = strlen($descripcion);
+                    $countreferenciaNumerica = strlen($referenciaNumerica);
+                    $array["countcuentaBeneficiario"] = $countcuentaBeneficiario;
+                    $array["countimportePagado"] = $countimportePagado;
+                    $array["countimportePagadoSinDecimal"] = $countimportePagadoSinDecimal;
+                    $array["countreferenciaAlfanumerica"] = $countreferenciaAlfanumerica;
+                    $array["countdescripcion"] = $countdescripcion;
+                    $array["countreferenciaNumerica"] = $countreferenciaNumerica;
+                    $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
+                    $valores   = array($cuentaBeneficiario, $importePagadoSinDecimal, $importePagado, $referenciaAlfanumerica, $descripcion, $referenciaNumerica);
+                    $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
+                    file_put_contents($urldestino, $nuevocontenido);
+
+                    fclose($nuevolayout);
+                }
+                fclose($layout);
+                $servidor = getServidorNextcloud();
+                $u_storage = $request->usuario_storage;
+                $p_storage = $request->password_storage;
+                $codigoarchivo = $idusuario."_".$rfc."_".$fecha;
+                $consecutivo = "";
+                $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $rfc, $servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+                if ($resultado["archivo"]["error"] == 0) {
+                    $codigodocumento = $codigoarchivo . $consecutivo;
+                    $directorio = $rfc . '/'. "Administracion" .'/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                    $target_path = $directorio . '/' . $codigodocumento . ".txt";
+                    $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                    $array["link"] = $link;
+                    unlink($urldestino);
+                }
+            }
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

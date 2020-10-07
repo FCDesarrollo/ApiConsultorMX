@@ -1657,7 +1657,8 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            $layouturl = "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download";
+            $tipolayout = $request->tipolayout;
+            $layouturl = $tipolayout == 1 ? "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download" : "http://cloud.dublock.com/index.php/s/BynSRPHBXCo7234/download";
             $carpetadestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
             $idusuario = $request->idusuario;
             $rfc = $request->rfc;
@@ -1673,26 +1674,42 @@ class EmpresaController extends Controller
                         fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
                     }
                     $contenidolayout = file_get_contents($urldestino);
-                    $cuentaBeneficiario = '5508816';
-                    $importePagado = '1250.50';
-                    $importePagadoSinDecimal = str_replace(".", "", $importePagado);
-                    $referenciaAlfanumerica = 'AAAAA0000000000';
+                    $cuentabeneficiario = '5508816';
+                    $importepagado = '1250.50';
+                    $importepagadosindecimal = str_replace(".", "", $importepagado);
+                    $referenciaalfanumerica = 'AAAAA0000000000';
                     $descripcion = 'XXXXX';
-                    $referenciaNumerica = '5555';
-                    $countcuentaBeneficiario = strlen($cuentaBeneficiario);
-                    $countimportePagado = strlen($importePagado);
-                    $countimportePagadoSinDecimal = strlen($importePagadoSinDecimal);
-                    $countreferenciaAlfanumerica = strlen($referenciaAlfanumerica);
-                    $countdescripcion = strlen($descripcion);
-                    $countreferenciaNumerica = strlen($referenciaNumerica);
-                    $array["countcuentaBeneficiario"] = $countcuentaBeneficiario;
-                    $array["countimportePagado"] = $countimportePagado;
-                    $array["countimportePagadoSinDecimal"] = $countimportePagadoSinDecimal;
-                    $array["countreferenciaAlfanumerica"] = $countreferenciaAlfanumerica;
-                    $array["countdescripcion"] = $countdescripcion;
-                    $array["countreferenciaNumerica"] = $countreferenciaNumerica;
+                    $referencianumerica = '5555';
+
+                    if($tipolayout == 2) {
+                        $maxcuentabeneficiario = 20;
+                        $maximportepagadosindecimal = 10;
+                        $maxreferenciaalfanumerica = 10;
+                        $maxdescripcion = 30;
+                        $maxferencianumerica = 10;
+
+                        $countcuentabeneficiario = strlen($cuentabeneficiario);                        
+                        //$countimportepagado = strlen($importepagado);
+                        $countimportepagadosindecimal = strlen($importepagadosindecimal);                        
+                        $countreferenciaalfanumerica = strlen($referenciaalfanumerica);
+                        $countdescripcion = strlen($descripcion);                        
+                        $countreferencianumerica = strlen($referencianumerica);
+
+                        $cuentabeneficiario = $countcuentabeneficiario < $maxcuentabeneficiario ? str_pad($cuentabeneficiario, $maxcuentabeneficiario) : substr($cuentabeneficiario , 0, $maxcuentabeneficiario);
+                        $importepagadosindecimal = $countimportepagadosindecimal < $maximportepagadosindecimal ? str_pad($importepagadosindecimal, $maximportepagadosindecimal, "0") : substr($importepagadosindecimal, 0, $maximportepagadosindecimal);
+                        $referenciaalfanumerica = $countreferenciaalfanumerica < $maxreferenciaalfanumerica ? str_pad($referenciaalfanumerica, $maxreferenciaalfanumerica) : substr($referenciaalfanumerica, 0, $maxreferenciaalfanumerica);
+                        $descripcion = $countdescripcion < $maxdescripcion ? str_pad($descripcion, $maxdescripcion) : substr($descripcion, 0, $maxdescripcion);
+                        $referencianumerica = $countreferencianumerica < $maxferencianumerica ? str_pad($referencianumerica, $maxferencianumerica) : substr($referencianumerica, 0, $maxferencianumerica);
+
+                        $array["cuentabeneficiario"] = $cuentabeneficiario;
+                        $array["importepagadosindecimal"] = $importepagadosindecimal;
+                        $array["referenciaalfanumerica"] = $referenciaalfanumerica;
+                        $array["descripcion"] = $descripcion;
+                        $array["referencianumerica"] = $referencianumerica;
+                    }
+
                     $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
-                    $valores   = array($cuentaBeneficiario, $importePagadoSinDecimal, $importePagado, $referenciaAlfanumerica, $descripcion, $referenciaNumerica);
+                    $valores   = array($cuentabeneficiario, $importepagadosindecimal, $importepagado, $referenciaalfanumerica, $descripcion, $referencianumerica);
                     $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
                     file_put_contents($urldestino, $nuevocontenido);
 

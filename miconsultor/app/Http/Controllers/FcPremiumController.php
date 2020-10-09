@@ -259,8 +259,13 @@ class FcPremiumController extends Controller
             $idempresa = $request->idempresa;
             $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa = $idempresa");
             $rutaempresa = $empresa[0]->rutaempresa;
-            $bitcontabilidad = DB::connection("General")->select("SELECT $rutaempresa.mc_bitcontabilidad.*, nombreservicio AS servicio, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ',mc1001.apellidom ) AS usuarioEntrego 
-            FROM $rutaempresa.mc_bitcontabilidad LEFT JOIN mc0001
+            $bitcontabilidad = DB::connection("General")->select("SELECT $rutaempresa.mc_bitcontabilidad.*, 
+            $rutaempresa.mc_bitcontabilidad_det.nombrearchivoE AS archivodet,
+            nombreservicio AS servicio, CONCAT(mc1001.nombre, ' ', mc1001.apellidop, ' ',mc1001.apellidom ) AS usuarioEntrego 
+            FROM $rutaempresa.mc_bitcontabilidad 
+            LEFT JOIN $rutaempresa.mc_bitcontabilidad_det
+            ON $rutaempresa.mc_bitcontabilidad.id = $rutaempresa.mc_bitcontabilidad_det.idbitacora
+            LEFT JOIN mc0001
             ON $rutaempresa.mc_bitcontabilidad.idservicio = mc0001.id
             LEFT JOIN mc1001 ON $rutaempresa.mc_bitcontabilidad.idusuarioE = mc1001.idusuario 
             WHERE $rutaempresa.mc_bitcontabilidad.status <> 0 AND $rutaempresa.mc_bitcontabilidad.idsubmenu = $request->idsubmenu");
@@ -270,7 +275,8 @@ class FcPremiumController extends Controller
             $usuariostorage = $empresa[0]->usuario_storage;
             $passwordstorage = $empresa[0]->password_storage;
             for($x=0 ; $x<count($bitcontabilidad) ; $x++) {
-                $target_path = $bitcontabilidad[$x]->url.'/'.$bitcontabilidad[$x]->archivo;
+                $archivo = $bitcontabilidad[$x]->archivodet == null ? $bitcontabilidad[$x]->archivo : $bitcontabilidad[$x]->archivodet;
+                $target_path = $bitcontabilidad[$x]->url.'/'.$archivo;
                 $link = '';
                 if($target_path != null) {
                     $link = GetLinkArchivo($target_path, $servidor, $usuariostorage, $passwordstorage);

@@ -370,7 +370,7 @@ class GeneralesController extends Controller
             $idmenu = $request->idmenu;
             $idsubmenu = $request->idsubmenu;
 
-            $tipos = DB::select("SELECT claveplantilla FROM mc_rubros WHERE idmenu = $idmenu And idsubmenu = $idsubmenu");
+            $tipos = DB::select("SELECT claveplantilla FROM mc_rubros WHERE idmenu = $idmenu AND idsubmenu = $idsubmenu AND claveplantilla IS NOT NULL");
 
             $filtro = "";
             for ($i = 0; $i < count($tipos); $i++) {

@@ -275,7 +275,21 @@ Route::post('agregarServicioEmpresaCliente', 'EmpresaController@agregarServicioE
 Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpresaCliente');
 Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
 Route::get('getContenidoServicioClientes', 'EmpresaController@getContenidoServicioClientes');
-
+Route::get('traerFlujosEfectivo', 'EmpresaController@traerFlujosEfectivo');
+Route::post('traerFlujosEfectivoFiltrados', 'EmpresaController@traerFlujosEfectivoFiltrados');
+Route::post('cargarFlujosEfectivo', 'EmpresaController@cargarFlujosEfectivo');
+Route::post('cargarProveedores', 'EmpresaController@cargarProveedores');
+Route::post('cargarCuentasPropias', 'EmpresaController@cargarCuentasPropias');
+Route::post('cargarCuentasClientesProveedores', 'EmpresaController@cargarCuentasClientesProveedores');
+Route::get('getCuentasPropias', 'EmpresaController@getCuentasPropias');
+Route::get('getCuentasClientesProveedores', 'EmpresaController@getCuentasClientesProveedores');
+Route::get('getFlwPagos', 'EmpresaController@getFlwPagos');
+Route::post('guardarFlwPagos', 'EmpresaController@guardarFlwPagos');
+Route::post('cambiarEstatusLayoutFlwPagos', 'EmpresaController@cambiarEstatusLayoutFlwPagos');
+Route::delete('borrarFlwPagosByLlaveMath', 'AutorizacionyGastosController@borrarFlwPagosByLlaveMath');
+Route::get('traerProveedoresFiltro', 'EmpresaController@traerProveedoresFiltro');
+Route::post('cambiarPrioridadProveedor', 'EmpresaController@cambiarPrioridadProveedor');
+Route::post('generarLayouts', 'EmpresaController@generarLayouts');
 
 //ACTUALIZA PERFILES GENERALES
 Route::put('actualizaPerfilesGeneral', 'ActualizarBaseDatosController@actualizaPerfilesGeneral'); // 14/02/2020
@@ -319,6 +333,7 @@ Route::post('eliminaArchivosDigital', 'AlmacenDigitalOperacionesController@elimi
 
 //API PARA LOS EXPEDIENTES DE LOS MODULOS
 Route::post('ClipMarcado', 'ConsumoController@ClipMarcado');
+Route::post('getArchivoDigital', 'ConsumoController@getArchivoDigital');
 
 //NOTIFICACIONES CRM
 Route::get('notificacionesCRM', 'NotificacionesController@notificacionesCRM');

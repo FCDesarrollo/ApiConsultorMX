@@ -9,7 +9,7 @@ use App\Mail\MensajesValidacion;
 use App\Mail\MensajesGenerales;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-
+use ZipArchive;
 
 class EmpresaController extends Controller
 {
@@ -1334,19 +1334,18 @@ class EmpresaController extends Controller
             $pendiente = $request->pendiente;
             if ($filtro == 1) {
                 $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo, (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon FROM mc_flujosefectivo WHERE mc_flujosefectivo.Pendiente >= $pendiente GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC");
-            } else if($filtro == 3) {
+            } else if ($filtro == 3) {
                 $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo,
                 (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
                 FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
                 WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente
                 GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC
                 ");
-            } else if($filtro == 4) {
+            } else if ($filtro == 4) {
                 $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo,
                 (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon FROM mc_flujosefectivo WHERE Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente 
                 GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC");
-            }
-            else {
+            } else {
                 $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo,
                 (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
                 FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
@@ -1367,39 +1366,39 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             $filtro = $request->filtro;
+            $pendiente = $request->pendiente;
             $query = "";
             switch ($filtro) {
                 case 1:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE mc_flujosefectivo.Pendiente >= $pendiente";
                     break;
                 case 3:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
                     break;
                 case 4:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE Prioridad = 1";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
                     break;
                 case 6:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
                     break;
                 default:
                     break;
             }
 
             $forma = $request->forma;
-            $separador = $filtro == 1 ? " WHERE" : " AND";
 
             switch ($forma) {
                 case 1:
-                    $query .= $separador." mc_flujosefectivo.Razon = '$request->razon'";
+                    $query .= " AND mc_flujosefectivo.Razon = '$request->razon'";
                     break;
                 case 2:
-                    $query .= $separador." mc_flujosefectivo.Tipo = '$request->tipo'";
+                    $query .= " AND mc_flujosefectivo.Tipo = '$request->tipo'";
                     break;
                 case 3:
-                    $query .= $separador." mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo'";
+                    $query .= " AND mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo'";
                     break;
                 case 4:
-                    $query .= " WHERE id = " . $request->ids[0];
+                    $query .= "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE id = " . $request->ids[0];
                     for ($x = 1; $x < count($request->ids); $x++) {
                         $query .= " OR id = " . $request->ids[$x];
                     }
@@ -1426,10 +1425,10 @@ class EmpresaController extends Controller
             if ($procesando == 1) {
                 DB::table('mc_flujosefectivo')->update(['Procesando' => 0]);
             }
-            for ($x = 0; $x < count($flujos); $x++) {
+            for ($x = 0; $x < count($flujos) && array_key_exists('IdDoc', $flujos[$x]); $x++) {
                 $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoc = ? and Suc = ?', [$flujos[$x]["IdDoc"], $flujos[$x]["Suc"]]);
                 if (count($flujoencontrado) > 0) {
-                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], 'Procesando' => 1]);
+                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], 'Procesando' => 1]);
                     //$IdDoc = $flujos[$x]["IdDoc"];
                 } else {
                     DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], "Procesando" => 1]);
@@ -1649,6 +1648,138 @@ class EmpresaController extends Controller
             DB::table('mc_catproveedores')->where("id", $idproveedor)->update(['Prioridad' => $prioridad]);
         }
 
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function generarLayouts(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $idusuario = $request->idusuario;
+            $rfc = $request->rfc;
+            $servidor = getServidorNextcloud();
+            $u_storage = $request->usuario_storage;
+            $p_storage = $request->password_storage;
+            $fecha = date("YmdHis");
+            $idsbancosorigen = $request->idsbancosorigen;
+            $tipolayout = $request->tipolayout;
+            $carpetadestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
+            mkdir($carpetadestino . "Layouts_" . $idusuario . "_" . $rfc . "_" . $fecha, 0700);
+            $carpetadestino = $carpetadestino . "Layouts_" . $idusuario . "_" . $rfc . "_" . $fecha . "/";
+
+            $array["numlayouts"] = count($idsbancosorigen);
+            for ($x = 0; $x < count($idsbancosorigen); $x++) {
+                $nombrearchivonuevo = "Layout_" . $idusuario . "_" . $rfc . "_" . $fecha . "_" . $x . ".txt";
+                $urldestino = $carpetadestino . $nombrearchivonuevo;
+                $layouturl = $tipolayout[$x] == 1 ? "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download" : "http://cloud.dublock.com/index.php/s/BynSRPHBXCo7234/download";
+                $layout = fopen($layouturl, "rb");
+                if ($layout) {
+                    $nuevolayout = fopen($urldestino, "a");
+
+                    if ($nuevolayout) {
+                        while (!feof($layout)) {
+                            fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
+                        }
+                        $contenidolayout = file_get_contents($urldestino);
+                        $cuentabeneficiario = '5508816';
+                        $importepagado = '1250.50';
+                        $importepagadosindecimal = str_replace(".", "", $importepagado);
+                        $referenciaalfanumerica = 'AAAAA0000000000';
+                        $descripcion = 'XXXXX';
+                        $referencianumerica = '5555';
+
+                        if ($tipolayout[$x] == 2) {
+                            $maxcuentabeneficiario = 20;
+                            $maximportepagadosindecimal = 10;
+                            $maxreferenciaalfanumerica = 10;
+                            $maxdescripcion = 30;
+                            $maxferencianumerica = 10;
+
+                            $countcuentabeneficiario = strlen($cuentabeneficiario);
+                            //$countimportepagado = strlen($importepagado);
+                            $countimportepagadosindecimal = strlen($importepagadosindecimal);
+                            $countreferenciaalfanumerica = strlen($referenciaalfanumerica);
+                            $countdescripcion = strlen($descripcion);
+                            $countreferencianumerica = strlen($referencianumerica);
+
+                            $cuentabeneficiario = $countcuentabeneficiario < $maxcuentabeneficiario ? str_pad($cuentabeneficiario, $maxcuentabeneficiario) : substr($cuentabeneficiario, 0, $maxcuentabeneficiario);
+                            $importepagadosindecimal = $countimportepagadosindecimal < $maximportepagadosindecimal ? str_pad($importepagadosindecimal, $maximportepagadosindecimal, "0") : substr($importepagadosindecimal, 0, $maximportepagadosindecimal);
+                            $referenciaalfanumerica = $countreferenciaalfanumerica < $maxreferenciaalfanumerica ? str_pad($referenciaalfanumerica, $maxreferenciaalfanumerica) : substr($referenciaalfanumerica, 0, $maxreferenciaalfanumerica);
+                            $descripcion = $countdescripcion < $maxdescripcion ? str_pad($descripcion, $maxdescripcion) : substr($descripcion, 0, $maxdescripcion);
+                            $referencianumerica = $countreferencianumerica < $maxferencianumerica ? str_pad($referencianumerica, $maxferencianumerica) : substr($referencianumerica, 0, $maxferencianumerica);
+
+                            /* $array["cuentabeneficiario"] = $cuentabeneficiario;
+                            $array["importepagadosindecimal"] = $importepagadosindecimal;
+                            $array["referenciaalfanumerica"] = $referenciaalfanumerica;
+                            $array["descripcion"] = $descripcion;
+                            $array["referencianumerica"] = $referencianumerica; */
+                        }
+
+                        $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
+                        $valores   = array($cuentabeneficiario, $importepagadosindecimal, $importepagado, $referenciaalfanumerica, $descripcion, $referencianumerica);
+                        $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
+                        file_put_contents($urldestino, $nuevocontenido);
+
+                        fclose($nuevolayout);
+                    }
+                    fclose($layout);
+
+                    if (count($idsbancosorigen) == 1) {
+                        $codigoarchivo = "Layout_" . $idusuario . "_" . $rfc . "_" . $fecha . "_" . $x;
+                        $consecutivo = "";
+                        $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $rfc, $servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+                        if ($resultado["archivo"]["error"] == 0) {
+                            $codigodocumento = $codigoarchivo . $consecutivo;
+                            $directorio = $rfc . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                            $target_path = $directorio . '/' . $codigodocumento . ".txt";
+                            $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                            $array["link"] = $link;
+                            unlink($urldestino);
+                        }
+                    }
+                }
+            }
+
+            if (count($idsbancosorigen) > 1) {
+                $zip = new ZipArchive();
+                $zipname = "layouts.zip";
+                $zip->open($zipname, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+                $da = opendir($carpetadestino);
+                $archibosaborrar = [];
+                $y = 0;
+                while (($archivo = readdir($da)) !== false) {
+                    if (is_file($carpetadestino . $archivo) && $archivo != "." && $archivo != ".." && $archivo != $zipname) {
+                        $zip->addFile($carpetadestino . $archivo, $archivo);
+                        $archibosaborrar[$y] = $carpetadestino . $archivo;
+                        $y++;
+                    }
+                }
+                closedir($da);
+                $zip->close();
+                $rutaFinal = $carpetadestino;
+                rename($zipname, "$rutaFinal/$zipname");
+
+                $codigoarchivo = "Layouts_" . $idusuario . "_" . $rfc . "_" . $fecha;
+                $consecutivo = "";
+                $resultado = subirArchivoNextcloud($zipname, "$rutaFinal/$zipname", $rfc, $servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+                if ($resultado["archivo"]["error"] == 0) {
+                    $codigodocumento = $codigoarchivo . $consecutivo;
+                    $directorio = $rfc . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                    $target_path = $directorio . '/' . $codigodocumento . ".zip";
+                    $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                    $array["link"] = $link;
+                    unlink($carpetadestino . $zipname);
+                }
+
+                for ($x = 0; $x < count($archibosaborrar); $x++) {
+                    unlink($archibosaborrar[$x]);
+                }
+            }
+            $urlcarpetaaborrar = substr($carpetadestino, 0, -1);
+            rmdir($urlcarpetaaborrar);
+        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

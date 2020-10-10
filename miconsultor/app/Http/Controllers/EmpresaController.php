@@ -1665,6 +1665,8 @@ class EmpresaController extends Controller
             $fecha = date("YmdHis");
             $idsbancosorigen = $request->idsbancosorigen;
             $tipolayout = $request->tipolayout;
+            $cuentabeneficiario = $request->cuentabeneficiario;
+            $importepagado = $request->importepagado;
             $carpetadestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
             mkdir($carpetadestino . "Layouts_" . $idusuario . "_" . $rfc . "_" . $fecha, 0700);
             $carpetadestino = $carpetadestino . "Layouts_" . $idusuario . "_" . $rfc . "_" . $fecha . "/";
@@ -1683,9 +1685,7 @@ class EmpresaController extends Controller
                             fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
                         }
                         $contenidolayout = file_get_contents($urldestino);
-                        $cuentabeneficiario = '5508816';
-                        $importepagado = '1250.50';
-                        $importepagadosindecimal = str_replace(".", "", $importepagado);
+                        $importepagadosindecimal = str_replace(".", "", $importepagado[$x]);
                         $referenciaalfanumerica = 'AAAAA0000000000';
                         $descripcion = 'XXXXX';
                         $referencianumerica = '5555';
@@ -1697,14 +1697,14 @@ class EmpresaController extends Controller
                             $maxdescripcion = 30;
                             $maxferencianumerica = 10;
 
-                            $countcuentabeneficiario = strlen($cuentabeneficiario);
+                            $countcuentabeneficiario = strlen($cuentabeneficiario[$x]);
                             //$countimportepagado = strlen($importepagado);
                             $countimportepagadosindecimal = strlen($importepagadosindecimal);
                             $countreferenciaalfanumerica = strlen($referenciaalfanumerica);
                             $countdescripcion = strlen($descripcion);
                             $countreferencianumerica = strlen($referencianumerica);
 
-                            $cuentabeneficiario = $countcuentabeneficiario < $maxcuentabeneficiario ? str_pad($cuentabeneficiario, $maxcuentabeneficiario) : substr($cuentabeneficiario, 0, $maxcuentabeneficiario);
+                            $cuentabeneficiario[$x] = $countcuentabeneficiario < $maxcuentabeneficiario ? str_pad($cuentabeneficiario[$x], $maxcuentabeneficiario) : substr($cuentabeneficiario[$x], 0, $maxcuentabeneficiario);
                             $importepagadosindecimal = $countimportepagadosindecimal < $maximportepagadosindecimal ? str_pad($importepagadosindecimal, $maximportepagadosindecimal, "0") : substr($importepagadosindecimal, 0, $maximportepagadosindecimal);
                             $referenciaalfanumerica = $countreferenciaalfanumerica < $maxreferenciaalfanumerica ? str_pad($referenciaalfanumerica, $maxreferenciaalfanumerica) : substr($referenciaalfanumerica, 0, $maxreferenciaalfanumerica);
                             $descripcion = $countdescripcion < $maxdescripcion ? str_pad($descripcion, $maxdescripcion) : substr($descripcion, 0, $maxdescripcion);
@@ -1718,7 +1718,7 @@ class EmpresaController extends Controller
                         }
 
                         $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
-                        $valores   = array($cuentabeneficiario, $importepagadosindecimal, $importepagado, $referenciaalfanumerica, $descripcion, $referencianumerica);
+                        $valores   = array($cuentabeneficiario[$x], $importepagadosindecimal, $importepagado[$x], $referenciaalfanumerica, $descripcion, $referencianumerica);
                         $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
                         file_put_contents($urldestino, $nuevocontenido);
 

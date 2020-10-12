@@ -1482,7 +1482,7 @@ class EmpresaController extends Controller
             $cuentas = $request->cuentas;
 
             for ($x = 0; $x < count($cuentas); $x++) {
-                $cuentaencontrada = DB::select('select * from mc_flow_bancuentas where Cuenta = ? ', [$cuentas[$x]["Cuenta"]]);
+                $cuentaencontrada = DB::select('select * from mc_flow_bancuentas where IdCuenta = ? ', [$cuentas[$x]["IdCuenta"]]);
                 if (count($cuentaencontrada) == 0) {
                     DB::table('mc_flow_bancuentas')->insert(['IdCuenta' => $cuentas[$x]["IdCuenta"], 'Clabe' => $cuentas[$x]["Clabe"], "Cuenta" => $cuentas[$x]["Cuenta"], "Nombre" => $cuentas[$x]["Nombre"], "IdBanco" => $cuentas[$x]["IdBanco"], "Activa" => $cuentas[$x]["Activa"]]);
                 }
@@ -1500,7 +1500,7 @@ class EmpresaController extends Controller
             $cuentas = $request->cuentas;
 
             for ($x = 0; $x < count($cuentas); $x++) {
-                $cuentaencontrada = DB::select('select * from mc_flow_cliproctas where Cuenta = ? ', [$cuentas[$x]["Cuenta"]]);
+                $cuentaencontrada = DB::select('select * from mc_flow_cliproctas where Id = ? ', [$cuentas[$x]["Id"]]);
                 if (count($cuentaencontrada) == 0) {
                     DB::table('mc_flow_cliproctas')->insert(['Id' => $cuentas[$x]["Id"], 'RFC' => $cuentas[$x]["RFC"], 'Cuenta' => $cuentas[$x]["Cuenta"], "Clabe" => $cuentas[$x]["Clabe"], "Banco" => $cuentas[$x]["Banco"], "IdBanco" => $cuentas[$x]["IdBanco"], "Escliente" => $cuentas[$x]["Escliente"]]);
                 }
@@ -1604,8 +1604,11 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
+            $IdsFlw = $request->IdsFlw;
             $IdUsuario = $request->IdUsuario;
-            DB::table('mc_flw_pagos')->where("IdUsuario", $IdUsuario)->update(['Layout' => 1]);
+            for($x=0 ; $x<count($IdsFlw) ; $x++) {
+                DB::table('mc_flw_pagos')->where("IdFlw", $IdsFlw[$x])->where("IdUsuario", $IdUsuario)->update(['Layout' => 1]);
+            }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

@@ -1353,7 +1353,60 @@ class EmpresaController extends Controller
                 ORDER BY PendientePorRazon DESC
                 ");
             }
-            /* $flujosefectivo = DB::select("SELECT id, Razon, SUM(Pendiente) AS Pendiente, Tipo FROM mc_flujosefectivo GROUP BY Razon, Tipo, id"); */
+
+            $array["flujosefectivo"] = $flujosefectivo;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function traerFlujosEfectivoAcomodados(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $filtro = $request->filtro;
+            $pendiente = $request->pendiente;
+            if ($filtro == 1) {
+                $flujosefectivo = DB::select("SELECT flw.Razon AS Proveedor, 
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2  WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V4 +45' ) AS V4,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V3 30-45') AS V3,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V2 15-30') AS V2,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V1 01-15') AS V1,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2  WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'PorVencer') AS PorVencer,
+                SUM(flw.Pendiente) AS TotalResultado
+                FROM mc_flujosefectivo flw WHERE flw.Pendiente > $pendiente GROUP BY flw.Razon ORDER BY TotalResultado DESC");
+            } else if ($filtro == 3) {
+                $flujosefectivo = DB::select("SELECT flw.Razon AS Proveedor, 
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2  WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V4 +45' ) AS V4,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V3 30-45') AS V3,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V2 15-30') AS V2,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V1 01-15') AS V1,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2  WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'PorVencer') AS PorVencer,
+                SUM(flw.Pendiente) AS TotalResultado
+                FROM mc_flujosefectivo flw 
+                LEFT JOIN mc_catproveedores pro ON flw.cRFC = pro.rfc WHERE pro.Prioridad = 1
+                AND flw.Pendiente > $pendiente GROUP BY flw.Razon ORDER BY TotalResultado DESC");
+            } else if ($filtro == 4) {
+                $flujosefectivo = DB::select("SELECT flw.Razon AS Proveedor, 
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2  WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V4 +45' ) AS V4,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V3 30-45') AS V3,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V2 15-30') AS V2,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V1 01-15') AS V1,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2  WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'PorVencer') AS PorVencer,
+                SUM(flw.Pendiente) AS TotalResultado
+                FROM mc_flujosefectivo flw WHERE flw.Pendiente > $pendiente AND flw.Prioridad = 1 GROUP BY flw.Razon ORDER BY TotalResultado DESC");
+            } else {
+                $flujosefectivo = DB::select("SELECT flw.Razon AS Proveedor, 
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2  WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V4 +45' ) AS V4,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V3 30-45') AS V3,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V2 15-30') AS V2,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2 WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'V1 01-15') AS V1,
+                (SELECT IF(ISNULL(SUM(flw2.Pendiente)), 0, SUM(flw2.Pendiente)) FROM mc_flujosefectivo flw2  WHERE flw2.Razon = flw.Razon AND flw2.Tipo = 'PorVencer') AS PorVencer,
+                SUM(flw.Pendiente) AS TotalResultado
+                FROM mc_flujosefectivo flw 
+                LEFT JOIN mc_catproveedores pro ON flw.cRFC = pro.rfc WHERE pro.Prioridad = 1
+                AND flw.Pendiente > $pendiente AND flw.Prioridad = 1 GROUP BY flw.Razon ORDER BY TotalResultado DESC");
+            }
 
             $array["flujosefectivo"] = $flujosefectivo;
         }

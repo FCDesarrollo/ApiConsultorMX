@@ -1594,7 +1594,7 @@ class EmpresaController extends Controller
             $Layout = $request->Layout;
             $IdUsuario = $request->IdUsuario;
 
-            $filtro = $IdUsuario != 0 ? "AND IdUsuario = $IdUsuario" : "";
+            $filtro = $IdUsuario != 0 ? "AND IdUsuario = $IdUsuario GROUP BY IdFlw" : "GROUP BY IdFlw";
             $pagospendientes = DB::select("SELECT * FROM mc_flw_pagos WHERE Layout = $Layout " . $filtro);
             $array["pagospendientes"] = $pagospendientes;
         }

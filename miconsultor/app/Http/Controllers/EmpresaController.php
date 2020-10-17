@@ -1497,7 +1497,7 @@ class EmpresaController extends Controller
 
             if ($procesando == 2) {
                 $flujoseliminar = DB::select('select * from mc_flujosefectivo where Procesando = ?', [0]);
-                for($y=0 ; $y<count($flujoseliminar) ; $y++) {
+                for ($y = 0; $y < count($flujoseliminar); $y++) {
                     DB::table('mc_flw_pagos')->where("IdFlw", $flujoseliminar[$y]->id)->delete();
                 }
                 DB::table('mc_flujosefectivo')->where("Procesando", 0)->delete();
@@ -1643,32 +1643,52 @@ class EmpresaController extends Controller
                     $Importe = $request->Importe;
                     $LlaveMatch = $request->LlaveMatch;
 
-                    DB::table('mc_flw_pagos')->insert([
-                        'IdFlw' => $IdFlw,
-                        'IdDoc' => $IdDoc, 'Idcon' => $Idcon, 'Fecha' => $Fecha,
-                        'Vence' => $Vence, 'Idclien' => $Idclien, 'Razon' => $Razon,
-                        'Concepto' => $Concepto, 'Serie' => $Serie, 'Folio' => $Folio,
-                        'Total' => $Total, 'Pendiente' => $Pendiente, 'Tipo' => $Tipo,
-                        'Suc' => $Suc, 'cRFC' => $cRFC, 'SaldoInt' => $SaldoInt,
-                        'IdUsuarioDocumento' => $IdUsuarioDocumento, 'Comentarios' => $Comentarios, 'Prioridad' => $Prioridad,
-                        'FechaPago' => $FechaPago, "Importe" => $Importe, "LlaveMatch" => $LlaveMatch, "IdUsuario" => $IdUsuario
-                    ]);
-                }
-                else if($paso == 2) {
+                    $pagoencontrado = DB::select('select * from mc_flw_pagos where IdFlw = ? and IdUsuario = ? ', [$IdFlw, $IdUsuario]);
+
+                    if (count($pagoencontrado) > 0) {
+                        DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->id)->update([
+                            'IdDoc' => $IdDoc, 'Idcon' => $Idcon, 'Fecha' => $Fecha,
+                            'Vence' => $Vence, 'Idclien' => $Idclien, 'Razon' => $Razon,
+                            'Concepto' => $Concepto, 'Serie' => $Serie, 'Folio' => $Folio,
+                            'Total' => $Total, 'Pendiente' => $Pendiente, 'Tipo' => $Tipo,
+                            'Suc' => $Suc, 'cRFC' => $cRFC, 'SaldoInt' => $SaldoInt,
+                            'IdUsuarioDocumento' => $IdUsuarioDocumento, 'Comentarios' => $Comentarios, 'Prioridad' => $Prioridad,
+                            'FechaPago' => $FechaPago, "Importe" => $Importe, "LlaveMatch" => $LlaveMatch
+                        ]);
+                    } else {
+                        DB::table('mc_flw_pagos')->insert([
+                            'IdFlw' => $IdFlw,
+                            'IdDoc' => $IdDoc, 'Idcon' => $Idcon, 'Fecha' => $Fecha,
+                            'Vence' => $Vence, 'Idclien' => $Idclien, 'Razon' => $Razon,
+                            'Concepto' => $Concepto, 'Serie' => $Serie, 'Folio' => $Folio,
+                            'Total' => $Total, 'Pendiente' => $Pendiente, 'Tipo' => $Tipo,
+                            'Suc' => $Suc, 'cRFC' => $cRFC, 'SaldoInt' => $SaldoInt,
+                            'IdUsuarioDocumento' => $IdUsuarioDocumento, 'Comentarios' => $Comentarios, 'Prioridad' => $Prioridad,
+                            'FechaPago' => $FechaPago, "Importe" => $Importe, "LlaveMatch" => $LlaveMatch, "IdUsuario" => $IdUsuario
+                        ]);
+                    }
+                } else if ($paso == 2) {
                     $idsflw = $request->idsflw;
                     $idscuentasorigen = $request->idscuentasorigen;
                     $idscuentasdestino = $request->idscuentasdestino;
                     $fechas = $request->fechas;
                     $tipos = $request->tipos;
-                    for($x=0 ; $x<count($idsflw) ; $x++) {
-                        $pagoencontrado = DB::select('select * from mc_flw_pagos where IdFlw = ? and IdUsuario = ? ', [$idsflw[$x],$IdUsuario]);
+                    for ($x = 0; $x < count($idsflw); $x++) {
+                        $pagoencontrado = DB::select('select * from mc_flw_pagos where IdFlw = ? and IdUsuario = ? ', [$idsflw[$x], $IdUsuario]);
                         if (count($pagoencontrado) > 0) {
-                            DB::table('mc_flw_pagos_det')->insert(['idPago' => $pagoencontrado[0]->id, 'idCuentaOrigen' => $idscuentasorigen[$x], 'idCuentaDestino' => $idscuentasdestino[$x], 'fecha' => $fechas[$x], 'tipo' => $tipos[$x]]);
+                            $pagodetencontrado = DB::select('select * from mc_flw_pagos_det where idPago = ?', [$pagoencontrado[0]->id]);
+                            if (count($pagodetencontrado) > 0) {
+                                DB::table('mc_flw_pagos_det')->where("id", $pagodetencontrado[0]->id)->update(['idCuentaOrigen' => $idscuentasorigen[$x], 'idCuentaDestino' => $idscuentasdestino[$x], 'fecha' => $fechas[$x], 'tipo' => $tipos[$x]]);
+                            } else {
+                                DB::table('mc_flw_pagos_det')->insert(['idPago' => $pagoencontrado[0]->id, 'idCuentaOrigen' => $idscuentasorigen[$x], 'idCuentaDestino' => $idscuentasdestino[$x], 'fecha' => $fechas[$x], 'tipo' => $tipos[$x]]);
+                            }
                         }
                     }
                 }
             } else {
+                $pagoencontrado = DB::select('select * from mc_flw_pagos where IdFlw = ? and IdUsuario = ? ', [$IdFlw, $IdUsuario]);
                 DB::table('mc_flw_pagos')->where("IdFlw", $IdFlw)->where("IdUsuario", $IdUsuario)->delete();
+                DB::table('mc_flw_pagos_det')->where("idPago", $pagoencontrado[0]->id)->delete();
             }
         }
 

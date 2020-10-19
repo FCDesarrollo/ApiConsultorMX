@@ -1333,24 +1333,32 @@ class EmpresaController extends Controller
             $filtro = $request->filtro;
             $pendiente = $request->pendiente;
             if ($filtro == 1) {
-                $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo, (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon FROM mc_flujosefectivo WHERE mc_flujosefectivo.Pendiente >= $pendiente GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC");
+                $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, mc_flujosefectivo.Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo, 
+                (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon 
+                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw
+                WHERE mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)
+                GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC");
             } else if ($filtro == 3) {
-                $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo,
-                (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
-                FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
-                WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente
+                $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, mc_flujosefectivo.Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo, 
+                (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon 
+                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw
+                LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
+                WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)
                 GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC
                 ");
             } else if ($filtro == 4) {
-                $flujosefectivo = DB::select("SELECT id, Razon AS RazonPrincipal, SUM(Pendiente) AS Pendiente, Tipo,
-                (SELECT SUM(Pendiente) FROM mc_flujosefectivo WHERE Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon FROM mc_flujosefectivo WHERE Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente 
-                GROUP BY Razon, Tipo, id ORDER BY PendientePorRazon DESC");
+                $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, mc_flujosefectivo.Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo, 
+                (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon 
+                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw
+                WHERE mc_flujosefectivo.Pendiente >= $pendiente AND mc_flujosefectivo.Prioridad = 1 AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)
+                GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC");
             } else {
-                $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo,
-                (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon
-                FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
-                WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id 
-                ORDER BY PendientePorRazon DESC
+                $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, mc_flujosefectivo.Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo, 
+                (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon 
+                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw
+                LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
+                WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)
+                GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC
                 ");
             }
 
@@ -1423,16 +1431,16 @@ class EmpresaController extends Controller
             $query = "";
             switch ($filtro) {
                 case 1:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE mc_flujosefectivo.Pendiente >= $pendiente";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw WHERE mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
                     break;
                 case 3:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
                     break;
                 case 4:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw WHERE mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
                     break;
                 case 6:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
                     break;
                 default:
                     break;
@@ -1584,7 +1592,7 @@ class EmpresaController extends Controller
         if ($valida[0]['error'] === 0) {
             $cuentas = DB::select("SELECT mc_flow_cliproctas.*,
             IF(ISNULL(Clabe), CONCAT(REPLACE(Banco,', S.A.', ''),' ',SUBSTRING(Cuenta, -4)), CONCAT(REPLACE(Banco,', S.A.',''), ' ',SUBSTRING(Clabe, -4))) AS Layout
-            FROM mc_flow_cliproctas WHERE Cuenta IS NOT NULL OR Clabe IS NOT NULL ORDER BY Layout");
+            FROM mc_flow_cliproctas WHERE Cuenta IS NOT NULL OR Clabe IS NOT NULL GROUP BY Id ORDER BY Layout");
             $array["cuentas"] = $cuentas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

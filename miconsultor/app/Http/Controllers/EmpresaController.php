@@ -1607,9 +1607,15 @@ class EmpresaController extends Controller
             $IdUsuario = $request->IdUsuario;
 
             $filtro = $IdUsuario != 0 ? "AND mc_flw_pagos.IdUsuario = $IdUsuario GROUP BY mc_flw_pagos.IdFlw" : "GROUP BY mc_flw_pagos.IdFlw";
-            $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flw_pagos_det.idCuentaOrigen, mc_flw_pagos_det.idCuentaDestino, mc_flw_pagos_det.fecha AS fechapagodet, mc_flw_pagos_det.tipo FROM mc_flw_pagos 
+            $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flw_pagos_det.idCuentaOrigen, mc_flow_bancuentas.IdBanco AS idBancoOrigen, mc_flow_bancuentas.Nombre AS cuentaOrigen,
+            mc_flw_pagos_det.idCuentaDestino, mc_flow_cliproctas.IdBanco AS idBancoDestino,
+            IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino,
+            mc_flw_pagos_det.fecha AS fechapagodet, 
+            mc_flw_pagos_det.tipo FROM mc_flw_pagos 
             INNER JOIN mc_flujosefectivo ON mc_flw_pagos.IdFlw = mc_flujosefectivo.id
-            LEFT JOIN mc_flw_pagos_det ON mc_flw_pagos.id = mc_flw_pagos_det.idPago 
+            LEFT JOIN mc_flw_pagos_det ON mc_flw_pagos.id = mc_flw_pagos_det.idPago
+            LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos_det.IdCuentaOrigen
+            LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos_det.IdCuentaDestino
             WHERE mc_flw_pagos.Layout = $Layout " . $filtro);
             $array["pagospendientes"] = $pagospendientes;
         }
@@ -1700,6 +1706,20 @@ class EmpresaController extends Controller
             }
         }
 
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function eliminarFlwPagos(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $idspago = $request->idspago;
+            for ($x = 0; $x < count($idspago); $x++) {
+                DB::table('mc_flw_pagos')->where("id", $idspago[$x])->delete();
+                DB::table('mc_flw_pagos_det')->where("idPago", $idspago[$x])->delete();
+            }
+        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 

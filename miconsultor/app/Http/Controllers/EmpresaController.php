@@ -833,6 +833,7 @@ class EmpresaController extends Controller
                 Vence DATE DEFAULT NULL,
                 Idclien INT(11) DEFAULT NULL,
                 Razon VARCHAR(200) COLLATE utf8_spanish_ci DEFAULT NULL,
+                CodConcepto VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Concepto VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Serie VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Folio NUMERIC(18, 0) DEFAULT NULL,
@@ -881,6 +882,7 @@ class EmpresaController extends Controller
                 Vence DATE DEFAULT NULL,
                 Idclien INT(11) DEFAULT NULL,
                 Razon VARCHAR(200) COLLATE utf8_spanish_ci DEFAULT NULL,
+                CodConcepto VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Concepto VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Serie VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Folio NUMERIC(18, 0) DEFAULT NULL,
@@ -1492,7 +1494,7 @@ class EmpresaController extends Controller
                     DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], 'Procesando' => 1]);
                     //$IdDoc = $flujos[$x]["IdDoc"];
                 } else {
-                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], "Procesando" => 1]);
+                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "CodConcepto" => $flujos[$x]["CodConcepto"], "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], "Procesando" => 1]);
                     //$IdDoc = 0;
                 }
                 /* for ($y = 0; $y < count($flujostotales) && $IdDoc != 0; $y++) {
@@ -1641,6 +1643,7 @@ class EmpresaController extends Controller
                     $Vence = $request->Vence;
                     $Idclien = $request->Idclien;
                     $Razon = $request->Razon;
+                    $CodConcepto = $request->CodConcepto;
                     $Concepto = $request->Concepto;
                     $Serie = $request->Serie;
                     $Folio = $request->Folio;
@@ -1663,6 +1666,7 @@ class EmpresaController extends Controller
                         DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->id)->update([
                             'IdDoc' => $IdDoc, 'Idcon' => $Idcon, 'Fecha' => $Fecha,
                             'Vence' => $Vence, 'Idclien' => $Idclien, 'Razon' => $Razon,
+                            'CodConcepto' => $CodConcepto,
                             'Concepto' => $Concepto, 'Serie' => $Serie, 'Folio' => $Folio,
                             'Total' => $Total, 'Pendiente' => $Pendiente, 'Tipo' => $Tipo,
                             'Suc' => $Suc, 'cRFC' => $cRFC, 'SaldoInt' => $SaldoInt,
@@ -1674,6 +1678,7 @@ class EmpresaController extends Controller
                             'IdFlw' => $IdFlw,
                             'IdDoc' => $IdDoc, 'Idcon' => $Idcon, 'Fecha' => $Fecha,
                             'Vence' => $Vence, 'Idclien' => $Idclien, 'Razon' => $Razon,
+                            'CodConcepto' => $CodConcepto,
                             'Concepto' => $Concepto, 'Serie' => $Serie, 'Folio' => $Folio,
                             'Total' => $Total, 'Pendiente' => $Pendiente, 'Tipo' => $Tipo,
                             'Suc' => $Suc, 'cRFC' => $cRFC, 'SaldoInt' => $SaldoInt,

@@ -875,29 +875,14 @@ class EmpresaController extends Controller
 
             $mc_flw_pagos = "create table if not exists mc_flw_pagos(
                 id int(11) NOT NULL AUTO_INCREMENT,
-                IdFlw INT(11) DEFAULT NULL,
-                IdDoc INT(11) DEFAULT NULL,
-                Idcon INT(11) DEFAULT NULL,
-                Fecha DATE DEFAULT NULL,
-                Vence DATE DEFAULT NULL,
-                Idclien INT(11) DEFAULT NULL,
-                Razon VARCHAR(200) COLLATE utf8_spanish_ci DEFAULT NULL,
-                CodConcepto VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Concepto VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Serie VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Folio NUMERIC(18, 0) DEFAULT NULL,
-                Total NUMERIC(18, 2) DEFAULT NULL,
-                Pendiente NUMERIC(18, 2) DEFAULT NULL,
-                Tipo VARCHAR(10) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Suc VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
-                cRFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
-                SaldoInt NUMERIC(18, 2) DEFAULT NULL,
-                IdUsuarioDocumento INT(11) DEFAULT NULL,
-                Comentarios VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Prioridad INT(11) DEFAULT NULL,
-                Importe NUMERIC(18, 2) DEFAULT NULL,
                 FechaPago DATE DEFAULT NULL,
+                Importe NUMERIC(18, 2) DEFAULT NULL,
                 LlaveMatch VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Tipo int(11) DEFAULT NULL,
+                RFC VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Proveedor VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
+                IdCuentaOrigen INT(11) DEFAULT NULL,
+                IdCuentaDestino INT(11) DEFAULT NULL,
                 IdUsuario INT(11) DEFAULT NULL,
                 Layout INT(11) DEFAULT 0,
                 PRIMARY KEY (id)
@@ -1337,13 +1322,15 @@ class EmpresaController extends Controller
             if ($filtro == 1) {
                 $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, mc_flujosefectivo.Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo, 
                 (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon 
-                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw
+                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw
+                LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
                 WHERE mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)
                 GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC");
             } else if ($filtro == 3) {
                 $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, mc_flujosefectivo.Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo, 
                 (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon 
-                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw
+                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw
+                LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
                 LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
                 WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)
                 GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC
@@ -1351,13 +1338,15 @@ class EmpresaController extends Controller
             } else if ($filtro == 4) {
                 $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, mc_flujosefectivo.Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo, 
                 (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon 
-                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw
+                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw
+                LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
                 WHERE mc_flujosefectivo.Pendiente >= $pendiente AND mc_flujosefectivo.Prioridad = 1 AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)
                 GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC");
             } else {
                 $flujosefectivo = DB::select("SELECT mc_flujosefectivo.id, mc_flujosefectivo.Razon AS RazonPrincipal, SUM(mc_flujosefectivo.Pendiente) AS Pendiente, mc_flujosefectivo.Tipo, 
                 (SELECT SUM(mc_flujosefectivo.Pendiente) FROM mc_flujosefectivo WHERE mc_flujosefectivo.Razon = RazonPrincipal GROUP BY Razon) AS PendientePorRazon 
-                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw
+                FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw
+                LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
                 LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc
                 WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)
                 GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC
@@ -1433,16 +1422,16 @@ class EmpresaController extends Controller
             $query = "";
             switch ($filtro) {
                 case 1:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw WHERE mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
                     break;
                 case 3:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc LEFT JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
                     break;
                 case 4:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw WHERE mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
                     break;
                 case 6:
-                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc LEFT JOIN mc_flw_pagos ON mc_flujosefectivo.id = mc_flw_pagos.IdFlw WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
+                    $query = "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo LEFT JOIN mc_catproveedores ON mc_flujosefectivo.cRFC = mc_catproveedores.rfc LEFT JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_catproveedores.Prioridad = 1 AND mc_flujosefectivo.Prioridad = 1 AND mc_flujosefectivo.Pendiente >= $pendiente AND (ISNULL(mc_flw_pagos.Layout) OR mc_flw_pagos.Layout = 0)";
                     break;
                 default:
                     break;
@@ -1506,9 +1495,13 @@ class EmpresaController extends Controller
             }
 
             if ($procesando == 2) {
-                $flujoseliminar = DB::select('select * from mc_flujosefectivo where Procesando = ?', [0]);
-                for ($y = 0; $y < count($flujoseliminar); $y++) {
-                    DB::table('mc_flw_pagos')->where("IdFlw", $flujoseliminar[$y]->id)->delete();
+                $pagodeteliminar = DB::select('select * from mc_flujosefectivo where Procesando = ?', [0]);
+                for ($y = 0; $y < count($pagodeteliminar); $y++) {
+                    $pagoeliminar = DB::select('select * from mc_flw_pagos_det where IdFlw = ?', [$pagodeteliminar[$y]->id]);
+                    for ($z = 0; $z < count($pagoeliminar); $z++) {
+                        DB::table('mc_flw_pagos')->where("id", $pagoeliminar[$z]->IdPago)->delete();
+                    }
+                    DB::table('mc_flw_pagos_det')->where("IdFlw", $pagodeteliminar[$y]->id)->delete();
                 }
                 DB::table('mc_flujosefectivo')->where("Procesando", 0)->delete();
             }
@@ -1608,18 +1601,33 @@ class EmpresaController extends Controller
             $Layout = $request->Layout;
             $IdUsuario = $request->IdUsuario;
 
-            $filtro = $IdUsuario != 0 ? "AND mc_flw_pagos.IdUsuario = $IdUsuario GROUP BY mc_flw_pagos.IdFlw" : "GROUP BY mc_flw_pagos.IdFlw";
+            $filtro = $IdUsuario != 0 ? "AND mc_flw_pagos.IdUsuario = $IdUsuario" : "";
+            $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flow_bancuentas.IdBanco AS idBancoOrigen, mc_flow_bancuentas.Nombre AS cuentaOrigen, mc_flow_cliproctas.IdBanco AS idBancoDestino,
+            IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino 
+            FROM mc_flw_pagos 
+            LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
+            LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino
+            WHERE Layout = $Layout " . $filtro);
+            for($x=0 ; $x<count($pagospendientes) ; $x++) {
+                $pagosdetalle = DB::select('SELECT mc_flw_pagos_det.id AS IdPagoDet, mc_flw_pagos_det.IdPago ,mc_flw_pagos_det.Importe, mc_flujosefectivo.* FROM mc_flw_pagos_det
+                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id
+                WHERE mc_flw_pagos_det.IdPago = ?', [$pagospendientes[$x]->id]);
+                for($y=0 ; $y<count($pagosdetalle) ; $y++) {
+                    $pagospendientes[$x]->Detalles[$y] = $pagosdetalle[$y];
+                }
+            }
+            $array["pagospendientes"] = $pagospendientes;
+
+            /* $filtro = $IdUsuario != 0 ? "AND mc_flw_pagos.IdUsuario = $IdUsuario GROUP BY mc_flw_pagos_det.IdFlw" : "GROUP BY mc_flw_pagos_det.IdFlw";
             $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flw_pagos_det.idCuentaOrigen, mc_flow_bancuentas.IdBanco AS idBancoOrigen, mc_flow_bancuentas.Nombre AS cuentaOrigen,
             mc_flw_pagos_det.idCuentaDestino, mc_flow_cliproctas.IdBanco AS idBancoDestino,
-            IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino,
-            mc_flw_pagos_det.fecha AS fechapagodet, 
-            mc_flw_pagos_det.tipo FROM mc_flw_pagos 
-            INNER JOIN mc_flujosefectivo ON mc_flw_pagos.IdFlw = mc_flujosefectivo.id
-            LEFT JOIN mc_flw_pagos_det ON mc_flw_pagos.id = mc_flw_pagos_det.idPago
+            IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino, mc_flw_pagos_det.Importe FROM mc_flw_pagos 
+            LEFT JOIN mc_flw_pagos_det ON mc_flw_pagos.id = mc_flw_pagos_det.IdPago
+            LEFT JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id
             LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos_det.IdCuentaOrigen
             LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos_det.IdCuentaDestino
             WHERE mc_flw_pagos.Layout = $Layout " . $filtro);
-            $array["pagospendientes"] = $pagospendientes;
+            $array["pagospendientes"] = $pagospendientes; */
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
@@ -1637,54 +1645,41 @@ class EmpresaController extends Controller
             if ($forma == 1) {
                 $paso = $request->paso;
                 if ($paso == 1) {
-                    $IdDoc = $request->IdDoc;
-                    $Idcon = $request->Idcon;
                     $Fecha = $request->Fecha;
-                    $Vence = $request->Vence;
-                    $Idclien = $request->Idclien;
-                    $Razon = $request->Razon;
-                    $CodConcepto = $request->CodConcepto;
-                    $Concepto = $request->Concepto;
-                    $Serie = $request->Serie;
-                    $Folio = $request->Folio;
-                    $Total = $request->Total;
-                    $Pendiente = $request->Pendiente;
-                    $Tipo = $request->Tipo;
-                    $Suc = $request->Suc;
-                    $cRFC = $request->cRFC;
-                    $SaldoInt = $request->SaldoInt;
-                    $IdUsuarioDocumento = $request->IdUsuarioDocumento;
-                    $Comentarios = $request->Comentarios;
-                    $Prioridad = $request->Prioridad;
-                    $FechaPago = $request->FechaPago;
                     $Importe = $request->Importe;
                     $LlaveMatch = $request->LlaveMatch;
+                    $Tipo = $request->Tipo;
+                    $RFC = $request->RFC;
+                    $Proveedor = $request->Proveedor;
 
-                    $pagoencontrado = DB::select('select * from mc_flw_pagos where IdFlw = ? and IdUsuario = ? ', [$IdFlw, $IdUsuario]);
+                    $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$IdFlw, $IdUsuario]);
 
                     if (count($pagoencontrado) > 0) {
-                        DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->id)->update([
-                            'IdDoc' => $IdDoc, 'Idcon' => $Idcon, 'Fecha' => $Fecha,
-                            'Vence' => $Vence, 'Idclien' => $Idclien, 'Razon' => $Razon,
-                            'CodConcepto' => $CodConcepto,
-                            'Concepto' => $Concepto, 'Serie' => $Serie, 'Folio' => $Folio,
-                            'Total' => $Total, 'Pendiente' => $Pendiente, 'Tipo' => $Tipo,
-                            'Suc' => $Suc, 'cRFC' => $cRFC, 'SaldoInt' => $SaldoInt,
-                            'IdUsuarioDocumento' => $IdUsuarioDocumento, 'Comentarios' => $Comentarios, 'Prioridad' => $Prioridad,
-                            'FechaPago' => $FechaPago, "Importe" => $Importe, "LlaveMatch" => $LlaveMatch
+                        $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                        DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->update([
+                            "Importe" => $Importe
+                        ]);
+                        DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
+                            "Importe" => $importetotal[0]->Importe, "LlaveMatch" => $LlaveMatch, "RFC" => $RFC, "Proveedor" => $Proveedor
                         ]);
                     } else {
-                        DB::table('mc_flw_pagos')->insert([
-                            'IdFlw' => $IdFlw,
-                            'IdDoc' => $IdDoc, 'Idcon' => $Idcon, 'Fecha' => $Fecha,
-                            'Vence' => $Vence, 'Idclien' => $Idclien, 'Razon' => $Razon,
-                            'CodConcepto' => $CodConcepto,
-                            'Concepto' => $Concepto, 'Serie' => $Serie, 'Folio' => $Folio,
-                            'Total' => $Total, 'Pendiente' => $Pendiente, 'Tipo' => $Tipo,
-                            'Suc' => $Suc, 'cRFC' => $cRFC, 'SaldoInt' => $SaldoInt,
-                            'IdUsuarioDocumento' => $IdUsuarioDocumento, 'Comentarios' => $Comentarios, 'Prioridad' => $Prioridad,
-                            'FechaPago' => $FechaPago, "Importe" => $Importe, "LlaveMatch" => $LlaveMatch, "IdUsuario" => $IdUsuario
-                        ]);
+                        $pagoProvencontrado = DB::select('SELECT * FROM mc_flw_pagos WHERE Proveedor = ? AND IdUsuario = ? AND Layout = ?', [$Proveedor, $IdUsuario, 0]);
+
+                        if (count($pagoProvencontrado) > 0) {
+                            DB::table('mc_flw_pagos')->where("id", $pagoProvencontrado[0]->id)->update([
+                                "Importe" => $pagoProvencontrado[0]->Importe + $Importe
+                            ]);
+                            DB::table('mc_flw_pagos_det')->insert([
+                                "IdPago" => $pagoProvencontrado[0]->id, "IdFlw" => $IdFlw, "Importe" => $Importe
+                            ]);
+                        } else {
+                            $IdPago = DB::table('mc_flw_pagos')->insertGetId([
+                                'Fecha' => $Fecha, "Importe" => $Importe, "LlaveMatch" => $LlaveMatch, "Tipo" => $Tipo, "RFC" => $RFC, "Proveedor" => $Proveedor, "IdUsuario" => $IdUsuario
+                            ]);
+                            DB::table('mc_flw_pagos_det')->insert([
+                                "IdPago" => $IdPago, "IdFlw" => $IdFlw, "Importe" => $Importe
+                            ]);
+                        }
                     }
                 } else if ($paso == 2) {
                     $idsflw = $request->idsflw;
@@ -1692,8 +1687,24 @@ class EmpresaController extends Controller
                     $idscuentasdestino = $request->idscuentasdestino;
                     $fechas = $request->fechas;
                     $tipos = $request->tipos;
+                    /* $array["idsflw"] = $idsflw;
+                    $array["idscuentasorigen"] = $idscuentasorigen;
+                    $array["idscuentasdestino"] = $idscuentasdestino;
+                    $array["fechas"] = $fechas;
+                    $array["tipos"] = $tipos; */
+
                     for ($x = 0; $x < count($idsflw); $x++) {
-                        $pagoencontrado = DB::select('select * from mc_flw_pagos where IdFlw = ? and IdUsuario = ? ', [$idsflw[$x], $IdUsuario]);
+                        $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
+                        INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                        WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$idsflw[$x], $IdUsuario]);
+                        if (count($pagoencontrado) > 0) {
+                            DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update(['Fecha' => $fechas[$x], 'Tipo' => $tipos[$x], 'idCuentaOrigen' => $idscuentasorigen[$x], 'idCuentaDestino' => $idscuentasdestino[$x]]);
+                        }
+                    }
+                    /* for ($x = 0; $x < count($idsflw); $x++) {
+                        $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
+                        INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                        WHERE IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$idsflw[$x], $IdUsuario]);
                         if (count($pagoencontrado) > 0) {
                             $pagodetencontrado = DB::select('select * from mc_flw_pagos_det where idPago = ?', [$pagoencontrado[0]->id]);
                             if (count($pagodetencontrado) > 0) {
@@ -1702,18 +1713,32 @@ class EmpresaController extends Controller
                                 DB::table('mc_flw_pagos_det')->insert(['idPago' => $pagoencontrado[0]->id, 'idCuentaOrigen' => $idscuentasorigen[$x], 'idCuentaDestino' => $idscuentasdestino[$x], 'fecha' => $fechas[$x], 'tipo' => $tipos[$x]]);
                             }
                         }
-                    }
+                    } */
                 }
             } else {
-                $pagoencontrado = DB::select('select * from mc_flw_pagos where IdFlw = ? and IdUsuario = ? ', [$IdFlw, $IdUsuario]);
-                DB::table('mc_flw_pagos')->where("IdFlw", $IdFlw)->where("IdUsuario", $IdUsuario)->delete();
-                DB::table('mc_flw_pagos_det')->where("idPago", $pagoencontrado[0]->id)->delete();
+                $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
+                INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$IdFlw, $IdUsuario]);
+
+                DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->delete();
+
+                $buscarpagosdet = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
+                WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                if (count($buscarpagosdet) > 0) {
+                    $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                    DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
+                        "Importe" => $importetotal[0]->Importe
+                    ]);
+                } else {
+                    DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->where("IdUsuario", $IdUsuario)->delete();
+                }
             }
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    //pendiente de revisar
     function eliminarFlwPagos(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
@@ -1721,8 +1746,8 @@ class EmpresaController extends Controller
         if ($valida[0]['error'] === 0) {
             $idspago = $request->idspago;
             for ($x = 0; $x < count($idspago); $x++) {
+                DB::table('mc_flw_pagos_det')->where("IdPago", $idspago[$x])->delete();
                 DB::table('mc_flw_pagos')->where("id", $idspago[$x])->delete();
-                DB::table('mc_flw_pagos_det')->where("idPago", $idspago[$x])->delete();
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1736,12 +1761,16 @@ class EmpresaController extends Controller
             $IdsFlw = $request->IdsFlw;
             $IdUsuario = $request->IdUsuario;
             for ($x = 0; $x < count($IdsFlw); $x++) {
-                DB::table('mc_flw_pagos')->where("IdFlw", $IdsFlw[$x])->where("IdUsuario", $IdUsuario)->update(['Layout' => 1]);
+                $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
+                INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$IdsFlw[$x], $IdUsuario]);
+                DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update(['Layout' => 1]);
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    //pendiente de revisar
     public function borrarFlwPagosByLlaveMath(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);

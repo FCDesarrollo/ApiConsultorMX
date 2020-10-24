@@ -1613,12 +1613,11 @@ class EmpresaController extends Controller
             $Layout = $request->Layout;
             $IdUsuario = $request->IdUsuario;
 
-            $filtro = $IdUsuario != 0 ? "AND mc_flw_pagos.IdUsuario = $IdUsuario" : "";
+            $filtro = $IdUsuario != 0 ? "WHERE mc_flw_pagos.IdUsuario = $IdUsuario" : "WHERE Layout = $Layout";
             $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flow_bancuentas.IdBanco AS idBancoOrigen, mc_flow_bancuentas.Nombre AS cuentaOrigen, mc_flow_cliproctas.IdBanco AS idBancoDestino,
             IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino, mc_flow_cliproctas.Banco AS BancoDestino, mc_flow_cliproctas.Clabe AS ClabeBancoDestino FROM mc_flw_pagos 
             LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
-            LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino
-            WHERE Layout = $Layout " . $filtro);
+            LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino " . $filtro);
             for($x=0 ; $x<count($pagospendientes) ; $x++) {
                 $pagosdetalle = DB::select('SELECT mc_flw_pagos_det.id AS IdPagoDet, mc_flw_pagos_det.IdPago ,mc_flw_pagos_det.Importe, mc_flujosefectivo.* FROM mc_flw_pagos_det
                 INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id

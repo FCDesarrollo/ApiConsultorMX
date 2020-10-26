@@ -1665,10 +1665,10 @@ class EmpresaController extends Controller
                     $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$IdFlw, $IdUsuario]);
 
                     if (count($pagoencontrado) > 0) {
-                        $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                         DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->update([
                             "Importe" => $Importe
                         ]);
+                        $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                         DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
                             "Importe" => $importetotal[0]->Importe, "LlaveMatch" => $LlaveMatch, "RFC" => $RFC, "Proveedor" => $Proveedor
                         ]);

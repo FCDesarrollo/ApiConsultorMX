@@ -1462,9 +1462,10 @@ class EmpresaController extends Controller
                     $query .= " AND mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo'";
                     break;
                 case 4:
-                    $query .= "SELECT mc_flujosefectivo.* FROM mc_flujosefectivo WHERE id = " . $request->ids[0];
+                    $query .= "SELECT mc_flujosefectivo.*, mc_flw_pagos_det.Importe FROM mc_flujosefectivo 
+                    INNER JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw WHERE mc_flujosefectivo.id = " . $request->ids[0];
                     for ($x = 1; $x < count($request->ids); $x++) {
-                        $query .= " OR id = " . $request->ids[$x];
+                        $query .= " OR mc_flujosefectivo.id = " . $request->ids[$x];
                     }
                 default:
                     break;
@@ -1613,7 +1614,7 @@ class EmpresaController extends Controller
             $Layout = $request->Layout;
             $IdUsuario = $request->IdUsuario;
 
-            $filtro = $IdUsuario != 0 ? "WHERE mc_flw_pagos.IdUsuario = $IdUsuario" : "WHERE Layout = $Layout";
+            $filtro = $IdUsuario != 0 ? "WHERE mc_flw_pagos.IdUsuario = $IdUsuario ORDER BY mc_flw_pagos.Fecha DESC" : "WHERE Layout = $Layout ORDER BY mc_flw_pagos.Fecha DESC";
             $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flow_bancuentas.IdBanco AS idBancoOrigen, mc_flow_bancuentas.Nombre AS cuentaOrigen, mc_flow_cliproctas.IdBanco AS idBancoDestino,
             IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino, mc_flow_cliproctas.Banco AS BancoDestino, mc_flow_cliproctas.Clabe AS ClabeBancoDestino FROM mc_flw_pagos 
             LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen

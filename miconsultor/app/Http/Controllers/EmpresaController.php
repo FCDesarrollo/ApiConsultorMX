@@ -878,7 +878,7 @@ class EmpresaController extends Controller
 
             $mc_flw_pagos = "create table if not exists mc_flw_pagos(
                 id int(11) NOT NULL AUTO_INCREMENT,
-                FechaPago DATE DEFAULT NULL,
+                Fecha DATE DEFAULT NULL,
                 Importe NUMERIC(18, 2) DEFAULT NULL,
                 LlaveMatch VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Tipo int(11) DEFAULT NULL,

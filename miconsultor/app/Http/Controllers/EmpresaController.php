@@ -1762,7 +1762,10 @@ class EmpresaController extends Controller
             $idspago = $request->idspago;
             for ($x = 0; $x < count($idspago); $x++) {
                 DB::table('mc_flw_pagos_det')->where("IdPago", $idspago[$x])->delete();
-                DB::table('mc_flw_pagos')->where("id", $idspago[$x])->delete();
+                $pagodetalleencontrado = DB::select('SELECT * FROM mc_flw_pagos_det WHERE IdPago = ?', [$idspago[$x]]);
+                if(count($pagodetalleencontrado) === 0) {
+                    DB::table('mc_flw_pagos')->where("id", $idspago[$x])->delete();
+                }
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

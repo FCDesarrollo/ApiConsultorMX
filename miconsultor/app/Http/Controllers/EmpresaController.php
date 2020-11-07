@@ -837,18 +837,22 @@ class EmpresaController extends Controller
                 CodConcepto VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Concepto VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Serie VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
-                Folio NUMERIC(18, 0) DEFAULT NULL,
-                Total NUMERIC(18, 2) DEFAULT NULL,
-                Pendiente NUMERIC(18, 2) DEFAULT NULL,
+                Folio DECIMAL(18, 0) DEFAULT NULL,
+                Total DECIMAL(18, 2) DEFAULT NULL,
+                Pendiente DECIMAL(18, 2) DEFAULT NULL,
                 Tipo VARCHAR(10) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Suc VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 cRFC VARCHAR(15) COLLATE utf8_spanish_ci DEFAULT NULL,
-                SaldoInt NUMERIC(18, 2) DEFAULT NULL,
+                SaldoInt DECIMAL(18, 2) DEFAULT NULL,
                 IdMoneda INT(11) DEFAULT NULL,
                 IdUsuario INT(11) DEFAULT NULL,
                 Comentarios VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Prioridad INT(11) DEFAULT NULL,
                 Procesando INT(11) DEFAULT 0,
+                Actualizacion DATE DEFAULT NULL,
+                ImporteOriginal DECIMAL(18,2) DEFAULT NULL,
+                TipoCambio DECIMAL(18,2) DEFAULT NULL,
+                Moneda VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flujosefectivo);
@@ -1513,10 +1517,10 @@ class EmpresaController extends Controller
             for ($x = 0; $x < count($flujos) && array_key_exists('IdDoc', $flujos[$x]); $x++) {
                 $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoc = ? and Suc = ?', [$flujos[$x]["IdDoc"], $flujos[$x]["Suc"]]);
                 if (count($flujoencontrado) > 0) {
-                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], 'Procesando' => 1, "Actualizacion" => $permisos["Actualizacion"]]);
+                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], 'Procesando' => 1, "Actualizacion" => $permisos["Actualizacion"], "ImporteOriginal" => $permisos["ImporteOriginal"], "TipoCambio" => $permisos["TipoCambio"], "Moneda" => $permisos["Moneda"]]);
                     //$IdDoc = $flujos[$x]["IdDoc"];
                 } else {
-                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "CodConcepto" => $flujos[$x]["CodConcepto"], "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdMoneda" => $flujos[$x]["IdMoneda"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], "Procesando" => 1, "Actualizacion" => $permisos["Actualizacion"]]);
+                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "CodConcepto" => $flujos[$x]["CodConcepto"], "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdMoneda" => $flujos[$x]["IdMoneda"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], "Procesando" => 1, "Actualizacion" => $permisos["Actualizacion"], "ImporteOriginal" => $permisos["ImporteOriginal"], "TipoCambio" => $permisos["TipoCambio"], "Moneda" => $permisos["Moneda"]]);
                     //$IdDoc = 0;
                 }
                 /* for ($y = 0; $y < count($flujostotales) && $IdDoc != 0; $y++) {

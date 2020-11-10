@@ -1860,7 +1860,7 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            $proveedores = DB::select('SELECT * FROM mc_catproveedores WHERE rfc IS NOT NULL ORDER BY razonsocial');
+            $proveedores = DB::select('SELECT * FROM mc_catproveedores WHERE mc_catproveedores.rfc IS NOT NULL ORDER BY mc_catproveedores.razonsocial');
             $array["proveedores"] = $proveedores;
         }
 

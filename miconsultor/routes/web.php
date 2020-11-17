@@ -401,3 +401,4 @@ Route::put('cambiarStatusServicio', 'ProveedoresController@cambiarStatusServicio
 Route::post('servicioscontratadosRFC', 'AdministradorController@servicioscontratadosRFC');
 Route::post('serviciosfcmodulo', 'AdministradorController@serviciosfcmodulo');
 Route::get('getDatosHome', 'EmpresaController@getDatosHome');
+Route::post('olvidoContra', 'GeneralesController@olvidoContra');

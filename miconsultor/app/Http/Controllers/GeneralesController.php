@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Mail;
+use App\Mail\MensajesGenerales;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -2111,6 +2113,33 @@ class GeneralesController extends Controller
             "ServidorStorage" => $ServidorStorage,
         );
 
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function olvidoContra(Request $request) {
+        $paso = $request->paso;
+        $correo = $request->correo;
+        $array["error"] = 0;
+        if($paso === 1) {
+            $usuario = DB::connection("General")->select("SELECT * FROM mc1001 WHERE correo = '$correo'");
+            if(count($usuario) > 0) {
+                $codigo = rand(10000000, 99999999);
+                $array["codigo"] = $codigo;
+                $data["titulo"] = "Cambio de contraseña";
+                $data["cabecera"] = "Se ha solicitado un cambio de contraseña a la cuenta asociada a este correo. En caso de que usted no lo haya solicitado favor de notificar a los administradores.";
+                $data["mensaje"] = "El código para cambiar su contraseña es: ".$codigo;
+                Mail::to($correo)->send(new MensajesGenerales($data));
+                $array["paso"] = $paso;
+            }
+            else {
+                $array["error"] = 2;
+            }
+        }
+        else {
+            $password = password_hash($request->password, PASSWORD_BCRYPT);
+            DB::connection("General")->table('mc1001')->where("correo", $request->correo)->update(["password" => $password]);
+            $array["paso"] = $paso;
+        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

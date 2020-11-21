@@ -901,6 +901,8 @@ class EmpresaController extends Controller
                 IdPago int(11) DEFAULT NULL,
                 IdFlw bigint(20) DEFAULT NULL,
                 Importe DECIMAL(18,2) DEFAULT NULL,
+                ImporteOriginal DECIMAL(18,2) DEFAULT NULL,
+                TipoCambio DECIMAL(18,2) DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flw_pagos_det);
@@ -1381,7 +1383,7 @@ class EmpresaController extends Controller
                 "); */
             }
 
-            $query .= $tabla != 1 ? " GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC" : "";
+            $query .= $tabla != 1 ? " GROUP BY mc_flujosefectivo.Razon, mc_flujosefectivo.Tipo, mc_flujosefectivo.id ORDER BY PendientePorRazon DESC" : "GROUP BY mc_flujosefectivo.id";
             $flujosefectivo = DB::select($query);
             $ultimaactualizacion = DB::select("SELECT IF(ISNULL(mc_flujosefectivo.Actualizacion), 'No actualizados', mc_flujosefectivo.Actualizacion) AS Actualizacion 
             FROM mc_flujosefectivo ORDER BY mc_flujosefectivo.Actualizacion DESC LIMIT 1");
@@ -1683,17 +1685,20 @@ class EmpresaController extends Controller
                     $IdsFlw = $request->IdsFlw;
                     $Fecha = $request->Fecha;
                     $Importes = $request->Importes;
+                    $ImportesOriginales = $request->ImportesOriginales;
+                    $TiposCambio = $request->TiposCambio;
                     $LlaveMatch = $request->LlaveMatch;
                     $Tipo = $request->Tipo;
                     $RFCS = $request->RFCS;
                     $Proveedores = $request->Proveedores;
 
                     for ($x = 0; $x < count($IdsFlw); $x++) {
-                        $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$IdsFlw[$x], $IdUsuario]);
+                        $TiposCambio[$x] = $TiposCambio[$x] == -1 ? 1 : $TiposCambio[$x]; 
+                        $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det LEFT JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ?', [$IdsFlw[$x], $IdUsuario, 0]);
 
                         if (count($pagoencontrado) > 0) {
                             DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->update([
-                                "Importe" => $Importes[$x]
+                                "Importe" => $Importes[$x], "ImporteOriginal" => $ImportesOriginales[$x], "TipoCambio" => $TiposCambio[$x]
                             ]);
                             $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                             DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
@@ -1707,14 +1712,14 @@ class EmpresaController extends Controller
                                     "Importe" => $pagoProvencontrado[0]->Importe + $Importes[$x]
                                 ]);
                                 DB::table('mc_flw_pagos_det')->insert([
-                                    "IdPago" => $pagoProvencontrado[0]->id, "IdFlw" => $IdsFlw[$x], "Importe" => $Importes[$x]
+                                    "IdPago" => $pagoProvencontrado[0]->id, "IdFlw" => $IdsFlw[$x], "Importe" => $Importes[$x], "ImporteOriginal" => $ImportesOriginales[$x], "TipoCambio" => $TiposCambio[$x]
                                 ]);
                             } else {
                                 $IdPago = DB::table('mc_flw_pagos')->insertGetId([
                                     'Fecha' => $Fecha, "Importe" => $Importes[$x], "LlaveMatch" => $LlaveMatch, "Tipo" => $Tipo, "RFC" => $RFCS[$x], "Proveedor" => $Proveedores[$x], "IdUsuario" => $IdUsuario
                                 ]);
                                 DB::table('mc_flw_pagos_det')->insert([
-                                    "IdPago" => $IdPago, "IdFlw" => $IdsFlw[$x], "Importe" => $Importes[$x]
+                                    "IdPago" => $IdPago, "IdFlw" => $IdsFlw[$x], "Importe" => $Importes[$x], "ImporteOriginal" => $ImportesOriginales[$x], "TipoCambio" => $TiposCambio[$x]
                                 ]);
                             }
                         }
@@ -1790,6 +1795,7 @@ class EmpresaController extends Controller
                 } else {
                     DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->where("IdUsuario", $IdUsuario)->delete();
                 }
+                DB::table('mc_flujosefectivo')->where("id", $pagoencontrado[0]->IdFlw)->update(['Pendiente' => DB::raw('Pendiente + '.$pagoencontrado[0]->Importe), 'ImporteOriginal' => DB::raw('ImporteOriginal + '.$pagoencontrado[0]->ImporteOriginal)]);
             }
         }
 

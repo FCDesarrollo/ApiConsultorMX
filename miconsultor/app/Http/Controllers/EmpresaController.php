@@ -1488,11 +1488,14 @@ class EmpresaController extends Controller
                     $query .= " AND mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo'";
                     break;
                 case 4:
-                    $query .= "SELECT mc_flujosefectivo.*, mc_flw_pagos_det.Importe FROM mc_flujosefectivo 
-                    INNER JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw WHERE mc_flujosefectivo.id = " . $request->ids[0];
+                    $query .= "SELECT mc_flujosefectivo.*, mc_flw_pagos_det.Importe, mc_flw_pagos.Layout FROM mc_flujosefectivo 
+                    INNER JOIN mc_flw_pagos_det ON mc_flujosefectivo.id = mc_flw_pagos_det.IdFlw 
+                    INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                    WHERE (mc_flujosefectivo.id = " . $request->ids[0];
                     for ($x = 1; $x < count($request->ids); $x++) {
                         $query .= " OR mc_flujosefectivo.id = " . $request->ids[$x];
                     }
+                    $query .= ") AND mc_flw_pagos.Layout = 0 ";
                 default:
                     break;
             }
@@ -1646,7 +1649,7 @@ class EmpresaController extends Controller
             LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
             LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino " . $filtro);
             for ($x = 0; $x < count($pagospendientes); $x++) {
-                $pagosdetalle = DB::select('SELECT mc_flw_pagos_det.id AS IdPagoDet, mc_flw_pagos_det.IdPago ,mc_flw_pagos_det.Importe, mc_flujosefectivo.* FROM mc_flw_pagos_det
+                $pagosdetalle = DB::select('SELECT mc_flw_pagos_det.id AS IdPagoDet, mc_flw_pagos_det.ImporteOriginal AS ImporteOriginalPago, mc_flw_pagos_det.TipoCambio as TipoCambioPago, mc_flw_pagos_det.IdPago ,mc_flw_pagos_det.Importe, mc_flujosefectivo.* FROM mc_flw_pagos_det
                 INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id
                 WHERE mc_flw_pagos_det.IdPago = ?', [$pagospendientes[$x]->id]);
                 for ($y = 0; $y < count($pagosdetalle); $y++) {
@@ -1758,7 +1761,7 @@ class EmpresaController extends Controller
                     for ($x = 0; $x < count($idsflw); $x++) {
                         $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
                         INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
-                        WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$idsflw[$x], $IdUsuario]);
+                        WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ?', [$idsflw[$x], $IdUsuario, 0]);
                         if (count($pagoencontrado) > 0) {
                             DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update(['Fecha' => $fechas[$x], 'Tipo' => $tipos[$x], 'idCuentaOrigen' => $idscuentasorigen[$x], 'idCuentaDestino' => $idscuentasdestino[$x]]);
                         }

@@ -1842,14 +1842,27 @@ class EmpresaController extends Controller
             $Importes = $request->Importes;
             $PagosOriginales = $request->PagosOriginales;
             $TiposCambio = $request->TiposCambio;
+            $IdsPago = [];
+            $CountIdsPago = 0;
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
                 INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
-                WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$IdsFlw[$x], $IdUsuario]);
-                DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update(['Layout' => 1]);
+                WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ?', [$IdsFlw[$x], $IdUsuario, 0]);
+                
                 $ImporteOriginalRestar = $TiposCambio[$x] != -1 ? $PagosOriginales[$x] : $Importes[$x];
                 DB::table('mc_flujosefectivo')->where("id", $IdsFlw[$x])->update(['Pendiente' => DB::raw('Pendiente - '.$Importes[$x]), 'ImporteOriginal' => DB::raw('ImporteOriginal - '.$ImporteOriginalRestar)]);
+
+                if (!in_array($pagoencontrado[0]->IdPago, $IdsPago)) {
+                    $IdsPago[$CountIdsPago] = $pagoencontrado[0]->IdPago;
+                    $CountIdsPago++;
+                } 
             }
+
+            $array["IdsPago"] = $IdsPago;
+            for ($x = 0; $x < count($IdsPago); $x++) {  
+                DB::table('mc_flw_pagos')->where("id", $IdsPago[$x])->update(['Layout' => 1]);
+            }
+            
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

@@ -1782,9 +1782,10 @@ class EmpresaController extends Controller
                 }
             } else {
                 //que aumente en el Pendiente e ImporteOriginal del flujo lo que se pago en el pago cancelado.
+                $IdPago = $request->IdPago;
                 $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
                 INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
-                WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ?', [$IdFlw, $IdUsuario]);
+                WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?', [$IdFlw, $IdUsuario, 1, $IdPago]);
 
                 DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->delete();
 

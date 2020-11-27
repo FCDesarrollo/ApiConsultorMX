@@ -493,6 +493,9 @@ class EmpresaController extends Controller
                 IdMoneda INT(11) DEFAULT NULL,
                 Escliente INT(11) DEFAULT NULL,
                 Prioridad INT(11) DEFAULT 0,
+                Correo1 VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
+                Correo2 VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
+                Correo3 VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catproveedores);
@@ -853,6 +856,8 @@ class EmpresaController extends Controller
                 ImporteOriginal DECIMAL(18,2) DEFAULT NULL,
                 TipoCambio DECIMAL(18,2) DEFAULT NULL,
                 Moneda VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
+                RutaArchivo VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
+                NombreArchivo VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flujosefectivo);
@@ -1522,10 +1527,10 @@ class EmpresaController extends Controller
             for ($x = 0; $x < count($flujos) && array_key_exists('IdDoc', $flujos[$x]); $x++) {
                 $flujoencontrado = DB::select('select * from mc_flujosefectivo where IdDoc = ? and Suc = ?', [$flujos[$x]["IdDoc"], $flujos[$x]["Suc"]]);
                 if (count($flujoencontrado) > 0) {
-                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], 'Procesando' => 1, "Actualizacion" => $permisos["Actualizacion"], "ImporteOriginal" => $flujos[$x]["ImporteOriginal"], "TipoCambio" => $flujos[$x]["TipoCambio"], "Moneda" => $flujos[$x]["Moneda"]]);
+                    DB::table('mc_flujosefectivo')->where("IdDoc", $flujos[$x]["IdDoc"])->where("Suc", $flujos[$x]["Suc"])->update(['Pendiente' => $flujos[$x]["Pendiente"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], 'Procesando' => 1, "Actualizacion" => $permisos["Actualizacion"], "ImporteOriginal" => $flujos[$x]["ImporteOriginal"], "TipoCambio" => $flujos[$x]["TipoCambio"], "Moneda" => $flujos[$x]["Moneda"], "RutaArchivo" => $flujos[$x]["RutaArchivo"], "NombreArchivo" => $flujos[$x]["NombreArchivo"]]);
                     //$IdDoc = $flujos[$x]["IdDoc"];
                 } else {
-                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "CodConcepto" => $flujos[$x]["CodConcepto"], "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdMoneda" => $flujos[$x]["IdMoneda"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], "Procesando" => 1, "Actualizacion" => $permisos["Actualizacion"], "ImporteOriginal" => $flujos[$x]["ImporteOriginal"], "TipoCambio" => $flujos[$x]["TipoCambio"], "Moneda" => $flujos[$x]["Moneda"]]);
+                    DB::table('mc_flujosefectivo')->insert(['IdDoc' => $flujos[$x]["IdDoc"], 'Idcon' => $flujos[$x]["Idcon"], "Fecha" => $flujos[$x]["Fecha"], "Vence" => $flujos[$x]["Vence"], "Idclien" => $flujos[$x]["Idclien"], "Razon" => trim($flujos[$x]["Razon"]), "CodConcepto" => $flujos[$x]["CodConcepto"], "Concepto" => $flujos[$x]["Concepto"], "Serie" => $flujos[$x]["Serie"], "Folio" => $flujos[$x]["Folio"], "Total" => $flujos[$x]["Total"], "Pendiente" => $flujos[$x]["Pendiente"], "Tipo" => trim($flujos[$x]["Tipo"]), "Suc" => $flujos[$x]["Suc"], "cRFC" => $flujos[$x]["cRFC"], "SaldoInt" => $flujos[$x]["SaldoInt"], "IdMoneda" => $flujos[$x]["IdMoneda"], "IdUsuario" => $flujos[$x]["IdUsuario"], "Comentarios" => $flujos[$x]["Comentarios"], "Prioridad" => $flujos[$x]["Prioridad"], "Procesando" => 1, "Actualizacion" => $permisos["Actualizacion"], "ImporteOriginal" => $flujos[$x]["ImporteOriginal"], "TipoCambio" => $flujos[$x]["TipoCambio"], "Moneda" => $flujos[$x]["Moneda"], "RutaArchivo" => $flujos[$x]["RutaArchivo"], "NombreArchivo" => $flujos[$x]["NombreArchivo"]]);
                     //$IdDoc = 0;
                 }
                 /* for ($y = 0; $y < count($flujostotales) && $IdDoc != 0; $y++) {
@@ -1566,9 +1571,9 @@ class EmpresaController extends Controller
             for ($x = 0; $x < count($proveedores); $x++) {
                 $proveedorencontrado = DB::select('select * from mc_catproveedores where codigo = ? and sucursal = ?', [$proveedores[$x]["codigo"], trim($proveedores[$x]["sucursal"])]);
                 if (count($proveedorencontrado) == 0) {
-                    DB::table('mc_catproveedores')->insert(['codigo' => $proveedores[$x]["codigo"], 'rfc' => trim($proveedores[$x]["rfc"]), "razonsocial" => trim($proveedores[$x]["razonsocial"]), "sucursal" => trim($proveedores[$x]["sucursal"]), "IdMoneda" => $proveedores[$x]["IdMoneda"], "Escliente" => $proveedores[$x]["Escliente"]]);
+                    DB::table('mc_catproveedores')->insert(['codigo' => $proveedores[$x]["codigo"], 'rfc' => trim($proveedores[$x]["rfc"]), "razonsocial" => trim($proveedores[$x]["razonsocial"]), "sucursal" => trim($proveedores[$x]["sucursal"]), "IdMoneda" => $proveedores[$x]["IdMoneda"], "Escliente" => $proveedores[$x]["Escliente"], "Correo1" => $proveedores[$x]["Correo1"], "Correo2" => $proveedores[$x]["Correo2"], "Correo3" => $proveedores[$x]["Correo3"]]);
                 } else {
-                    DB::table('mc_catproveedores')->where("codigo", $proveedores[$x]["codigo"])->update(['sucursal' => $proveedores[$x]["sucursal"], "IdMoneda" => $proveedores[$x]["IdMoneda"], 'Escliente' => $proveedores[$x]["Escliente"]]);
+                    DB::table('mc_catproveedores')->where("codigo", $proveedores[$x]["codigo"])->update(['sucursal' => $proveedores[$x]["sucursal"], "IdMoneda" => $proveedores[$x]["IdMoneda"], 'Escliente' => $proveedores[$x]["Escliente"], "Correo1" => $proveedores[$x]["Correo1"], "Correo2" => $proveedores[$x]["Correo2"], "Correo3" => $proveedores[$x]["Correo3"]]);
                 }
             }
         }

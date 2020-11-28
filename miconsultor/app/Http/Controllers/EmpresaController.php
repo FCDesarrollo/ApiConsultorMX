@@ -1866,7 +1866,12 @@ class EmpresaController extends Controller
 
             $array["IdsPago"] = $IdsPago;
             for ($x = 0; $x < count($IdsPago); $x++) {  
+                $correo = "jj.garcia.dl.1994@gmail.com";
                 DB::table('mc_flw_pagos')->where("id", $IdsPago[$x])->update(['Layout' => 1]);
+                $data["titulo"] = "Nueva Pago: ".$IdsPago[$x];
+                $data["cabecera"] = "Se ha hecho un pago a Empresa";
+                $data["mensaje"] = "Pago de Importe";
+                Mail::to($correo)->send(new MensajesGenerales($data));
             }
             
         }

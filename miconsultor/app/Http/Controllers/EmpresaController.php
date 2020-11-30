@@ -437,9 +437,19 @@ class EmpresaController extends Controller
               id INT(11) NOT NULL AUTO_INCREMENT,
               idbitacora INT(11) DEFAULT NULL,
               nombrearchivoE VARCHAR(255) CHARACTER SET latin1 DEFAULT NULL,
+              fechacorte DATE DEFAULT NULL,
               PRIMARY KEY (id)
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_bitcontabilidad_det);
+
+            $mc_bitcontabilidad_entregas = "create table if not exists mc_bitcontabilidad_entregas (
+                idbitacora INT(11) DEFAULT NULL,
+                idusuario INT(11) DEFAULT NULL,
+                idservicio INT(11) DEFAULT NULL,
+                accion INT(11) DEFAULT NULL,
+                fechadecarga DATETIME DEFAULT current_timestamp()
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+              DB::statement($mc_bitcontabilidad_entregas);
 
             $mc_catclienprov = "create table if not exists mc_catclienprov (
               id INT(11) NOT NULL AUTO_INCREMENT,
@@ -1392,6 +1402,18 @@ class EmpresaController extends Controller
             $flujosefectivo = DB::select($query);
             $ultimaactualizacion = DB::select("SELECT IF(ISNULL(mc_flujosefectivo.Actualizacion), 'No actualizados', mc_flujosefectivo.Actualizacion) AS Actualizacion 
             FROM mc_flujosefectivo ORDER BY mc_flujosefectivo.Actualizacion DESC LIMIT 1");
+
+            $servidor = getServidorNextcloud();
+            $idempresa = $request->idEmpresa;
+            $datosempresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE idempresa = $idempresa");
+            $u_storage = $datosempresa[0]->usuario_storage;
+            $p_storage = $datosempresa[0]->password_storage;
+            
+            $rutaarchivo = "AAM110816VA3/Contabilidad/Contabilidad/ExpedientesContables/COM/20/10/";
+            $nombrearchivo = "8402A0FE-1943-11EB-8BAB-00155D014007.pdf";
+            $target_path = $rutaarchivo . $nombrearchivo;
+            $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+            $array["link"] = $link;
 
             $array["flujosefectivo"] = $flujosefectivo;
             $array["ultimaactualizacion"] = $ultimaactualizacion;

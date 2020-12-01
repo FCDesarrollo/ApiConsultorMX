@@ -276,6 +276,7 @@ Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpr
 Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
 Route::get('getContenidoServicioClientes', 'EmpresaController@getContenidoServicioClientes');
 Route::get('traerFlujosEfectivo', 'EmpresaController@traerFlujosEfectivo');
+Route::get('traerArchivosFlujos', 'EmpresaController@traerArchivosFlujos');
 Route::get('traerFlujosEfectivoAcomodados', 'EmpresaController@traerFlujosEfectivoAcomodados');
 Route::post('traerFlujosEfectivoFiltrados', 'EmpresaController@traerFlujosEfectivoFiltrados');
 Route::post('cargarFlujosEfectivo', 'EmpresaController@cargarFlujosEfectivo');

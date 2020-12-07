@@ -1943,9 +1943,10 @@ class ConsumoController extends Controller
         $valida = verificaUsuario($request->usuario, $request->pwd);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] == 0) {
-            $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE RFC = $request->rfc");
+            $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE RFC = '$request->rfc'");
             if(!empty($empresa)){
-                $logos = DB::connection("General")->select("SELECT * FROM mc1020 WHERE idempresa = $empresa[0]->idempresa");
+                $idempresa = $empresa[0]->idempresa;
+                $logos = DB::connection("General")->select("SELECT * FROM mc1020 WHERE idempresa = $idempresa");
                 $array["logos"] = $logos;
             }else{
                 $array["error"] = 1; //RFC no existe

@@ -1949,7 +1949,8 @@ class ConsumoController extends Controller
                 $logos = DB::connection("General")->select("SELECT * FROM mc1020 WHERE idempresa = $idempresa");
                 $array["logos"] = $logos;
             }else{
-                $array["error"] = 1; //RFC no existe
+                $logos = DB::connection("General")->select("SELECT * FROM mc1020 WHERE idempresa = 0");
+                $array["error"] = $logos; //retorna logo por default
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);   

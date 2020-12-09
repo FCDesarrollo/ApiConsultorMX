@@ -1879,6 +1879,7 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             $IdsFlw = $request->IdsFlw;
+            $NombreEmpresa = $request->nombreempresa;
             $IdUsuario = $request->IdUsuario;
             $Importes = $request->Importes;
             $PagosOriginales = $request->PagosOriginales;
@@ -1894,8 +1895,8 @@ class EmpresaController extends Controller
                 INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
                 WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ?', [$IdsFlw[$x], $IdUsuario, 0]);
                 
-                $ImporteOriginalRestar = $TiposCambio[$x] != -1 ? $PagosOriginales[$x] : $Importes[$x];
-                DB::table('mc_flujosefectivo')->where("id", $IdsFlw[$x])->update(['Pendiente' => DB::raw('Pendiente - '.$Importes[$x]), 'ImporteOriginal' => DB::raw('ImporteOriginal - '.$ImporteOriginalRestar)]);
+                /* $ImporteOriginalRestar = $TiposCambio[$x] != -1 ? $PagosOriginales[$x] : $Importes[$x];
+                DB::table('mc_flujosefectivo')->where("id", $IdsFlw[$x])->update(['Pendiente' => DB::raw('Pendiente - '.$Importes[$x]), 'ImporteOriginal' => DB::raw('ImporteOriginal - '.$ImporteOriginalRestar)]); */
 
                 if (!in_array($pagoencontrado[0]->IdPago, $IdsPago)) {
                     $IdsPago[$CountInfo] = $pagoencontrado[0]->IdPago;
@@ -1910,23 +1911,49 @@ class EmpresaController extends Controller
             $EnviarExtraidos = [];
             $CountCorreosExtraidos = 0;
             for ($x = 0; $x < count($IdsPago); $x++) {  
-                DB::table('mc_flw_pagos')->where("id", $IdsPago[$x])->update(['Layout' => 1]);
+                /* DB::table('mc_flw_pagos')->where("id", $IdsPago[$x])->update(['Layout' => 1]); */
+                $correos = [];
+                $CountCorreos = 0;
                 for($y=0 ; $y<count($CorreosMandar[$x]) ; $y++) {
-                    $correo = $CorreosMandar[$x][$y]["correo"];
                     $enviar = $CorreosMandar[$x][$y]["enviar"];
-                    $CorreosExtraidos[$CountCorreosExtraidos] = $correo;
-                    $EnviarExtraidos[$CountCorreosExtraidos] = $enviar;
-                    $CountCorreosExtraidos++;
                     if($enviar) {
+                        $correos[$CountCorreos] = $CorreosMandar[$x][$y]["correo"];
+                        $CountCorreos++;
+                    }
+                    /* $CorreosExtraidos[$CountCorreosExtraidos] = $correo;
+                    $EnviarExtraidos[$CountCorreosExtraidos] = $enviar;
+                    $CountCorreosExtraidos++; */
+                    /* if($enviar) {
                         $data["titulo"] = "Nueva Pago Realizado";
                         $data["cabecera"] = "Se ha hecho un pago a la Empresa ".$ProveedoresMandar[$x];
                         $data["mensaje"] = "Se pago un importe de $".$ImportesMandar[$x].".";
-                        Mail::to($correo)->send(new MensajesGenerales($data));
+                        Mail::to($correo)->cc($moreUsers)->send(new MensajesGenerales($data));
+                    } */
+                }
+                $array["correos"][$x] = $correos;
+                $array["IdsPago"][$x] = $IdsPago[$x];
+                if(count($correos) > 0) {
+                    $CorreoPrincipal = $correos[0];
+                    unset($correos[0]);
+                    $CorreosCC = array_values($correos);
+                    $array["CorreoPrincipal"][$x] = $CorreoPrincipal;
+                    $array["CorreoPrincipalCount"][$x] = count($CorreoPrincipal);
+                    $array["CorreosCC"][$x] = $CorreosCC;
+                    $array["CorreosCCCount"][$x] = count($CorreosCC);
+
+                    $data["titulo"] = "Nueva Pago De ".$NombreEmpresa;
+                    $data["cabecera"] = "Se ha hecho un pago a la Empresa ".$ProveedoresMandar[$x];
+                    $data["mensaje"] = "Se pago un importe de $".$ImportesMandar[$x].".";
+                    if(count($CorreosCC) == 0) {
+                        Mail::to($CorreoPrincipal)->send(new MensajesGenerales($data));
+                    }
+                    else {
+                        Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesGenerales($data));
                     }
                 }
             }
-            $array["CorreosExtraidos"] = $CorreosExtraidos;
-            $array["EnviarExtraidos"] = $EnviarExtraidos;
+            /* $array["CorreosExtraidos"] = $CorreosExtraidos;
+            $array["EnviarExtraidos"] = $EnviarExtraidos; */
             
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

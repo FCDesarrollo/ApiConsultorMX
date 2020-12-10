@@ -1885,14 +1885,20 @@ class EmpresaController extends Controller
             $PagosOriginales = $request->PagosOriginales;
             $TiposCambio = $request->TiposCambio;
             $Correos = $request->Correos;
+            $CuentasOrigen = $request->CuentasOrigen;
+            $CuentasDestino = $request->CuentasDestino;
             $IdsPago = [];
             $CorreosMandar = [];
             $ProveedoresMandar = [];
             $ImportesMandar = [];
+            $CuentasOrigenMandar = [];
+            $CuentasDestinoMandar = [];
+            $FoliosMandar = [];
             $CountInfo = 0;
             for ($x = 0; $x < count($IdsFlw); $x++) {
-                $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.*, mc_flw_pagos.Proveedor, FORMAT(mc_flw_pagos.Importe,2) AS Importe FROM mc_flw_pagos_det 
+                $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.*, mc_flw_pagos.Proveedor, FORMAT(mc_flw_pagos.Importe,2) AS Importe, mc_flujosefectivo.Folio FROM mc_flw_pagos_det 
                 INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id
                 WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ?', [$IdsFlw[$x], $IdUsuario, 0]);
                 
                 /* $ImporteOriginalRestar = $TiposCambio[$x] != -1 ? $PagosOriginales[$x] : $Importes[$x];
@@ -1903,13 +1909,34 @@ class EmpresaController extends Controller
                     $CorreosMandar[$CountInfo] = $Correos[$x];
                     $ProveedoresMandar[$CountInfo] = $pagoencontrado[0]->Proveedor;
                     $ImportesMandar[$CountInfo] = $pagoencontrado[0]->Importe;
+                    $CuentasOrigenMandar[$CountInfo] = $CuentasOrigen[$x];
+                    $CuentasDestinoMandar[$CountInfo] = $CuentasDestino[$x];
+                    $FoliosMandar[$CountInfo] = $pagoencontrado[0]->Folio;
                     $CountInfo++;
-                } 
+                }
+                else {
+                    $pos = array_search($pagoencontrado[0]->IdPago, $IdsPago);
+                    $FoliosMandar[$pos] = $FoliosMandar[$pos].",".$pagoencontrado[0]->Folio;
+                }
+            }
+            $MensajesFolios = [];
+
+            for($x=0 ; $x<count($FoliosMandar) ; $x++) {
+                $folios = explode(",", $FoliosMandar[$x]);
+                if(count($folios) === 1) {
+                    $MensajesFolios[$x] = "al documento con folio ".$folios[0];
+                }
+                else if(count($folios) === 2) {
+                    $MensajesFolios[$x] = "a los documentos con folio ".$folios[0]." y ".$folios[1];
+                }
+                else {
+                    $MensajesFolios[$x] = "a los documentos con folio ".$folios[0];
+                    for($y=1 ; $y<count($folios) ; $y++) {
+                        $MensajesFolios[$x] = $y == (count($folios) - 1) ? $MensajesFolios[$x]." y ".$folios[$y] : $MensajesFolios[$x].", ".$folios[$y]; 
+                    }
+                }
             }
 
-            $CorreosExtraidos = [];
-            $EnviarExtraidos = [];
-            $CountCorreosExtraidos = 0;
             for ($x = 0; $x < count($IdsPago); $x++) {  
                 /* DB::table('mc_flw_pagos')->where("id", $IdsPago[$x])->update(['Layout' => 1]); */
                 $correos = [];
@@ -1920,18 +1947,8 @@ class EmpresaController extends Controller
                         $correos[$CountCorreos] = $CorreosMandar[$x][$y]["correo"];
                         $CountCorreos++;
                     }
-                    /* $CorreosExtraidos[$CountCorreosExtraidos] = $correo;
-                    $EnviarExtraidos[$CountCorreosExtraidos] = $enviar;
-                    $CountCorreosExtraidos++; */
-                    /* if($enviar) {
-                        $data["titulo"] = "Nueva Pago Realizado";
-                        $data["cabecera"] = "Se ha hecho un pago a la Empresa ".$ProveedoresMandar[$x];
-                        $data["mensaje"] = "Se pago un importe de $".$ImportesMandar[$x].".";
-                        Mail::to($correo)->cc($moreUsers)->send(new MensajesGenerales($data));
-                    } */
                 }
-                $array["correos"][$x] = $correos;
-                $array["IdsPago"][$x] = $IdsPago[$x];
+
                 if(count($correos) > 0) {
                     $CorreoPrincipal = $correos[0];
                     unset($correos[0]);
@@ -1942,8 +1959,8 @@ class EmpresaController extends Controller
                     $array["CorreosCCCount"][$x] = count($CorreosCC);
 
                     $data["titulo"] = "Nueva Pago De ".$NombreEmpresa;
-                    $data["cabecera"] = "Se ha hecho un pago a la Empresa ".$ProveedoresMandar[$x];
-                    $data["mensaje"] = "Se pago un importe de $".$ImportesMandar[$x].".";
+                    $data["cabecera"] = "Se ha hecho un pago con razon ".$ProveedoresMandar[$x];
+                    $data["mensaje"] = "Se pago un importe de $".$ImportesMandar[$x]." a la cuenta ".$CuentasOrigenMandar[$x]." proveniente de la cuenta ".$CuentasDestinoMandar[$x]." correspondiente ".$MensajesFolios[$x].".";
                     if(count($CorreosCC) == 0) {
                         Mail::to($CorreoPrincipal)->send(new MensajesGenerales($data));
                     }
@@ -1952,8 +1969,6 @@ class EmpresaController extends Controller
                     }
                 }
             }
-            /* $array["CorreosExtraidos"] = $CorreosExtraidos;
-            $array["EnviarExtraidos"] = $EnviarExtraidos; */
             
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

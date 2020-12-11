@@ -1887,6 +1887,26 @@ class EmpresaController extends Controller
             $Correos = $request->Correos;
             $CuentasOrigen = $request->CuentasOrigen;
             $CuentasDestino = $request->CuentasDestino;
+            
+            $IdEmpresa = $request->IdEmpresa;
+            $RFC = $request->rfc;
+            $Servidor = getServidorNextcloud();
+            $DatosEmpresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
+            $u_storage = $DatosEmpresa[0]->usuario_storage;
+            $p_storage = $DatosEmpresa[0]->password_storage;
+            
+            $FechaServidor = date("YmdHis");
+            $IdsBancosOrigen = $request->idsbancosorigen;
+            $TipoLayout = $request->TipoLayout;
+            $CuentasBeneficiarios = $request->CuentasBeneficiarios;
+            $ImportesPagados = $request->ImportesPagados;
+            $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
+            mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
+            $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
+
+            $array["CarpetaDestino"] = $CarpetaDestino;
+            return json_encode($array, JSON_UNESCAPED_UNICODE);
+
             $IdsPago = [];
             $CorreosMandar = [];
             $ProveedoresMandar = [];

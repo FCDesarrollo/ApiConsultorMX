@@ -1894,9 +1894,11 @@ class EmpresaController extends Controller
             $DatosEmpresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
             $u_storage = $DatosEmpresa[0]->usuario_storage;
             $p_storage = $DatosEmpresa[0]->password_storage;
-            
             $FechaServidor = date("YmdHis");
-            $IdsBancosOrigen = $request->idsbancosorigen;
+            $IdsCuentasOrigen = $request->IdsCuentasOrigen;
+            $IdsCuentasDestino = $request->IdsCuentasDestino;
+            $ProveedoresInfoBancos = $request->ProveedoresInfoBancos;
+            $IdsBancosOrigen = $request->IdsBancosOrigen;
             $TipoLayout = $request->TipoLayout;
             $CuentasBeneficiarios = $request->CuentasBeneficiarios;
             $ImportesPagados = $request->ImportesPagados;
@@ -1905,6 +1907,75 @@ class EmpresaController extends Controller
             $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
 
             $array["CarpetaDestino"] = $CarpetaDestino;
+            $array["IdsBancosOrigen"] = $IdsBancosOrigen;
+            $array["numlayouts"] = count($IdsBancosOrigen);
+            for ($x = 0; $x < count($IdsBancosOrigen); $x++) {
+                $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
+                $urldestino = $CarpetaDestino . $nombrearchivonuevo;
+                $layouturl = $TipoLayout[$x] == 1 ? "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download" : "http://cloud.dublock.com/index.php/s/BynSRPHBXCo7234/download";
+                $layout = fopen($layouturl, "rb");
+                
+                if ($layout) {
+                    $array["layout"][$x] = "si";
+                    $nuevolayout = fopen($urldestino, "a");
+                    if ($nuevolayout) {
+                        while (!feof($layout)) {
+                            fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
+                        }
+                        $contenidolayout = file_get_contents($urldestino);
+                        $importepagadosindecimal = str_replace(".", "", $ImportesPagados[$x]);
+                        $referenciaalfanumerica = 'AAAAA0000000000';
+                        $descripcion = 'XXXXX';
+                        $referencianumerica = '5555';
+
+                        if ($TipoLayout[$x] == 2) {
+                            $maxcuentabeneficiario = 20;
+                            $maximportepagadosindecimal = 10;
+                            $maxreferenciaalfanumerica = 10;
+                            $maxdescripcion = 30;
+                            $maxferencianumerica = 10;
+
+                            $countcuentabeneficiario = strlen($CuentasBeneficiarios[$x]);
+                            $countimportepagadosindecimal = strlen($importepagadosindecimal);
+                            $countreferenciaalfanumerica = strlen($referenciaalfanumerica);
+                            $countdescripcion = strlen($descripcion);
+                            $countreferencianumerica = strlen($referencianumerica);
+
+                            $CuentasBeneficiarios[$x] = $countcuentabeneficiario < $maxcuentabeneficiario ? str_pad($CuentasBeneficiarios[$x], $maxcuentabeneficiario) : substr($CuentasBeneficiarios[$x], 0, $maxcuentabeneficiario);
+
+                            $importepagadosindecimal = $countimportepagadosindecimal < $maximportepagadosindecimal ? str_pad($importepagadosindecimal, $maximportepagadosindecimal, "0") : substr($importepagadosindecimal, 0, $maximportepagadosindecimal);
+
+                            $referenciaalfanumerica = $countreferenciaalfanumerica < $maxreferenciaalfanumerica ? str_pad($referenciaalfanumerica, $maxreferenciaalfanumerica) : substr($referenciaalfanumerica, 0, $maxreferenciaalfanumerica);
+
+                            $descripcion = $countdescripcion < $maxdescripcion ? str_pad($descripcion, $maxdescripcion) : substr($descripcion, 0, $maxdescripcion);
+
+                            $referencianumerica = $countreferencianumerica < $maxferencianumerica ? str_pad($referencianumerica, $maxferencianumerica) : substr($referencianumerica, 0, $maxferencianumerica);
+                        }
+
+                        $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
+                        $valores   = array($CuentasBeneficiarios[$x], $importepagadosindecimal, $ImportesPagados[$x], $referenciaalfanumerica, $descripcion, $referencianumerica);
+                        $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
+                        file_put_contents($urldestino, $nuevocontenido);
+
+                        fclose($nuevolayout);
+                    }
+                    fclose($layout);
+
+                    $codigoarchivo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x;
+                    $consecutivo = "";
+                    $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+                    if ($resultado["archivo"]["error"] == 0) {
+                        $codigodocumento = $codigoarchivo . $consecutivo;
+                        $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                        $target_path = $directorio . '/' . $codigodocumento . ".txt";
+                        $link = GetLinkArchivo($target_path, $Servidor, $u_storage, $p_storage);
+                        $array["link"][$x] = $link;
+                        unlink($urldestino);
+                    }
+                }
+            }
+            $urlcarpetaaborrar = substr($CarpetaDestino, 0, -1);
+            rmdir($urlcarpetaaborrar);
             return json_encode($array, JSON_UNESCAPED_UNICODE);
 
             $IdsPago = [];

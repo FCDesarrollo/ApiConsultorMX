@@ -1879,34 +1879,186 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             $IdsFlw = $request->IdsFlw;
+            $NombreEmpresa = $request->nombreempresa;
             $IdUsuario = $request->IdUsuario;
             $Importes = $request->Importes;
             $PagosOriginales = $request->PagosOriginales;
             $TiposCambio = $request->TiposCambio;
+            $Correos = $request->Correos;
+            $CuentasOrigen = $request->CuentasOrigen;
+            $CuentasDestino = $request->CuentasDestino;
+            
+            $IdEmpresa = $request->IdEmpresa;
+            $RFC = $request->rfc;
+            $Servidor = getServidorNextcloud();
+            $DatosEmpresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
+            $u_storage = $DatosEmpresa[0]->usuario_storage;
+            $p_storage = $DatosEmpresa[0]->password_storage;
+            $FechaServidor = date("YmdHis");
+            $IdsCuentasOrigen = $request->IdsCuentasOrigen;
+            $IdsCuentasDestino = $request->IdsCuentasDestino;
+            $ProveedoresInfoBancos = $request->ProveedoresInfoBancos;
+            $IdsBancosOrigen = $request->IdsBancosOrigen;
+            $TipoLayout = $request->TipoLayout;
+            $CuentasBeneficiarios = $request->CuentasBeneficiarios;
+            $ImportesPagados = $request->ImportesPagados;
+            $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
+            mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
+            $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
+
+            $array["CarpetaDestino"] = $CarpetaDestino;
+            $array["IdsBancosOrigen"] = $IdsBancosOrigen;
+            $array["numlayouts"] = count($IdsBancosOrigen);
+            for ($x = 0; $x < count($IdsBancosOrigen); $x++) {
+                $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
+                $urldestino = $CarpetaDestino . $nombrearchivonuevo;
+                $layouturl = $TipoLayout[$x] == 1 ? "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download" : "http://cloud.dublock.com/index.php/s/BynSRPHBXCo7234/download";
+                $layout = fopen($layouturl, "rb");
+                
+                if ($layout) {
+                    $array["layout"][$x] = "si";
+                    $nuevolayout = fopen($urldestino, "a");
+                    if ($nuevolayout) {
+                        while (!feof($layout)) {
+                            fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
+                        }
+                        $contenidolayout = file_get_contents($urldestino);
+                        $importepagadosindecimal = str_replace(".", "", $ImportesPagados[$x]);
+                        $referenciaalfanumerica = 'AAAAA0000000000';
+                        $descripcion = 'XXXXX';
+                        $referencianumerica = '5555';
+
+                        if ($TipoLayout[$x] == 2) {
+                            $maxcuentabeneficiario = 20;
+                            $maximportepagadosindecimal = 10;
+                            $maxreferenciaalfanumerica = 10;
+                            $maxdescripcion = 30;
+                            $maxferencianumerica = 10;
+
+                            $countcuentabeneficiario = strlen($CuentasBeneficiarios[$x]);
+                            $countimportepagadosindecimal = strlen($importepagadosindecimal);
+                            $countreferenciaalfanumerica = strlen($referenciaalfanumerica);
+                            $countdescripcion = strlen($descripcion);
+                            $countreferencianumerica = strlen($referencianumerica);
+
+                            $CuentasBeneficiarios[$x] = $countcuentabeneficiario < $maxcuentabeneficiario ? str_pad($CuentasBeneficiarios[$x], $maxcuentabeneficiario) : substr($CuentasBeneficiarios[$x], 0, $maxcuentabeneficiario);
+
+                            $importepagadosindecimal = $countimportepagadosindecimal < $maximportepagadosindecimal ? str_pad($importepagadosindecimal, $maximportepagadosindecimal, "0") : substr($importepagadosindecimal, 0, $maximportepagadosindecimal);
+
+                            $referenciaalfanumerica = $countreferenciaalfanumerica < $maxreferenciaalfanumerica ? str_pad($referenciaalfanumerica, $maxreferenciaalfanumerica) : substr($referenciaalfanumerica, 0, $maxreferenciaalfanumerica);
+
+                            $descripcion = $countdescripcion < $maxdescripcion ? str_pad($descripcion, $maxdescripcion) : substr($descripcion, 0, $maxdescripcion);
+
+                            $referencianumerica = $countreferencianumerica < $maxferencianumerica ? str_pad($referencianumerica, $maxferencianumerica) : substr($referencianumerica, 0, $maxferencianumerica);
+                        }
+
+                        $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
+                        $valores   = array($CuentasBeneficiarios[$x], $importepagadosindecimal, $ImportesPagados[$x], $referenciaalfanumerica, $descripcion, $referencianumerica);
+                        $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
+                        file_put_contents($urldestino, $nuevocontenido);
+
+                        fclose($nuevolayout);
+                    }
+                    fclose($layout);
+
+                    $codigoarchivo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x;
+                    $consecutivo = "";
+                    $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+                    if ($resultado["archivo"]["error"] == 0) {
+                        $codigodocumento = $codigoarchivo . $consecutivo;
+                        $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                        $target_path = $directorio . '/' . $codigodocumento . ".txt";
+                        $link = GetLinkArchivo($target_path, $Servidor, $u_storage, $p_storage);
+                        $array["link"][$x] = $link;
+                        unlink($urldestino);
+                    }
+                }
+            }
+            $urlcarpetaaborrar = substr($CarpetaDestino, 0, -1);
+            rmdir($urlcarpetaaborrar);
+            return json_encode($array, JSON_UNESCAPED_UNICODE);
+
             $IdsPago = [];
-            $CountIdsPago = 0;
+            $CorreosMandar = [];
+            $ProveedoresMandar = [];
+            $ImportesMandar = [];
+            $CuentasOrigenMandar = [];
+            $CuentasDestinoMandar = [];
+            $FoliosMandar = [];
+            $CountInfo = 0;
             for ($x = 0; $x < count($IdsFlw); $x++) {
-                $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
+                $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.*, mc_flw_pagos.Proveedor, FORMAT(mc_flw_pagos.Importe,2) AS Importe, mc_flujosefectivo.Folio FROM mc_flw_pagos_det 
                 INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id
                 WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ?', [$IdsFlw[$x], $IdUsuario, 0]);
                 
-                $ImporteOriginalRestar = $TiposCambio[$x] != -1 ? $PagosOriginales[$x] : $Importes[$x];
-                DB::table('mc_flujosefectivo')->where("id", $IdsFlw[$x])->update(['Pendiente' => DB::raw('Pendiente - '.$Importes[$x]), 'ImporteOriginal' => DB::raw('ImporteOriginal - '.$ImporteOriginalRestar)]);
+                /* $ImporteOriginalRestar = $TiposCambio[$x] != -1 ? $PagosOriginales[$x] : $Importes[$x];
+                DB::table('mc_flujosefectivo')->where("id", $IdsFlw[$x])->update(['Pendiente' => DB::raw('Pendiente - '.$Importes[$x]), 'ImporteOriginal' => DB::raw('ImporteOriginal - '.$ImporteOriginalRestar)]); */
 
                 if (!in_array($pagoencontrado[0]->IdPago, $IdsPago)) {
-                    $IdsPago[$CountIdsPago] = $pagoencontrado[0]->IdPago;
-                    $CountIdsPago++;
-                } 
+                    $IdsPago[$CountInfo] = $pagoencontrado[0]->IdPago;
+                    $CorreosMandar[$CountInfo] = $Correos[$x];
+                    $ProveedoresMandar[$CountInfo] = $pagoencontrado[0]->Proveedor;
+                    $ImportesMandar[$CountInfo] = $pagoencontrado[0]->Importe;
+                    $CuentasOrigenMandar[$CountInfo] = $CuentasOrigen[$x];
+                    $CuentasDestinoMandar[$CountInfo] = $CuentasDestino[$x];
+                    $FoliosMandar[$CountInfo] = $pagoencontrado[0]->Folio;
+                    $CountInfo++;
+                }
+                else {
+                    $pos = array_search($pagoencontrado[0]->IdPago, $IdsPago);
+                    $FoliosMandar[$pos] = $FoliosMandar[$pos].",".$pagoencontrado[0]->Folio;
+                }
+            }
+            $MensajesFolios = [];
+
+            for($x=0 ; $x<count($FoliosMandar) ; $x++) {
+                $folios = explode(",", $FoliosMandar[$x]);
+                if(count($folios) === 1) {
+                    $MensajesFolios[$x] = "al documento con folio ".$folios[0];
+                }
+                else if(count($folios) === 2) {
+                    $MensajesFolios[$x] = "a los documentos con folio ".$folios[0]." y ".$folios[1];
+                }
+                else {
+                    $MensajesFolios[$x] = "a los documentos con folio ".$folios[0];
+                    for($y=1 ; $y<count($folios) ; $y++) {
+                        $MensajesFolios[$x] = $y == (count($folios) - 1) ? $MensajesFolios[$x]." y ".$folios[$y] : $MensajesFolios[$x].", ".$folios[$y]; 
+                    }
+                }
             }
 
-            $array["IdsPago"] = $IdsPago;
             for ($x = 0; $x < count($IdsPago); $x++) {  
-                $correo = "jj.garcia.dl.1994@gmail.com";
-                DB::table('mc_flw_pagos')->where("id", $IdsPago[$x])->update(['Layout' => 1]);
-                $data["titulo"] = "Nueva Pago: ".$IdsPago[$x];
-                $data["cabecera"] = "Se ha hecho un pago a Empresa";
-                $data["mensaje"] = "Pago de Importe";
-                Mail::to($correo)->send(new MensajesGenerales($data));
+                /* DB::table('mc_flw_pagos')->where("id", $IdsPago[$x])->update(['Layout' => 1]); */
+                $correos = [];
+                $CountCorreos = 0;
+                for($y=0 ; $y<count($CorreosMandar[$x]) ; $y++) {
+                    $enviar = $CorreosMandar[$x][$y]["enviar"];
+                    if($enviar) {
+                        $correos[$CountCorreos] = $CorreosMandar[$x][$y]["correo"];
+                        $CountCorreos++;
+                    }
+                }
+
+                if(count($correos) > 0) {
+                    $CorreoPrincipal = $correos[0];
+                    unset($correos[0]);
+                    $CorreosCC = array_values($correos);
+                    $array["CorreoPrincipal"][$x] = $CorreoPrincipal;
+                    $array["CorreoPrincipalCount"][$x] = count($CorreoPrincipal);
+                    $array["CorreosCC"][$x] = $CorreosCC;
+                    $array["CorreosCCCount"][$x] = count($CorreosCC);
+
+                    $data["titulo"] = "Nueva Pago De ".$NombreEmpresa;
+                    $data["cabecera"] = "Se ha hecho un pago con razon ".$ProveedoresMandar[$x];
+                    $data["mensaje"] = "Se pago un importe de $".$ImportesMandar[$x]." a la cuenta ".$CuentasOrigenMandar[$x]." proveniente de la cuenta ".$CuentasDestinoMandar[$x]." correspondiente ".$MensajesFolios[$x].".";
+                    if(count($CorreosCC) == 0) {
+                        Mail::to($CorreoPrincipal)->send(new MensajesGenerales($data));
+                    }
+                    else {
+                        Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesGenerales($data));
+                    }
+                }
             }
             
         }

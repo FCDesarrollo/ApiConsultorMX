@@ -628,9 +628,11 @@ class AdministradorController extends Controller
                     INNER JOIN mc1004 m04 ON m01.idmenu=m04.idmenu 
                     INNER JOIN mc1005 m05 ON m01.idsubmenu=m05.idsubmenu WHERE id=$idservicio");
         if (!empty($servicio)){
-            $array["datos"] =array(
-                "servicio" => $servicio,
-             );
+            $array["codigoservicio"] = $servicio[0]->codigoservicio;
+            $array["idsubmenu"] = $servicio[0]->idsubmenu;
+            $array["carModulos"] = $servicio[0]->carModulos;
+            $array["carMenu"] = $servicio[0]->carMenu;
+            $array["carSubMenu"] = $servicio[0]->carSubMenu;
         }else{
             $array["error"] = "6";
         }

@@ -159,7 +159,7 @@ class FcPremiumController extends Controller
 
         if ($idcliente != 0){
             $licencia = DB::connection("General")->select("SELECT idlicencia,clave_activacion,fechafin FROM fclicencias 
-                                                            WHERE numero_serie='$clave' AND idcliente=0 AND status=0");
+                                                            WHERE numero_serie='$clave'");
             $Serial= bcrypt($clave.$equipo.$rfcempresa.$datoex);
             if (!empty($licencia)){
                 DB::connection("General")->table('fclicencias')->where("idlicencia", $licencia[0]->idlicencia)->

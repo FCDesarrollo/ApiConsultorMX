@@ -1823,6 +1823,7 @@ class EmpresaController extends Controller
             } else {
                 //que aumente en el Pendiente e ImporteOriginal del flujo lo que se pago en el pago cancelado.
                 $IdPago = $request->IdPago;
+                $IdEmpresa = $request->IdEmpresa;
                 $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
                 INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
                 WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?', [$IdFlw, $IdUsuario, 1, $IdPago]);
@@ -1831,13 +1832,52 @@ class EmpresaController extends Controller
 
                 $buscarpagosdet = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
                 WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                $servidor = getServidorNextcloud();
+                $DatosEmpresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
+                $usuariostorage = $DatosEmpresa[0]->usuario_storage;
+                $passwordstorage = $DatosEmpresa[0]->password_storage;
+                $layoutencontrado = DB::select('SELECT * FROM mc_flw_layouts WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                 if (count($buscarpagosdet) > 0) {
+                    $RFC = $request->rfc;
+                    $FechaServidor = date("YmdHis");
+                    $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
+                    mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
+                    $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
+                    $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_temporal.txt";
+                    $urldestino = $CarpetaDestino . $nombrearchivonuevo;
+                    $layouturl = $layoutencontrado[0]->LinkLayout;
+                    $layout = fopen($layouturl, "rb");
+                    if ($layout) {
+                        $nuevolayout = fopen($urldestino, "a");
+                        if ($nuevolayout) {
+                            while (!feof($layout)) {
+                                fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
+                            }
+                            $contenidolayout = file_get_contents($urldestino);
+                            $infopago = DB::select('SELECT * FROM mc_flw_pagos
+                            WHERE id = ?', [$pagoencontrado[0]->IdPago]);
+                            $ImportePagado = $infopago[0]->Importe;
+                            $importepagadosindecimal = str_replace(".", "", $ImportePagado);
+                            /* $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
+                            $valores   = array($CuentasBeneficiarios[$x], $importepagadosindecimal, $ImportesPagados[$x], $referenciaalfanumerica, $descripcion, $referencianumerica);
+                            $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
+                            file_put_contents($urldestino, $nuevocontenido);
+                            fclose($nuevolayout); */
+                        }
+                    }
+
                     $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                     DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
                         "Importe" => $importetotal[0]->Importe
                     ]);
                 } else {
                     DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->where("IdUsuario", $IdUsuario)->delete();
+                    DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->delete();
+
+                    $rutaarchivo = $layoutencontrado[0]->UrlLayout."/".$layoutencontrado[0]->NombreLayout;                   
+                    $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaarchivo);
+                    DB::table('mc_flw_layouts')->where("IdPago", $pagoencontrado[0]->IdPago)->delete();
+                    $array["resp"] = $resp;
                 }
                 DB::table('mc_flujosefectivo')->where("id", $pagoencontrado[0]->IdFlw)->update(['Pendiente' => DB::raw('Pendiente + '.$pagoencontrado[0]->Importe), 'ImporteOriginal' => DB::raw('ImporteOriginal + '.$pagoencontrado[0]->ImporteOriginal)]);
             }
@@ -1959,7 +1999,7 @@ class EmpresaController extends Controller
 
                         fclose($nuevolayout);
                     }
-                    fclose($layout);
+                    fclose($layout);//aqui me quede
 
                     $codigoarchivo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x;
                     $consecutivo = "";
@@ -1973,7 +2013,7 @@ class EmpresaController extends Controller
                         $infopagoencontrado = DB::select('SELECT * FROM mc_flw_pagos WHERE Proveedor = ? AND IdCuentaOrigen = ? AND IdCuentaDestino = ? AND Layout = ?', [$ProveedoresInfoBancos[$x], $IdsCuentasOrigen[$x], $IdsCuentasDestino[$x], 0]);
                         $array["infopagoencontrado"][$x] = $infopagoencontrado[0]->id;
                         $array["link"][$x] = $link;
-                        DB::table('mc_flw_layouts')->insert(['IdPago' => $infopagoencontrado[0]->id, 'UrlLayout' => $resultado["archivo"]["target"], 'NombreLayout' => $resultado["archivo"]["codigo"] , 'LinkLayout' => $link]);
+                        DB::table('mc_flw_layouts')->insert(['IdPago' => $infopagoencontrado[0]->id, 'UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"] , 'LinkLayout' => $link]);
                         unlink($urldestino);
                     }
                 }
@@ -2052,18 +2092,19 @@ class EmpresaController extends Controller
                     $array["CorreoPrincipalCount"][$x] = count($CorreoPrincipal);
                     $array["CorreosCC"][$x] = $CorreosCC;
                     $array["CorreosCCCount"][$x] = count($CorreosCC);
+                    $layoutencontrado = DB::select('SELECT * FROM mc_flw_layouts WHERE IdPago = ?', [$IdsPago[$x]]);
 
                     $data["titulo"] = "Nueva Pago De ".$NombreEmpresa;
                     $data["cabecera"] = "Se ha hecho un pago con razon ".$ProveedoresMandar[$x];
-                    $data["mensaje"] = "Se pago un importe de $".$ImportesMandar[$x]." a la cuenta ".$CuentasOrigenMandar[$x]." proveniente de la cuenta ".$CuentasDestinoMandar[$x]." correspondiente ".$MensajesFolios[$x].".";
-                    DB::table('mc_flw_correos')->insert(['IdPago' => $IdsPago[$x], 'Correo' => $CorreoPrincipal, 'Tipo' => 1]);
+                    $data["mensaje"] = "Se pago un importe de $".$ImportesMandar[$x]." a la cuenta ".$CuentasOrigenMandar[$x]." proveniente de la cuenta ".$CuentasDestinoMandar[$x]." correspondiente ".$MensajesFolios[$x].". (Código de mensaje: ".$layoutencontrado[0]->id.").";
+                    DB::table('mc_flw_correos')->insert(['IdPago' => $IdsPago[$x], 'Correo' => $CorreoPrincipal, 'Tipo' => 1, 'Titulo' => $data["titulo"], 'cabecera' => $data["cabecera"], 'mensaje' => $data["mensaje"]]);
                     if(count($CorreosCC) == 0) {
                         Mail::to($CorreoPrincipal)->send(new MensajesGenerales($data));
                     }
                     else {
                         Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesGenerales($data));
                         for($y=0; $y<count($CorreosCC) ; $y++) {
-                            DB::table('mc_flw_correos')->insert(['IdPago' => $IdsPago[$x], 'Correo' => $CorreosCC[$y], 'Tipo' => 2]);//probar si se insertan 2 correos secundarios
+                            DB::table('mc_flw_correos')->insert(['IdPago' => $IdsPago[$x], 'Correo' => $CorreosCC[$y], 'Tipo' => 2, 'Titulo' => $data["titulo"], 'cabecera' => $data["cabecera"], 'mensaje' => $data["mensaje"]]);//probar si se insertan 2 correos secundarios
                         }
                     }
                 }

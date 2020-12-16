@@ -209,6 +209,8 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $array["archivo"]["target"] = $target_path;
         $array["archivo"]["codigo"] = $filename;
         $array["archivo"]["error"] = $error_no;
+        $array["archivo"]["directorio"] = $directorio;
+        $array["archivo"]["filename"] = $filename . "." . $type[count($type) - 1];
 
         return $array;
     }

@@ -276,6 +276,8 @@ Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpr
 Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
 Route::get('getContenidoServicioClientes', 'EmpresaController@getContenidoServicioClientes');
 Route::get('traerFlujosEfectivo', 'EmpresaController@traerFlujosEfectivo');
+Route::get('traerArchivosFlujos', 'EmpresaController@traerArchivosFlujos');
+Route::get('traerFlujosEfectivoAcomodados', 'EmpresaController@traerFlujosEfectivoAcomodados');
 Route::post('traerFlujosEfectivoFiltrados', 'EmpresaController@traerFlujosEfectivoFiltrados');
 Route::post('cargarFlujosEfectivo', 'EmpresaController@cargarFlujosEfectivo');
 Route::post('cargarProveedores', 'EmpresaController@cargarProveedores');
@@ -285,11 +287,13 @@ Route::get('getCuentasPropias', 'EmpresaController@getCuentasPropias');
 Route::get('getCuentasClientesProveedores', 'EmpresaController@getCuentasClientesProveedores');
 Route::get('getFlwPagos', 'EmpresaController@getFlwPagos');
 Route::post('guardarFlwPagos', 'EmpresaController@guardarFlwPagos');
+Route::delete('eliminarFlwPagos', 'EmpresaController@eliminarFlwPagos');
 Route::post('cambiarEstatusLayoutFlwPagos', 'EmpresaController@cambiarEstatusLayoutFlwPagos');
-Route::delete('borrarFlwPagosByLlaveMath', 'AutorizacionyGastosController@borrarFlwPagosByLlaveMath');
+Route::delete('borrarFlwPagosByLlaveMath', 'EmpresaController@borrarFlwPagosByLlaveMath');
 Route::get('traerProveedoresFiltro', 'EmpresaController@traerProveedoresFiltro');
 Route::post('cambiarPrioridadProveedor', 'EmpresaController@cambiarPrioridadProveedor');
 Route::post('generarLayouts', 'EmpresaController@generarLayouts');
+Route::delete('eliminarFlwPagosHechos', 'EmpresaController@eliminarFlwPagosHechos');
 
 //ACTUALIZA PERFILES GENERALES
 Route::put('actualizaPerfilesGeneral', 'ActualizarBaseDatosController@actualizaPerfilesGeneral'); // 14/02/2020
@@ -334,6 +338,7 @@ Route::post('eliminaArchivosDigital', 'AlmacenDigitalOperacionesController@elimi
 //API PARA LOS EXPEDIENTES DE LOS MODULOS
 Route::post('ClipMarcado', 'ConsumoController@ClipMarcado');
 Route::post('getArchivoDigital', 'ConsumoController@getArchivoDigital');
+Route::post('getLogosEmpresa', 'ConsumoController@getLogosEmpresa');
 
 //NOTIFICACIONES CRM
 Route::get('notificacionesCRM', 'NotificacionesController@notificacionesCRM');
@@ -397,3 +402,4 @@ Route::put('cambiarStatusServicio', 'ProveedoresController@cambiarStatusServicio
 Route::post('servicioscontratadosRFC', 'AdministradorController@servicioscontratadosRFC');
 Route::post('serviciosfcmodulo', 'AdministradorController@serviciosfcmodulo');
 Route::get('getDatosHome', 'EmpresaController@getDatosHome');
+Route::post('olvidoContra', 'GeneralesController@olvidoContra');

@@ -1939,4 +1939,23 @@ class ConsumoController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function getLogosEmpresa(request $request){
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] == 0) {
+            $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE RFC = '$request->rfc'");
+            $idempresa = $empresa[0]->idempresa;
+            $logos = DB::connection("General")->select("SELECT * FROM mc1020 WHERE idempresa = $idempresa");
+
+            if(!empty($logos)){                
+                $array["logos"] = $logos;
+            }else{
+                $logos = DB::connection("General")->select("SELECT * FROM mc1020 WHERE idempresa = 0");
+                $array["logos"] = $logos; //retorna logo por default
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);   
+    }
+
+
 }

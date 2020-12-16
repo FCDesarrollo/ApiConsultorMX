@@ -431,15 +431,15 @@ class AdministradorController extends Controller
 
             }else{
                 $result = DB::select("SELECT idsucursal FROM mc_catsucursales 
-                                WHERE sucursal= '$request->Sucursal' AND rutaadw='$request->Ruta' AND sincronizado=1");
+                                WHERE sucursal= '$request->Sucursal' AND rutaadw='$request->Ruta' AND idadw = $request->idAdw AND sincronizado=1");
                 if(!empty($result)){
                     $idsuc = $result[0]->idsucursal;
                     DB::table('mc_catsucursales')->where("idsucursal", $idsuc)->
-                                update(['rutaadw' => $request->Ruta]);
+                                update(['rutaadw' => $request->Ruta, 'idadw' => $request->idAdw]);
                 }else{
                     $idsuc = DB::table('mc_catsucursales')->insertGetId(
                         ['sucursal' => $request->Sucursal,'rutaadw' => $request->Ruta,
-                        'sincronizado' => 1]);
+                        'sincronizado' => 1, 'idadw' => $request->idAdw]);
                 }
             }
             $datos = $idsuc;

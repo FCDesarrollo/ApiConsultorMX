@@ -618,4 +618,23 @@ class AdministradorController extends Controller
         //return $datos;
     }
 
+    public function DatosServicios(Request $request)
+    {
+        $idservicio = $request->idservicio;
+        $array["error"] = "0";
+        $servicio = DB::connection("General")->select("SELECT m01.codigoservicio,m01.idsubmenu,
+            m03.nombre_carpeta AS carModulos,m04.nombre_carpeta AS carMenu,m05.nombre_carpeta AS carSubMenu
+                FROM mc0001 m01 INNER JOIN mc1003 m03 ON m01.idmodulo=m03.idmodulo 
+                    INNER JOIN mc1004 m04 ON m01.idmenu=m04.idmenu 
+                    INNER JOIN mc1005 m05 ON m01.idsubmenu=m05.idsubmenu WHERE id=$idservicio");
+        if (!empty($servicio)){
+            $array["datos"] =array(
+                "servicio" => $servicio,
+             );
+        }else{
+            $array["error"] = "6";
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
 }

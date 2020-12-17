@@ -1843,9 +1843,10 @@ class EmpresaController extends Controller
                     $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
                     mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
                     $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
-                    $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_temporal.txt";
+                    /* $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_temporal.txt"; */
+                    $nombrearchivonuevo = $layoutencontrado[0]->NombreLayout;
                     $urldestino = $CarpetaDestino . $nombrearchivonuevo;
-                    $layouturl = $layoutencontrado[0]->LinkLayout;
+                    $layouturl = $layoutencontrado[0]->LinkLayout."/download";
                     $layout = fopen($layouturl, "rb");
                     if ($layout) {
                         $nuevolayout = fopen($urldestino, "a");
@@ -1858,18 +1859,54 @@ class EmpresaController extends Controller
                             WHERE id = ?', [$pagoencontrado[0]->IdPago]);
                             $ImportePagado = $infopago[0]->Importe;
                             $importepagadosindecimal = str_replace(".", "", $ImportePagado);
-                            /* $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
-                            $valores   = array($CuentasBeneficiarios[$x], $importepagadosindecimal, $ImportesPagados[$x], $referenciaalfanumerica, $descripcion, $referencianumerica);
+                            $array["ImportePagado"] = $ImportePagado;
+                            $array["importepagadosindecimal"] = $importepagadosindecimal;
+                            $importepagadofloat = floatval($ImportePagado);
+                            $importepagadosindecimalfloat = floatval($importepagadosindecimal);
+                            $array["importepagadofloat"] = $importepagadofloat;
+                            $array["importepagadosindecimalfloat"] = $importepagadosindecimalfloat;
+                            $importedividido = explode(".", $ImportePagado);
+                            $puntosdecimales = intval($importedividido[1]);
+                            $array["importedividido"] = $importedividido;
+                            $array["importedivididocount"] = count($importedividido);
+                            $array["puntosdecimales"] = $puntosdecimales;
+                            $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                            DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
+                                "Importe" => $importetotal[0]->Importe
+                            ]);
+                            if($puntosdecimales > 0) {
+                                $ImportePagadoNuevo = $importetotal[0]->Importe;
+                                $importepagadosindecimalnuevo = str_replace(".", "", $ImportePagadoNuevo);
+                                $variables = array($ImportePagado, $importepagadosindecimal);
+                                $valores   = array($ImportePagadoNuevo, $importepagadosindecimalnuevo);
+                            }
+                            else {
+                                $variables = array(strval($importepagadofloat));
+                                $valores   = array(floatval($importetotal[0]->Importe));
+                            }
                             $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
                             file_put_contents($urldestino, $nuevocontenido);
-                            fclose($nuevolayout); */
+                            fclose($nuevolayout);
+                        }
+                        fclose($layout);
+
+                        //$codigoarchivo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x;
+                        $codigoarchivo = substr($layoutencontrado[0]->NombreLayout, 0, -4);
+                        $consecutivo = "";
+                        $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $RFC, $servidor, $usuariostorage, $passwordstorage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+                        $array["resultado"] = $resultado;
+                        if ($resultado["archivo"]["error"] == 0) {
+                            $codigodocumento = $codigoarchivo . $consecutivo;
+                            $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                            $target_path = $directorio . '/' . $codigodocumento . ".txt";
+                            $link = GetLinkArchivo($target_path, $servidor, $usuariostorage, $passwordstorage);
+                            $array["link"] = $link;
+                            DB::table('mc_flw_layouts')->where("IdPago", $pagoencontrado[0]->IdPago)->update(['UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"] , 'LinkLayout' => $link]);
+                            unlink($urldestino);
                         }
                     }
-
-                    $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
-                    DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
-                        "Importe" => $importetotal[0]->Importe
-                    ]);
+                    $urlcarpetaaborrar = substr($CarpetaDestino, 0, -1);
+                    rmdir($urlcarpetaaborrar);
                 } else {
                     DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->where("IdUsuario", $IdUsuario)->delete();
                     DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->delete();

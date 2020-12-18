@@ -1865,24 +1865,29 @@ class EmpresaController extends Controller
                             $importepagadosindecimalfloat = floatval($importepagadosindecimal);
                             $array["importepagadofloat"] = $importepagadofloat;
                             $array["importepagadosindecimalfloat"] = $importepagadosindecimalfloat;
-                            $importedividido = explode(".", $ImportePagado);
-                            $puntosdecimales = intval($importedividido[1]);
-                            $array["importedividido"] = $importedividido;
-                            $array["importedivididocount"] = count($importedividido);
-                            $array["puntosdecimales"] = $puntosdecimales;
+                            
                             $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                             DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
                                 "Importe" => $importetotal[0]->Importe
                             ]);
+                            $importedividido = explode(".", $importetotal[0]->Importe);
+                            $puntosdecimales = intval($importedividido[1]);
+                            $array["importedividido"] = $importedividido;
+                            $array["importedivididocount"] = count($importedividido);
+                            $array["puntosdecimales"] = $puntosdecimales;
                             if($puntosdecimales > 0) {
                                 $ImportePagadoNuevo = $importetotal[0]->Importe;
                                 $importepagadosindecimalnuevo = str_replace(".", "", $ImportePagadoNuevo);
+                                $array["ImportePagadoNuevo"] = $ImportePagadoNuevo;
+                                $array["importepagadosindecimalnuevo"] = $importepagadosindecimalnuevo;
                                 $variables = array($ImportePagado, $importepagadosindecimal);
                                 $valores   = array($ImportePagadoNuevo, $importepagadosindecimalnuevo);
                             }
                             else {
                                 $variables = array(strval($importepagadofloat));
                                 $valores   = array(floatval($importetotal[0]->Importe));
+                                $array["ImportePagadoNuevoelse"] = strval($importepagadofloat);
+                                $array["ImportePagadoNuevoelse"] = floatval($importetotal[0]->Importe);
                             }
                             $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
                             file_put_contents($urldestino, $nuevocontenido);

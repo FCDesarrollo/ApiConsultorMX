@@ -1069,16 +1069,16 @@ class AutorizacionyGastosController extends Controller
 
     public function RequerimientoMarcado(Request $request)
     {
-
+        
         $autenticacion = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
 
         $array["error"] = $autenticacion[0]["error"];
 
-        $idusuario = $autenticacion[0]["usuario"]->idusuario;
-
         $array["desasociado"] = false;
 
         if ($autenticacion[0]['error'] == 0) {
+
+            $idusuario = $autenticacion[0]["usuario"][0]->idusuario;
             
             $registros = $request->registros;          
 

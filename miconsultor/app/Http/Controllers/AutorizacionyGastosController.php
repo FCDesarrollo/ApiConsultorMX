@@ -1074,7 +1074,7 @@ class AutorizacionyGastosController extends Controller
 
         $array["error"] = $autenticacion[0]["error"];
 
-        $idusuario = $autenticacion[0]["usuario"][0]->idusuario;
+        $idusuario = $autenticacion[0]["usuario"]->idusuario;
 
         $array["desasociado"] = false;
 

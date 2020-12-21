@@ -709,6 +709,9 @@ class EmpresaController extends Controller
                 serie varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 folio varchar(255) COLLATE latin1_spanish_ci DEFAULT NULL,
                 estatus int(11) DEFAULT NULL,
+                id_agente int(11) DEFAULT NULL,
+                fecha_procesado DATETIME DEFAULT NULL,
+                estatus_procesado int(11) DEFAULT '0',
                 PRIMARY KEY (idReq)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_requerimientos);
@@ -1695,6 +1698,16 @@ class EmpresaController extends Controller
                 for ($y = 0; $y < count($pagosdetalle); $y++) {
                     $pagospendientes[$x]->Detalles[$y] = $pagosdetalle[$y];
                 }
+
+                $pagoscorreos = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagospendientes[$x]->id]);
+                for ($y = 0; $y < count($pagoscorreos); $y++) {
+                    $pagospendientes[$x]->Correos[$y] = $pagoscorreos[$y];
+                }
+
+                $pagoslayouts = DB::select('SELECT * FROM mc_flw_layouts WHERE IdPago = ?', [$pagospendientes[$x]->id]);
+                for ($y = 0; $y < count($pagoslayouts); $y++) {
+                    $pagospendientes[$x]->Layouts[$y] = $pagoslayouts[$y];
+                }
             }
             $array["pagospendientes"] = $pagospendientes;
 
@@ -1855,47 +1868,27 @@ class EmpresaController extends Controller
                                 fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
                             }
                             $contenidolayout = file_get_contents($urldestino);
-                            $infopago = DB::select('SELECT * FROM mc_flw_pagos
-                            WHERE id = ?', [$pagoencontrado[0]->IdPago]);
+                            $infopago = DB::select('SELECT mc_flw_pagos.*, mc_flw_layouts.id AS IdLayout FROM mc_flw_pagos 
+                            INNER JOIN mc_flw_layouts ON mc_flw_pagos.id = mc_flw_layouts.IdPago WHERE mc_flw_pagos.id = ?', [$pagoencontrado[0]->IdPago]);
                             $ImportePagado = $infopago[0]->Importe;
                             $importepagadosindecimal = str_replace(".", "", $ImportePagado);
-                            $array["ImportePagado"] = $ImportePagado;
-                            $array["importepagadosindecimal"] = $importepagadosindecimal;
-                            $importepagadofloat = floatval($ImportePagado);
-                            $importepagadosindecimalfloat = floatval($importepagadosindecimal);
-                            $array["importepagadofloat"] = $importepagadofloat;
-                            $array["importepagadosindecimalfloat"] = $importepagadosindecimalfloat;
                             
-                            $importetotal = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                            $importetotalnuevo = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                             DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
-                                "Importe" => $importetotal[0]->Importe
+                                "Importe" => $importetotalnuevo[0]->Importe
                             ]);
-                            $importedividido = explode(".", $importetotal[0]->Importe);
-                            $puntosdecimales = intval($importedividido[1]);
-                            $array["importedividido"] = $importedividido;
-                            $array["importedivididocount"] = count($importedividido);
-                            $array["puntosdecimales"] = $puntosdecimales;
-                            if($puntosdecimales > 0) {
-                                $ImportePagadoNuevo = $importetotal[0]->Importe;
-                                $importepagadosindecimalnuevo = str_replace(".", "", $ImportePagadoNuevo);
-                                $array["ImportePagadoNuevo"] = $ImportePagadoNuevo;
-                                $array["importepagadosindecimalnuevo"] = $importepagadosindecimalnuevo;
-                                $variables = array($ImportePagado, $importepagadosindecimal);
-                                $valores   = array($ImportePagadoNuevo, $importepagadosindecimalnuevo);
-                            }
-                            else {
-                                $variables = array(strval($importepagadofloat));
-                                $valores   = array(floatval($importetotal[0]->Importe));
-                                $array["ImportePagadoNuevoelse"] = strval($importepagadofloat);
-                                $array["ImportePagadoNuevoelse"] = floatval($importetotal[0]->Importe);
-                            }
+
+                            $ImportePagadoNuevo = $importetotalnuevo[0]->Importe;
+                            $importepagadosindecimalnuevo = str_replace(".", "", $ImportePagadoNuevo);
+                            $variables = array($ImportePagado, $importepagadosindecimal);
+                            $valores   = array($ImportePagadoNuevo, $importepagadosindecimalnuevo);
+
                             $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
                             file_put_contents($urldestino, $nuevocontenido);
                             fclose($nuevolayout);
                         }
                         fclose($layout);
 
-                        //$codigoarchivo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x;
                         $codigoarchivo = substr($layoutencontrado[0]->NombreLayout, 0, -4);
                         $consecutivo = "";
                         $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $RFC, $servidor, $usuariostorage, $passwordstorage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);

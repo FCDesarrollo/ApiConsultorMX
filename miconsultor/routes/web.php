@@ -295,6 +295,7 @@ Route::get('traerProveedoresFiltro', 'EmpresaController@traerProveedoresFiltro')
 Route::post('cambiarPrioridadProveedor', 'EmpresaController@cambiarPrioridadProveedor');
 Route::post('generarLayouts', 'EmpresaController@generarLayouts');
 Route::delete('eliminarFlwPagosHechos', 'EmpresaController@eliminarFlwPagosHechos');
+Route::get('traerLayoutsPorIdBanco', 'EmpresaController@traerLayoutsPorIdBanco');
 
 //ACTUALIZA PERFILES GENERALES
 Route::put('actualizaPerfilesGeneral', 'ActualizarBaseDatosController@actualizaPerfilesGeneral'); // 14/02/2020

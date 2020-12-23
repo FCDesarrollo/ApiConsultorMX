@@ -1988,7 +1988,7 @@ class EmpresaController extends Controller
 
                         $MensajeFolios = "al documento con folio " . $Folios[0];
 
-                        $data["titulo"] = "Pago De " . $nombreempresa." Cancelado";
+                        $data["titulo"] = "Pago De " . $nombreempresa . " Cancelado";
                         $data["cabecera"] = "Se ha cancelado el pago con razon " . $pagoencontrado[0]->Proveedor . " (Favor de ignorar el mensaje con código " . $infocorreospago[0]->CodigoMensaje . ")";
                         $data["mensaje"] = "El pago con un importe de $" . $pagoencontrado[0]->ImportePago . " a la cuenta " . $pagoencontrado[0]->CuentaOrigen . " proveniente de la cuenta " . $pagoencontrado[0]->CuentaDestino . " correspondiente " . $MensajeFolios . " se ha cancelado.";
 
@@ -2440,6 +2440,41 @@ class EmpresaController extends Controller
                     DB::table('mc_flujosefectivo')->where("id", $pagodetencontrado[$y]->IdFlw)->delete();
                 }
                 DB::table('mc_flw_pagos_det')->where("IdPago", $idspago[$x])->delete();
+            }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function traerLayoutsPorIdBanco(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $idUsuario = $request->idUsuario;
+            $idBanco = $request->idBanco;
+            $layouts = DB::select('SELECT mc_flw_layouts_config.*, 
+            IF((SELECT mc_flw_layouts_usuarios.id FROM mc_flw_layouts_usuarios 
+            WHERE mc_flw_layouts_usuarios.IdLayoutConfig = mc_flw_layouts_config.id AND mc_flw_layouts_usuarios.IdUsuario = ?) > 0 , 1, 0) AS Eleccion 
+            FROM mc_flw_layouts_config 
+            WHERE mc_flw_layouts_config.IdBanco = ? OR mc_flw_layouts_config.IdBanco = ?', [$idUsuario, 0, $idBanco]);
+            $array["layouts"] = $layouts;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function cambiarLayoutElegido(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $idUsuario = $request->idUsuario;
+            $idLayoutConfig = $request->idLayoutConfig;
+            $layoutsusuario = DB::select('SELECT * FROM mc_flw_layouts_usuarios WHERE IdLayoutConfig = ? AND IdUsuario = ?', [$idLayoutConfig, $idUsuario]);
+            if(count($layoutsusuario) > 0) {
+
+            }
+            else {
+                
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

@@ -2160,14 +2160,56 @@ class EmpresaController extends Controller
                         $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
                         $target_path = $directorio . '/' . $codigodocumento . ".txt";
                         $link = GetLinkArchivo($target_path, $Servidor, $u_storage, $p_storage);
+                        if(count($IdsBancosOrigen) == 1) {
+                            $array["link"] = $link;
+                            unlink($urldestino);
+                        }
                         $infopagoencontrado = DB::select('SELECT * FROM mc_flw_pagos WHERE Proveedor = ? AND IdCuentaOrigen = ? AND IdCuentaDestino = ? AND Layout = ?', [$ProveedoresInfoBancos[$x], $IdsCuentasOrigen[$x], $IdsCuentasDestino[$x], 0]);
                         /* $array["infopagoencontrado"][$x] = $infopagoencontrado[0]->id;
                         $array["link"][$x] = $link; */
                         DB::table('mc_flw_layouts')->insert(['IdPago' => $infopagoencontrado[0]->id, 'UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $link]);
-                        unlink($urldestino);
+                        //unlink($urldestino);
                     }
                 }
             }
+
+            if (count($IdsBancosOrigen) > 1) {
+                $zip = new ZipArchive();
+                $zipname = "layouts.zip";
+                $zip->open($zipname, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+                $da = opendir($CarpetaDestino);
+                $archibosaborrar = [];
+                $y = 0;
+                while (($archivo = readdir($da)) !== false) {
+                    if (is_file($CarpetaDestino . $archivo) && $archivo != "." && $archivo != ".." && $archivo != $zipname) {
+                        $zip->addFile($CarpetaDestino . $archivo, $archivo);
+                        $archibosaborrar[$y] = $CarpetaDestino . $archivo;
+                        $y++;
+                    }
+                }
+                closedir($da);
+                $zip->close();
+                $rutaFinal = $CarpetaDestino;
+                rename($zipname, "$rutaFinal/$zipname");
+
+                $codigoarchivo = "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor;
+                $consecutivo = "";
+                $resultado = subirArchivoNextcloud($zipname, "$rutaFinal/$zipname", $RFC, $Servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+                if ($resultado["archivo"]["error"] == 0) {
+                    $codigodocumento = $codigoarchivo . $consecutivo;
+                    $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                    $target_path = $directorio . '/' . $codigodocumento . ".zip";
+                    $array["target_path"] = $target_path;
+                    $link = GetLinkArchivo($target_path, $Servidor, $u_storage, $p_storage);
+                    $array["link"] = $link;
+                    unlink($CarpetaDestino . $zipname);
+                }
+
+                for ($x = 0; $x < count($archibosaborrar); $x++) {
+                    unlink($archibosaborrar[$x]);
+                }
+            }
+
             $urlcarpetaaborrar = substr($CarpetaDestino, 0, -1);
             rmdir($urlcarpetaaborrar);
 

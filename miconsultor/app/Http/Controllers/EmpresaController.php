@@ -1867,12 +1867,21 @@ class EmpresaController extends Controller
                 INNER JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
                 INNER JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?", [$IdFlw, $IdUsuario, 1, $IdPago]);
 
-                $buscarpagosdetantes = DB::select('SELECT mc_flw_pagos_det.*, mc_flujosefectivo.Folio 
-                FROM mc_flw_pagos_det INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                $buscarpagosdetantes = DB::select('SELECT mc_flw_pagos.Fecha, 
+                CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
+                CONCAT("$",FORMAT((mc_flw_pagos_det.Importe + mc_flujosefectivo.Pendiente), 2)) AS Total, 
+                CONCAT("$", FORMAT(mc_flw_pagos_det.Importe, 2)) AS Pagado, CONCAT("$", FORMAT(mc_flujosefectivo.Pendiente, 2)) AS Pendiente 
+                FROM mc_flw_pagos_det INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
+
                 DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->delete();
 
-                $buscarpagosdet = DB::select('SELECT mc_flw_pagos_det.*, mc_flujosefectivo.Folio 
-                FROM mc_flw_pagos_det INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                $buscarpagosdet = DB::select('SELECT mc_flw_pagos.Fecha, 
+                CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
+                CONCAT("$",FORMAT((mc_flw_pagos_det.Importe + mc_flujosefectivo.Pendiente), 2)) AS Total, 
+                CONCAT("$", FORMAT(mc_flw_pagos_det.Importe, 2)) AS Pagado, CONCAT("$", FORMAT(mc_flujosefectivo.Pendiente, 2)) AS Pendiente 
+                FROM mc_flw_pagos_det INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
                 $servidor = getServidorNextcloud();
                 $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
                 $nombreempresa = $DatosEmpresa[0]->nombreempresa;
@@ -1937,7 +1946,7 @@ class EmpresaController extends Controller
 
                     $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                     if (count($infocorreospago) > 0) {
-                        $Folios = [];
+                        /* $Folios = [];
                         for ($x = 0; $x < count($buscarpagosdet); $x++) {
                             $Folios[$x] = $buscarpagosdet[$x]->Folio;
                         }
@@ -1953,7 +1962,7 @@ class EmpresaController extends Controller
                             for ($x = 1; $x < count($Folios); $x++) {
                                 $MensajeFolios = $x == (count($Folios) - 1) ? $MensajeFolios . " y " . $Folios[$x] : $MensajeFolios . ", " . $Folios[$x];
                             }
-                        }
+                        } */
 
                         $CodigoMensajeNuevo = rand(1000000000, 9999999999);
                         $ValidarCodigoMensajeNuevo = false;
@@ -1966,14 +1975,20 @@ class EmpresaController extends Controller
                             }
                         }
 
-                        $data["titulo"] = "Nueva Pago De " . $nombreempresa;
-                        $data["cabecera"] = "Se ha hecho un pago con razon " . $pagoencontrado[0]->Proveedor . " (Favor de ignorar el mensaje con código " . $infocorreospago[0]->CodigoMensaje . ")";
+                        $data["titulo"] = "Modificación De Pago De " . $nombreempresa;
+                        $data["codigoMensaje"] = $CodigoMensajeNuevo. " (Favor de ignorar el mensaje con código " . $infocorreospago[0]->CodigoMensaje . ")";
+                        $data["cuentaOrigen"] = $pagoencontrado[0]->CuentaOrigen;
+                        $data["cuentaDestino"] = $pagoencontrado[0]->CuentaDestino;
+                        $data["proveedor"] = $pagoencontrado[0]->Proveedor;
+                        $data["importePagado"] = "$".$importetotalnuevo[0]->ImporteConFormato;
+                        $data["detallesPago"] = $buscarpagosdet;
+                        /* $data["cabecera"] = "Se ha hecho un pago con razon " . $pagoencontrado[0]->Proveedor . " (Favor de ignorar el mensaje con código " . $infocorreospago[0]->CodigoMensaje . ")";
                         $data["mensaje"] = "Se pago un importe de $" . $importetotalnuevo[0]->ImporteConFormato . " a la cuenta " . $pagoencontrado[0]->CuentaOrigen . " proveniente de la cuenta " . $pagoencontrado[0]->CuentaDestino . " correspondiente " . $MensajeFolios . ". (Código de mensaje: " . $CodigoMensajeNuevo . ").";
 
                         $array["MensajeFolios"] = $MensajeFolios;
                         $array["titulo"] = $data["titulo"];
                         $array["cabecera"] = $data["cabecera"];
-                        $array["mensaje"] = $data["mensaje"];
+                        $array["mensaje"] = $data["mensaje"]; */
 
                         $Correos = [];
                         for ($x = 0; $x < count($infocorreospago); $x++) {
@@ -1983,11 +1998,11 @@ class EmpresaController extends Controller
                         unset($Correos[0]);
                         $CorreosCC = array_values($Correos);
 
-                        DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->update(['Titulo' => $data["titulo"], 'Cabecera' => $data["cabecera"], 'Mensaje' => $data["mensaje"], 'CodigoMensaje' => $CodigoMensajeNuevo]);
+                        DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->update([/* 'Titulo' => $data["titulo"], 'Cabecera' => $data["cabecera"], 'Mensaje' => $data["mensaje"],  */'CodigoMensaje' => $CodigoMensajeNuevo]);
                         if (count($CorreosCC) == 0) {
-                            Mail::to($CorreoPrincipal)->send(new MensajesGenerales($data));
+                            Mail::to($CorreoPrincipal)->send(new MensajesLayouts($data));
                         } else {
-                            Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesGenerales($data));
+                            Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesLayouts($data));
                         }
                     }
                 } else {
@@ -2001,21 +2016,27 @@ class EmpresaController extends Controller
                     $array["resp"] = $resp;
 
                     if (count($infocorreospago) > 0) {
-                        $Folios = [];
+                        /* $Folios = [];
                         for ($x = 0; $x < count($buscarpagosdetantes); $x++) {
                             $Folios[$x] = $buscarpagosdetantes[$x]->Folio;
                         }
 
-                        $MensajeFolios = "al documento con folio " . $Folios[0];
+                        $MensajeFolios = "al documento con folio " . $Folios[0]; */
 
                         $data["titulo"] = "Pago De " . $nombreempresa . " Cancelado";
-                        $data["cabecera"] = "Se ha cancelado el pago con razon " . $pagoencontrado[0]->Proveedor . " (Favor de ignorar el mensaje con código " . $infocorreospago[0]->CodigoMensaje . ")";
+                        $data["codigoMensaje"] = $infocorreospago[0]->CodigoMensaje ." (Cancelado)";
+                        $data["cuentaOrigen"] = $pagoencontrado[0]->CuentaOrigen;
+                        $data["cuentaDestino"] = $pagoencontrado[0]->CuentaDestino;
+                        $data["proveedor"] = $pagoencontrado[0]->Proveedor;
+                        $data["importePagado"] = $pagoencontrado[0]->ImportePago;
+                        $data["detallesPago"] = $buscarpagosdetantes;
+                        /* $data["cabecera"] = "Se ha cancelado el pago con razon " . $pagoencontrado[0]->Proveedor . " (Favor de ignorar el mensaje con código " . $infocorreospago[0]->CodigoMensaje . ")";
                         $data["mensaje"] = "El pago con un importe de $" . $pagoencontrado[0]->ImportePago . " a la cuenta " . $pagoencontrado[0]->CuentaOrigen . " proveniente de la cuenta " . $pagoencontrado[0]->CuentaDestino . " correspondiente " . $MensajeFolios . " se ha cancelado.";
 
                         $array["MensajeFolios"] = $MensajeFolios;
                         $array["titulo"] = $data["titulo"];
                         $array["cabecera"] = $data["cabecera"];
-                        $array["mensaje"] = $data["mensaje"];
+                        $array["mensaje"] = $data["mensaje"]; */
 
                         $Correos = [];
                         for ($x = 0; $x < count($infocorreospago); $x++) {
@@ -2026,9 +2047,9 @@ class EmpresaController extends Controller
                         $CorreosCC = array_values($Correos);
 
                         if (count($CorreosCC) == 0) {
-                            Mail::to($CorreoPrincipal)->send(new MensajesGenerales($data));
+                            Mail::to($CorreoPrincipal)->send(new MensajesLayouts($data));
                         } else {
-                            Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesGenerales($data));
+                            Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesLayouts($data));
                         }
                     }
                 }
@@ -2547,6 +2568,33 @@ class EmpresaController extends Controller
             else {
                 
             }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function reenviarCorreoLayout(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $titulo = $request->titulo;
+            $codigoMensaje = $request->codigoMensaje;
+            $cuentaOrigen = $request->cuentaOrigen;
+            $cuentaDestino = $request->cuentaDestino;
+            $proveedor = $request->proveedor;
+            $importePagado = $request->importePagado;
+            $detallesPago = $request->detallesPago;
+            $correo = $request->correo;
+
+            $data["titulo"] = $titulo;
+            $data["codigoMensaje"] = $codigoMensaje;
+            $data["cuentaOrigen"] = $cuentaOrigen;
+            $data["cuentaDestino"] = $cuentaDestino;
+            $data["proveedor"] = $proveedor;
+            $data["importePagado"] = $importePagado;
+            $data["detallesPago"] = $detallesPago;
+
+            Mail::to($correo)->send(new MensajesLayouts($data));
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

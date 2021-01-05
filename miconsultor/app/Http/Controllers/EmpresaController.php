@@ -2577,14 +2577,15 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
+            $idPago = $request->idPago;
             $titulo = $request->titulo;
             $codigoMensaje = $request->codigoMensaje;
             $cuentaOrigen = $request->cuentaOrigen;
             $cuentaDestino = $request->cuentaDestino;
             $proveedor = $request->proveedor;
             $importePagado = $request->importePagado;
-            $detallesPago = $request->detallesPago;
             $correo = $request->correo;
+            $forma = $request->forma;
 
             $data["titulo"] = $titulo;
             $data["codigoMensaje"] = $codigoMensaje;
@@ -2592,9 +2593,28 @@ class EmpresaController extends Controller
             $data["cuentaDestino"] = $cuentaDestino;
             $data["proveedor"] = $proveedor;
             $data["importePagado"] = $importePagado;
-            $data["detallesPago"] = $detallesPago;
 
-            Mail::to($correo)->send(new MensajesLayouts($data));
+            $detallespago = DB::select('SELECT mc_flw_pagos.Fecha, 
+                CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
+                CONCAT("$",FORMAT((mc_flw_pagos_det.Importe + mc_flujosefectivo.Pendiente), 2)) AS Total, 
+                CONCAT("$", FORMAT(mc_flw_pagos_det.Importe, 2)) AS Pagado, CONCAT("$", FORMAT(mc_flujosefectivo.Pendiente, 2)) AS Pendiente 
+                FROM mc_flw_pagos_det INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$idPago]);
+            $data["detallesPago"] = $detallespago;
+
+            if($forma === 2) {
+                $correoencontrado = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ? AND Correo = ?', [$idPago, $correo]);
+                if(count($correoencontrado) == 0) {
+                    DB::table('mc_flw_correos')->insert(['IdPago' => $idPago, 'Correo' => $correo, 'Tipo' => 3, 'CodigoMensaje' => $codigoMensaje]);
+                    Mail::to($correo)->send(new MensajesLayouts($data));
+                }
+                else {
+                    $array["error"] = -2;
+                }
+            }
+            else {
+                Mail::to($correo)->send(new MensajesLayouts($data));
+            }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

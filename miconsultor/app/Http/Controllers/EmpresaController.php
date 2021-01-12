@@ -1706,7 +1706,8 @@ class EmpresaController extends Controller
                     $pagospendientes[$x]->Correos[$y] = $pagoscorreos[$y];
                 }
 
-                $pagoslayouts = DB::select('SELECT * FROM mc_flw_layouts WHERE IdPago = ?', [$pagospendientes[$x]->id]);
+                //$pagoslayouts = DB::select('SELECT * FROM mc_flw_layouts WHERE IdPago = ?', [$pagospendientes[$x]->id]);
+                $pagoslayouts = DB::select('SELECT * FROM mc_flw_layouts WHERE id = ?', [$pagospendientes[$x]->IdLayout]);
                 for ($y = 0; $y < count($pagoslayouts); $y++) {
                     $pagospendientes[$x]->Layouts[$y] = $pagoslayouts[$y];
                 }
@@ -2188,7 +2189,8 @@ class EmpresaController extends Controller
                         $infopagoencontrado = DB::select('SELECT * FROM mc_flw_pagos WHERE Proveedor = ? AND IdCuentaOrigen = ? AND IdCuentaDestino = ? AND Layout = ?', [$ProveedoresInfoBancos[$x], $IdsCuentasOrigen[$x], $IdsCuentasDestino[$x], 0]);
                         /* $array["infopagoencontrado"][$x] = $infopagoencontrado[0]->id;
                         $array["link"][$x] = $link; */
-                        DB::table('mc_flw_layouts')->insert(['IdPago' => $infopagoencontrado[0]->id, 'UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $link]);
+                        $layoutinsertado = DB::table('mc_flw_layouts')->insertGetId([/* 'IdPago' => $infopagoencontrado[0]->id,  */'UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $link]);
+                        DB::table('mc_flw_pagos')->where("id", $infopagoencontrado[0]->id)->update(['IdLayout' => $layoutinsertado]);
                         //unlink($urldestino);
                     }
                 }

@@ -1714,16 +1714,30 @@ class EmpresaController extends Controller
             }
             $array["pagospendientes"] = $pagospendientes;
 
-            /* $filtro = $IdUsuario != 0 ? "AND mc_flw_pagos.IdUsuario = $IdUsuario GROUP BY mc_flw_pagos_det.IdFlw" : "GROUP BY mc_flw_pagos_det.IdFlw";
-            $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flw_pagos_det.idCuentaOrigen, mc_flow_bancuentas.IdBanco AS idBancoOrigen, mc_flow_bancuentas.Nombre AS cuentaOrigen,
-            mc_flw_pagos_det.idCuentaDestino, mc_flow_cliproctas.IdBanco AS idBancoDestino,
-            IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino, mc_flw_pagos_det.Importe FROM mc_flw_pagos 
-            LEFT JOIN mc_flw_pagos_det ON mc_flw_pagos.id = mc_flw_pagos_det.IdPago
-            LEFT JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id
-            LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos_det.IdCuentaOrigen
-            LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos_det.IdCuentaDestino
-            WHERE mc_flw_pagos.Layout = $Layout " . $filtro);
-            $array["pagospendientes"] = $pagospendientes; */
+            $filtrolayouts = $IdUsuario != 0 ? "WHERE mc_flw_pagos.IdUsuario = $IdUsuario GROUP BY mc_flw_layouts.id ORDER BY mc_flw_pagos.Fecha DESC" : "WHERE Layout = $Layout GROUP BY mc_flw_layouts.id ORDER BY mc_flw_pagos.Fecha DESC";
+
+            $layouts = DB::select("SELECT mc_flw_layouts.*,SUM(mc_flw_pagos.Importe) AS Importe, mc_flow_bancuentas.Nombre AS CuentaOrigen,
+            IF(mc_flow_bancuentas.IdBanco = mc_flow_cliproctas.IdBanco, 'Mismo Banco', 'Otros Bancos') AS BancoDestino
+            FROM mc_flw_layouts 
+            INNER JOIN mc_flw_pagos ON mc_flw_pagos.IdLayout = mc_flw_layouts.id 
+            INNER JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
+            INNER JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino " . $filtrolayouts);
+
+            for ($x = 0; $x < count($layouts); $x++) {
+                $pagoslayout = DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos WHERE mc_flw_pagos.IdLayout = ?', [$layouts[$x]->id]);
+                for ($y = 0; $y < count($pagoslayout); $y++) {
+                    $documentospago = DB::select("SELECT mc_flw_pagos_det.id AS IdPagoDet, mc_flw_pagos_det.ImporteOriginal AS ImporteOriginalPago, mc_flw_pagos_det.TipoCambio AS TipoCambioPago, mc_flw_pagos_det.IdPago ,mc_flw_pagos_det.Importe, mc_flujosefectivo.* FROM mc_flw_pagos_det
+                    INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id
+                    WHERE mc_flw_pagos_det.IdPago = ?", [$pagoslayout[$y]->id]);
+                    $correospago = DB::select("SELECT mc_flw_correos.* FROM mc_flw_correos WHERE mc_flw_correos.IdPago = ?", [$pagoslayout[$y]->id]);
+                    $pagoslayout[$y]->documentos = $documentospago;
+                    $pagoslayout[$y]->correos = $correospago;
+                }
+                $layouts[$x]->pagos = $pagoslayout;
+            }
+
+            $array["layouts"] = $layouts;
+            
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

@@ -1724,7 +1724,11 @@ class EmpresaController extends Controller
             INNER JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino " . $filtrolayouts);
 
             for ($x = 0; $x < count($layouts); $x++) {
-                $pagoslayout = DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos WHERE mc_flw_pagos.IdLayout = ?', [$layouts[$x]->id]);
+                $pagoslayout = DB::select("SELECT mc_flw_pagos.*, mc_flow_bancuentas.Nombre AS cuentaOrigen, 
+                IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ', SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',
+                SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino FROM mc_flw_pagos
+                LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
+                LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino WHERE mc_flw_pagos.IdLayout = ?", [$layouts[$x]->id]);
                 for ($y = 0; $y < count($pagoslayout); $y++) {
                     $documentospago = DB::select("SELECT mc_flw_pagos_det.id AS IdPagoDet, mc_flw_pagos_det.ImporteOriginal AS ImporteOriginalPago, mc_flw_pagos_det.TipoCambio AS TipoCambioPago, mc_flw_pagos_det.IdPago ,mc_flw_pagos_det.Importe, mc_flujosefectivo.* FROM mc_flw_pagos_det
                     INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id
@@ -1877,7 +1881,7 @@ class EmpresaController extends Controller
                 mc_flw_pagos.IdCuentaOrigen, mc_flow_bancuentas.Nombre AS CuentaOrigen, mc_flw_pagos.IdCuentaDestino,
                 IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',
                 SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',
-                SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS CuentaDestino FROM mc_flw_pagos_det 
+                SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS CuentaDestino, mc_flw_pagos.IdLayout FROM mc_flw_pagos_det 
                 INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
                 INNER JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
                 INNER JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?", [$IdFlw, $IdUsuario, 1, $IdPago]);
@@ -1902,7 +1906,7 @@ class EmpresaController extends Controller
                 $nombreempresa = $DatosEmpresa[0]->nombreempresa;
                 $usuariostorage = $DatosEmpresa[0]->usuario_storage;
                 $passwordstorage = $DatosEmpresa[0]->password_storage;
-                $layoutencontrado = DB::select('SELECT * FROM mc_flw_layouts WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                $layoutencontrado = DB::select('SELECT * FROM mc_flw_layouts WHERE id = ?', [$pagoencontrado[0]->IdLayout]);
                 if (count($buscarpagosdet) > 0) {
                     $RFC = $request->rfc;
                     $FechaServidor = date("YmdHis");
@@ -1920,8 +1924,7 @@ class EmpresaController extends Controller
                                 fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
                             }
                             $contenidolayout = file_get_contents($urldestino);
-                            $infopago = DB::select('SELECT mc_flw_pagos.*, mc_flw_layouts.id AS IdLayout FROM mc_flw_pagos 
-                            INNER JOIN mc_flw_layouts ON mc_flw_pagos.id = mc_flw_layouts.IdPago WHERE mc_flw_pagos.id = ?', [$pagoencontrado[0]->IdPago]);
+                            $infopago = DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos WHERE mc_flw_pagos.id = ?', [$pagoencontrado[0]->IdPago]);
                             $ImportePagado = $infopago[0]->Importe;
                             $importepagadosindecimal = str_replace(".", "", $ImportePagado);
 
@@ -1952,7 +1955,7 @@ class EmpresaController extends Controller
                             $target_path = $directorio . '/' . $codigodocumento . ".txt";
                             $link = GetLinkArchivo($target_path, $servidor, $usuariostorage, $passwordstorage);
                             $array["link"] = $link;
-                            DB::table('mc_flw_layouts')->where("IdPago", $pagoencontrado[0]->IdPago)->update(['UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $link]);
+                            DB::table('mc_flw_layouts')->where("id", $pagoencontrado[0]->IdLayout)->update(['UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $link]);
                             unlink($urldestino);
                         }
                     }
@@ -2027,7 +2030,7 @@ class EmpresaController extends Controller
 
                     $rutaarchivo = $layoutencontrado[0]->UrlLayout . "/" . $layoutencontrado[0]->NombreLayout;
                     $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaarchivo);
-                    DB::table('mc_flw_layouts')->where("IdPago", $pagoencontrado[0]->IdPago)->delete();
+                    DB::table('mc_flw_layouts')->where("id", $pagoencontrado[0]->IdLayout)->delete();
                     $array["resp"] = $resp;
 
                     if (count($infocorreospago) > 0) {
@@ -2621,6 +2624,20 @@ class EmpresaController extends Controller
             if($forma === 2) {
                 $correoencontrado = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ? AND Correo = ?', [$idPago, $correo]);
                 if(count($correoencontrado) == 0) {
+                    if($codigoMensaje == 0) {
+                        $codigoMensaje = rand(1000000000, 9999999999);
+                        $ValidarCodigoMensaje = false;
+                        while ($ValidarCodigoMensaje) {
+                            $codigomensajeencontrado = DB::select('SELECT * FROM mc_flw_correos WHERE CodigoMensaje = ?', [$codigoMensaje]);
+                            if (count($codigomensajeencontrado) == 0) {
+                                $ValidarCodigoMensaje = true;
+                            } else {
+                                $codigoMensaje = rand(1000000000, 9999999999);
+                            }
+                        }
+                        $data["codigoMensaje"] = $codigoMensaje;
+                    }
+                    
                     DB::table('mc_flw_correos')->insert(['IdPago' => $idPago, 'Correo' => $correo, 'Tipo' => 3, 'CodigoMensaje' => $codigoMensaje]);
                     Mail::to($correo)->send(new MensajesLayouts($data));
                 }

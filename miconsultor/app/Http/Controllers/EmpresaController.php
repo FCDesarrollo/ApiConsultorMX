@@ -1945,6 +1945,14 @@ class EmpresaController extends Controller
                         }
                         fclose($layout);
 
+                        $array["UrlLayout1"] = $layoutencontrado[0]->UrlLayout;
+                        $array["NombreLayout1"] = $layoutencontrado[0]->NombreLayout;
+                        if($layoutencontrado[0]->UrlLayout != null && $layoutencontrado[0]->NombreLayout != null) {
+                            $rutaarchivo = $layoutencontrado[0]->UrlLayout . "/" . $layoutencontrado[0]->NombreLayout;
+                            $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaarchivo);
+                            $array["resp"] = $resp;
+                        }
+
                         $codigoarchivo = substr($layoutencontrado[0]->NombreLayout, 0, -4);
                         $consecutivo = "";
                         $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $RFC, $servidor, $usuariostorage, $passwordstorage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
@@ -2028,10 +2036,16 @@ class EmpresaController extends Controller
                     $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                     DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->delete();
 
-                    $rutaarchivo = $layoutencontrado[0]->UrlLayout . "/" . $layoutencontrado[0]->NombreLayout;
-                    $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaarchivo);
-                    DB::table('mc_flw_layouts')->where("id", $pagoencontrado[0]->IdLayout)->delete();
-                    $array["resp"] = $resp;
+                    $validacionlayout = DB::select('SELECT * FROM mc_flw_pagos WHERE IdLayout = ?', [$pagoencontrado[0]->IdLayout]);
+                    $array["UrlLayout2"] = $layoutencontrado[0]->UrlLayout;
+                    $array["NombreLayout2"] = $layoutencontrado[0]->NombreLayout;
+                    $array["validacionlayout"] = $validacionlayout;
+                    if(count($validacionlayout) == 0 && ($layoutencontrado[0]->UrlLayout != null && $layoutencontrado[0]->NombreLayout != null)) {
+                        $rutaarchivo = $layoutencontrado[0]->UrlLayout . "/" . $layoutencontrado[0]->NombreLayout;
+                        $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaarchivo);
+                        DB::table('mc_flw_layouts')->where("id", $pagoencontrado[0]->IdLayout)->delete();
+                        $array["resp"] = $resp;
+                    }
 
                     if (count($infocorreospago) > 0) {
                         /* $Folios = [];

@@ -2036,15 +2036,21 @@ class EmpresaController extends Controller
                     $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                     DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->delete();
 
-                    $validacionlayout = DB::select('SELECT * FROM mc_flw_pagos WHERE IdLayout = ?', [$pagoencontrado[0]->IdLayout]);
+                    $validacionlayout = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos WHERE IdLayout = ?', [$pagoencontrado[0]->IdLayout]);
                     $array["UrlLayout2"] = $layoutencontrado[0]->UrlLayout;
                     $array["NombreLayout2"] = $layoutencontrado[0]->NombreLayout;
                     $array["validacionlayout"] = $validacionlayout;
-                    if(count($validacionlayout) == 0 && ($layoutencontrado[0]->UrlLayout != null && $layoutencontrado[0]->NombreLayout != null)) {
-                        $rutaarchivo = $layoutencontrado[0]->UrlLayout . "/" . $layoutencontrado[0]->NombreLayout;
-                        $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaarchivo);
-                        DB::table('mc_flw_layouts')->where("id", $pagoencontrado[0]->IdLayout)->delete();
-                        $array["resp"] = $resp;
+                    if($layoutencontrado[0]->UrlLayout != null && $layoutencontrado[0]->NombreLayout != null) {
+                        if(count($validacionlayout) == 0) {
+                            $rutaarchivo = $layoutencontrado[0]->UrlLayout . "/" . $layoutencontrado[0]->NombreLayout;
+                            $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaarchivo);
+                            DB::table('mc_flw_layouts')->where("id", $pagoencontrado[0]->IdLayout)->delete();
+                            $array["resp"] = $resp;
+                        }
+                        else {
+                            //aqui se debe de editar el layout con el nuevo importe (probar si sirve lo de $validacionlayout[0]->Importe;)
+                            $array["ImporteSum"] = $validacionlayout[0]->Importe;
+                        }
                     }
 
                     if (count($infocorreospago) > 0) {

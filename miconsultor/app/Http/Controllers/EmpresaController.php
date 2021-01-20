@@ -2648,7 +2648,7 @@ class EmpresaController extends Controller
             IF((SELECT mc_flw_layouts_usuarios.id FROM mc_flw_layouts_usuarios 
             WHERE mc_flw_layouts_usuarios.IdLayoutConfig = mc_flw_layouts_config.id AND mc_flw_layouts_usuarios.IdUsuario = ?) > 0 , 1, 0) AS Eleccion 
             FROM mc_flw_layouts_config 
-            WHERE mc_flw_layouts_config.IdBanco = ? OR mc_flw_layouts_config.IdBanco = ?', [$idUsuario, 0, $idBanco]);
+            WHERE mc_flw_layouts_config.IdBanco = ?', [$idUsuario, $idBanco]);
             $array["layouts"] = $layouts;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -2660,17 +2660,25 @@ class EmpresaController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             $idUsuario = $request->idUsuario;
+            $idBancoActual = $request->idBancoActual;
             $idBanco = $request->idBanco;
             $idLayout = $request->idLayout;
-            $layoutsusuario = DB::select('SELECT * FROM mc_flw_layouts_usuarios WHERE IdUsuario = ? AND IdBanco = ?', [$idUsuario, $idBanco]);
+            $layoutsusuario = DB::select('SELECT * FROM mc_flw_layouts_usuarios WHERE IdUsuario = ? AND IdBanco = ? ', [$idUsuario, $idBancoActual]);
             if(count($layoutsusuario) > 0) {
-                DB::table('mc_flw_layouts_usuarios')->where("id", $layoutsusuario[0]->id)->update(["IdLayoutConfig" => $idLayout]);
+                DB::table('mc_flw_layouts_usuarios')->where("id", $layoutsusuario[0]->id)->update(["IdLayoutConfig" => $idLayout, "IdBanco" => $idBanco]);
             }
             else {
                 DB::table('mc_flw_layouts_usuarios')->insert([
                     "IdLayoutConfig" => $idLayout,"IdUsuario" => $idUsuario, "IdBanco" => $idBanco
                 ]);
             }
+
+            $layouts = DB::select('SELECT mc_flw_layouts_config.*, 
+            IF((SELECT mc_flw_layouts_usuarios.id FROM mc_flw_layouts_usuarios 
+            WHERE mc_flw_layouts_usuarios.IdLayoutConfig = mc_flw_layouts_config.id AND mc_flw_layouts_usuarios.IdUsuario = ?) > 0 , 1, 0) AS Eleccion 
+            FROM mc_flw_layouts_config 
+            WHERE mc_flw_layouts_config.IdBanco = ?', [$idUsuario, $idBancoActual]);
+            $array["layouts"] = $layouts;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

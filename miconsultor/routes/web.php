@@ -296,6 +296,7 @@ Route::post('cambiarPrioridadProveedor', 'EmpresaController@cambiarPrioridadProv
 Route::post('generarLayouts', 'EmpresaController@generarLayouts');
 Route::delete('eliminarFlwPagosHechos', 'EmpresaController@eliminarFlwPagosHechos');
 Route::get('traerLayoutsPorIdBanco', 'EmpresaController@traerLayoutsPorIdBanco');
+Route::post('cambiarLayoutElegido', 'EmpresaController@cambiarLayoutElegido');
 Route::post('reenviarCorreoLayout', 'EmpresaController@reenviarCorreoLayout');
 
 //ACTUALIZA PERFILES GENERALES

@@ -817,3 +817,14 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         }
         return $flag;  		
     }
+
+    function armarLayout($idUsuario, $idBanco, $datosLayout) {
+        $layoutsusuario = DB::select('SELECT * FROM mc_flw_layouts_usuarios WHERE IdUsuario = ? AND IdBanco = ? ', [$idUsuario, $idBanco]);
+        if(count($layoutsusuario) > 0) {
+            $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
+        }
+        else {
+            $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
+        }
+        return $configlayout;
+    }

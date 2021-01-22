@@ -2212,16 +2212,23 @@ class EmpresaController extends Controller
             $TipoLayout = $request->TipoLayout;
             $CuentasBeneficiarios = $request->CuentasBeneficiarios;
             $ImportesPagados = $request->ImportesPagados;
+            $ImportesPorPagos = $request->ImportesPorPagos;
             $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
             mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
             $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
 
             for ($x = 0; $x < count($IdsBancosOrigen); $x++) {
-                $datosLayout = [];
-                $array["armarLayout"] = armarLayout($IdUsuario, $IdsBancosOrigen[$x], $datosLayout);
-                /* $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
+                $datosLayout["cuentaBeneficiario"] = $CuentasBeneficiarios[$x];
+                $datosLayout["importe"] = $ImportesPorPagos[$x];
+                $datosLayout["referenciaAlfanumerica"] = "XXXXXAAAAA";
+                $datosLayout["descripcion"] = "pruebadescripcion";
+                $datosLayout["referenciaNumerica"] = "12345";
+                
+                $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
                 $urldestino = $CarpetaDestino . $nombrearchivonuevo;
-                $layouturl = $TipoLayout[$x] == 1 ? "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download" : "http://cloud.dublock.com/index.php/s/BynSRPHBXCo7234/download";
+
+                $array["armarLayout"] = armarLayout($IdUsuario, $IdsBancosOrigen[$x], $datosLayout, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, ($x+1), $IdsBancosOrigen);
+                /*$layouturl = $TipoLayout[$x] == 1 ? "http://cloud.dublock.com/index.php/s/oBBcHJqm3snMAA7/download" : "http://cloud.dublock.com/index.php/s/BynSRPHBXCo7234/download";
                 $layout = fopen($layouturl, "rb");
 
                 if ($layout) {

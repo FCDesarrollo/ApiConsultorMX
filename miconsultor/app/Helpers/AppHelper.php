@@ -818,13 +818,73 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $flag;  		
     }
 
-    function armarLayout($idUsuario, $idBanco, $datosLayout) {
-        $layoutsusuario = DB::select('SELECT * FROM mc_flw_layouts_usuarios WHERE IdUsuario = ? AND IdBanco = ? ', [$idUsuario, $idBanco]);
+    function armarLayout($IdUsuario, $idBanco, $datosLayout, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, $Consecutivo, $IdsBancosOrigen) {
+        $layoutsusuario = DB::select('SELECT mc_flw_layouts_usuarios.*, mc_flw_layouts_config.LinkLayout FROM mc_flw_layouts_usuarios 
+        INNER JOIN mc_flw_layouts_config ON mc_flw_layouts_usuarios.IdLayoutConfig = mc_flw_layouts_config.id
+        WHERE mc_flw_layouts_usuarios.IdUsuario = ? AND mc_flw_layouts_usuarios.IdBanco = ?', [$IdUsuario, $idBanco]);
         if(count($layoutsusuario) > 0) {
             $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
         }
         else {
             $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
         }
-        return $configlayout;
+        $layouturl = $layoutsusuario[0]->LinkLayout;
+        $layout = fopen($layouturl, "rb");
+
+        if ($layout) {
+            $nuevolayout = fopen($urldestino, "a");
+            if ($nuevolayout) {
+                while (!feof($layout)) {
+                    fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
+                }
+                $contenidolayout = file_get_contents($urldestino);
+
+                if ($TipoLayout[$x] == 2) {
+                    $maxcuentabeneficiario = 20;
+                    $maximportepagadosindecimal = 10;
+                    $maxreferenciaalfanumerica = 10;
+                    $maxdescripcion = 30;
+                    $maxferencianumerica = 10;
+
+                    $countcuentabeneficiario = strlen($CuentasBeneficiarios[$x]);
+                    $countimportepagadosindecimal = strlen($importepagadosindecimal);
+                    $countreferenciaalfanumerica = strlen($referenciaalfanumerica);
+                    $countdescripcion = strlen($descripcion);
+                    $countreferencianumerica = strlen($referencianumerica);
+
+                    $CuentasBeneficiarios[$x] = $countcuentabeneficiario < $maxcuentabeneficiario ? str_pad($CuentasBeneficiarios[$x], $maxcuentabeneficiario) : substr($CuentasBeneficiarios[$x], 0, $maxcuentabeneficiario);
+
+                    $importepagadosindecimal = $countimportepagadosindecimal < $maximportepagadosindecimal ? str_pad($importepagadosindecimal, $maximportepagadosindecimal, "0") : substr($importepagadosindecimal, 0, $maximportepagadosindecimal);
+
+                    $referenciaalfanumerica = $countreferenciaalfanumerica < $maxreferenciaalfanumerica ? str_pad($referenciaalfanumerica, $maxreferenciaalfanumerica) : substr($referenciaalfanumerica, 0, $maxreferenciaalfanumerica);
+
+                    $descripcion = $countdescripcion < $maxdescripcion ? str_pad($descripcion, $maxdescripcion) : substr($descripcion, 0, $maxdescripcion);
+
+                    $referencianumerica = $countreferencianumerica < $maxferencianumerica ? str_pad($referencianumerica, $maxferencianumerica) : substr($referencianumerica, 0, $maxferencianumerica);
+                }
+
+                $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
+                $valores   = array($CuentasBeneficiarios[$x], $importepagadosindecimal, $ImportesPagados[$x], $referenciaalfanumerica, $descripcion, $referencianumerica);
+                $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
+                file_put_contents($urldestino, $nuevocontenido);
+
+                fclose($nuevolayout);
+            }
+            fclose($layout);
+
+            $codigoarchivo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $Consecutivo;
+            $consecutivo = "";
+            $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+            if ($resultado["archivo"]["error"] == 0) {
+                $codigodocumento = $codigoarchivo . $consecutivo;
+                $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                $target_path = $directorio . '/' . $codigodocumento . ".txt";
+                $link = GetLinkArchivo($target_path, $Servidor, $u_storage, $p_storage);
+                if(count($IdsBancosOrigen) == 1) {
+                    unlink($urldestino);
+                }
+            }
+        }
+
+        return $layoutsusuario;
     }

@@ -828,8 +828,10 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         else {
             $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
         }
+        
         $layouturl = $layoutsusuario[0]->LinkLayout;
         $layout = fopen($layouturl, "rb");
+        $link = '';
 
         if ($layout) {
             $nuevolayout = fopen($urldestino, "a");
@@ -839,32 +841,15 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                 }
                 $contenidolayout = file_get_contents($urldestino);
 
-                if ($TipoLayout[$x] == 2) {
-                    $maxcuentabeneficiario = 20;
-                    $maximportepagadosindecimal = 10;
-                    $maxreferenciaalfanumerica = 10;
-                    $maxdescripcion = 30;
-                    $maxferencianumerica = 10;
-
-                    $countcuentabeneficiario = strlen($CuentasBeneficiarios[$x]);
-                    $countimportepagadosindecimal = strlen($importepagadosindecimal);
-                    $countreferenciaalfanumerica = strlen($referenciaalfanumerica);
-                    $countdescripcion = strlen($descripcion);
-                    $countreferencianumerica = strlen($referencianumerica);
-
-                    $CuentasBeneficiarios[$x] = $countcuentabeneficiario < $maxcuentabeneficiario ? str_pad($CuentasBeneficiarios[$x], $maxcuentabeneficiario) : substr($CuentasBeneficiarios[$x], 0, $maxcuentabeneficiario);
-
-                    $importepagadosindecimal = $countimportepagadosindecimal < $maximportepagadosindecimal ? str_pad($importepagadosindecimal, $maximportepagadosindecimal, "0") : substr($importepagadosindecimal, 0, $maximportepagadosindecimal);
-
-                    $referenciaalfanumerica = $countreferenciaalfanumerica < $maxreferenciaalfanumerica ? str_pad($referenciaalfanumerica, $maxreferenciaalfanumerica) : substr($referenciaalfanumerica, 0, $maxreferenciaalfanumerica);
-
-                    $descripcion = $countdescripcion < $maxdescripcion ? str_pad($descripcion, $maxdescripcion) : substr($descripcion, 0, $maxdescripcion);
-
-                    $referencianumerica = $countreferencianumerica < $maxferencianumerica ? str_pad($referencianumerica, $maxferencianumerica) : substr($referencianumerica, 0, $maxferencianumerica);
+                $variables = array();
+                $valores = array();
+                for($x=0 ; $x<count($configlayout) ; $x++) {
+                    $maxcaracteres = $configlayout[$x]->Longitud;
+                    $countvalor = strlen($datosLayout[$configlayout[$x]->NombreVariable]);
+                    $valor = $countvalor < $maxcaracteres ? str_pad($datosLayout[$configlayout[$x]->NombreVariable], $maxcaracteres, $configlayout[$x]->Llenado != null ? $configlayout[$x]->Llenado : ' ', $configlayout[$x]->Alineacion == 1 ? STR_PAD_RIGHT : STR_PAD_LEFT) : substr($datosLayout[$configlayout[$x]->NombreVariable], 0, $maxcaracteres);
+                    array_push ($variables, $configlayout[$x]->Etiqueta);
+                    array_push ($valores, $valor);
                 }
-
-                $variables = array('${cuentaBeneficiario}', '${importePagadoSinDecimal}', '${importePagado}', '${referenciaAlfanumerica}', '${descripcion}', '${referenciaNumerica}');
-                $valores   = array($CuentasBeneficiarios[$x], $importepagadosindecimal, $ImportesPagados[$x], $referenciaalfanumerica, $descripcion, $referencianumerica);
                 $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
                 file_put_contents($urldestino, $nuevocontenido);
 
@@ -886,5 +871,5 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             }
         }
 
-        return $layoutsusuario;
+        return $link;
     }

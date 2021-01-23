@@ -2218,11 +2218,15 @@ class EmpresaController extends Controller
             $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
 
             for ($x = 0; $x < count($IdsBancosOrigen); $x++) {
-                $datosLayout["cuentaBeneficiario"] = $CuentasBeneficiarios[$x];
-                $datosLayout["importe"] = $ImportesPorPagos[$x];
+                $CuentasOrigenLayout = explode("-$-", $CuentasBeneficiarios[$x]);
+                $ImporteLayout = explode("-$-", $ImportesPorPagos[$x]);
+                $datosLayout["cuentaBeneficiario"] = $CuentasOrigenLayout[0];
+                $datosLayout["importe"] = str_replace(".", "", $ImporteLayout[0]);
                 $datosLayout["referenciaAlfanumerica"] = "XXXXXAAAAA";
                 $datosLayout["descripcion"] = "pruebadescripcion";
                 $datosLayout["referenciaNumerica"] = "12345";
+                $datosLayout["razon"] = "Prueba";
+                $datosLayout["claveMatch"] = "[m000001]";
                 
                 $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
                 $urldestino = $CarpetaDestino . $nombrearchivonuevo;

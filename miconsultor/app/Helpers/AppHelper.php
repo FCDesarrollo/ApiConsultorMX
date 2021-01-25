@@ -828,6 +828,14 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         else {
             $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
         }
+
+
+        for($x=0 ; $x<count($datosLayout["idsFlw"]) ; $x++) {
+            $IdsFlw[$x] = explode(",", $datosLayout["idsFlw"][$x]);
+            $infopagoencontrado = DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?', [$IdUsuario, 0, $IdsFlw[$x][0]]);
+            $datosLayout["llaveMatch"][$x] = $infopagoencontrado[0]->LlaveMatch;
+            $datosLayout["importe"][$x] = number_format($datosLayout["importe"][$x], 2, '','');
+        }
         
         $layouturl = $layoutsusuario[0]->LinkLayout;
         $layout = fopen($layouturl, "rb");
@@ -837,21 +845,27 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             $nuevolayout = fopen($urldestino, "a");
             if ($nuevolayout) {
                 while (!feof($layout)) {
-                    fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
+                    $layoutcontent = fread($layout, 1024 * 8);
                 }
-                $contenidolayout = file_get_contents($urldestino);
+                
+                for($x=0 ; $x<count($datosLayout["idsFlw"]) ; $x++) {
+                    $layoutcontent.= "\n";
+                    fwrite($nuevolayout, $layoutcontent, 1024 * 8);
+                    $contenidolayout = file_get_contents($urldestino);
 
-                $variables = array();
-                $valores = array();
-                for($x=0 ; $x<count($configlayout) ; $x++) {
-                    $maxcaracteres = $configlayout[$x]->Longitud;
-                    $countvalor = strlen($datosLayout[$configlayout[$x]->NombreVariable]);
-                    $valor = $countvalor < $maxcaracteres ? str_pad($datosLayout[$configlayout[$x]->NombreVariable], $maxcaracteres, $configlayout[$x]->Llenado != null ? $configlayout[$x]->Llenado : ' ', $configlayout[$x]->Alineacion == 1 ? STR_PAD_RIGHT : STR_PAD_LEFT) : substr($datosLayout[$configlayout[$x]->NombreVariable], 0, $maxcaracteres);
-                    array_push ($variables, $configlayout[$x]->Etiqueta);
-                    array_push ($valores, $valor);
+                    $variables = array();
+                    $valores = array();
+                    //ver cuando el tamaño es igual al maximo permitido
+                    for($y=0 ; $y<count($configlayout) ; $y++) {
+                        $maxcaracteres = $configlayout[$y]->Longitud;
+                        $countvalor = strlen($datosLayout[$configlayout[$y]->NombreVariable][$x]);
+                        $valor = $countvalor < $maxcaracteres ? str_pad($datosLayout[$configlayout[$y]->NombreVariable][$x], $maxcaracteres, $configlayout[$y]->Llenado != null ? $configlayout[$y]->Llenado : ' ', $configlayout[$y]->Alineacion == 1 ? STR_PAD_RIGHT : STR_PAD_LEFT) : substr($datosLayout[$configlayout[$y]->NombreVariable][$x], 0, $maxcaracteres);
+                        array_push ($variables, $configlayout[$y]->Etiqueta);
+                        array_push ($valores, $valor);
+                    }
+                    $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
+                    file_put_contents($urldestino, $nuevocontenido);
                 }
-                $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
-                file_put_contents($urldestino, $nuevocontenido);
 
                 fclose($nuevolayout);
             }
@@ -871,5 +885,5 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             }
         }
 
-        return $link;
+        return $datosLayout;
     }

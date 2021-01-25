@@ -2206,27 +2206,46 @@ class EmpresaController extends Controller
             $p_storage = $DatosEmpresa[0]->password_storage;
             $FechaServidor = date("YmdHis");
             /* $IdsCuentasOrigen = $request->IdsCuentasOrigen;
-            $IdsCuentasDestino = $request->IdsCuentasDestino;
-            $ProveedoresInfoBancos = $request->ProveedoresInfoBancos; */
+            $IdsCuentasDestino = $request->IdsCuentasDestino; */
+            $ProveedoresInfoBancos = $request->ProveedoresInfoBancos;
             $IdsBancosOrigen = $request->IdsBancosOrigen;
             $TipoLayout = $request->TipoLayout;
             $CuentasBeneficiarios = $request->CuentasBeneficiarios;
             $ImportesPagados = $request->ImportesPagados;
             $ImportesPorPagos = $request->ImportesPorPagos;
+            $IdsFlwPorPago = $request->idsFlwPorPago;
             $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
             mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
             $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
 
             for ($x = 0; $x < count($IdsBancosOrigen); $x++) {
-                $CuentasOrigenLayout = explode("-$-", $CuentasBeneficiarios[$x]);
-                $ImporteLayout = explode("-$-", $ImportesPorPagos[$x]);
-                $datosLayout["cuentaBeneficiario"] = $CuentasOrigenLayout[0];
-                $datosLayout["importe"] = str_replace(".", "", $ImporteLayout[0]);
-                $datosLayout["referenciaAlfanumerica"] = "XXXXXAAAAA";
-                $datosLayout["descripcion"] = "pruebadescripcion";
-                $datosLayout["referenciaNumerica"] = "12345";
-                $datosLayout["razon"] = "Prueba";
-                $datosLayout["claveMatch"] = "[m000001]";
+                $datosLayout["cuentaBeneficiario"] = explode("-$-", $CuentasBeneficiarios[$x]);
+                $datosLayout["importe"] = explode("-$-", $ImportesPorPagos[$x]);
+                $datosLayout["razon"] = explode("-$-", $ProveedoresInfoBancos[$x]);
+                $referenciaalfanumerica = "XXXXXAAAAA";
+                $descripcion = "pruebadescripcion";
+                $referenciaNumerica = "12345";
+                for($y=1 ; $y<count($datosLayout["cuentaBeneficiario"]) ; $y++) {
+                    $referenciaalfanumerica.= "-$-XXXXXAAAAA";
+                    $descripcion.= "-$-pruebadescripcion";
+                    $referenciaNumerica.= "-$-12345";
+                }
+                $datosLayout["referenciaAlfanumerica"] = explode("-$-", $referenciaalfanumerica);
+                $datosLayout["descripcion"] = explode("-$-", $descripcion);
+                $datosLayout["referenciaNumerica"] = explode("-$-", $referenciaNumerica);
+                $datosLayout["idsFlw"] = explode("-$-", $IdsFlwPorPago[$x]);
+                //$datosLayout["claveMatch"] = explode("-$-", "[m0000161]-$-[m0000162]");
+                /* $ImporteLayout = explode("-$-", $ImportesPorPagos[$x]); */
+                //$datosLayout["importe"] = str_replace(".", "", $ImportesPorPagos[$x]);
+
+                /* $datosLayout["cuentaBeneficiario"] = $CuentasBeneficiarios[$x];
+                $datosLayout["importe"] = $ImportesPorPagos[$x];
+                $datosLayout["referenciaAlfanumerica"] = "XXXXXAAAAA-$-XXXXXAAAAA";
+                $datosLayout["descripcion"] = "pruebadescripcion-$-pruebadescripcion";
+                $datosLayout["referenciaNumerica"] = "12345-$-12345";
+                $datosLayout["razon"] = "Prueba-$-Prueba";
+                $datosLayout["claveMatch"] = "[m0000161]-$-[m0000162]";
+                $datosLayout["idsFlw"] = $IdsFlwPorPago[$x]; */
                 
                 $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
                 $urldestino = $CarpetaDestino . $nombrearchivonuevo;

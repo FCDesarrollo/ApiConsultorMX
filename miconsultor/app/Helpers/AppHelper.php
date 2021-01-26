@@ -826,7 +826,8 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
         }
         else {
-            $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
+            $layoutsusuario = DB::select('SELECT * FROM mc_flw_layouts_config WHERE id = ?', [1]);
+            $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [1]);
         }
 
 
@@ -839,7 +840,6 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         
         $layouturl = $layoutsusuario[0]->LinkLayout;
         $layout = fopen($layouturl, "rb");
-        $link = '';
 
         if ($layout) {
             $nuevolayout = fopen($urldestino, "a");
@@ -855,11 +855,10 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
 
                     $variables = array();
                     $valores = array();
-                    //ver cuando el tamaño es igual al maximo permitido
                     for($y=0 ; $y<count($configlayout) ; $y++) {
                         $maxcaracteres = $configlayout[$y]->Longitud;
-                        $countvalor = strlen($datosLayout[$configlayout[$y]->NombreVariable][$x]);
-                        $valor = $countvalor < $maxcaracteres ? str_pad($datosLayout[$configlayout[$y]->NombreVariable][$x], $maxcaracteres, $configlayout[$y]->Llenado != null ? $configlayout[$y]->Llenado : ' ', $configlayout[$y]->Alineacion == 1 ? STR_PAD_RIGHT : STR_PAD_LEFT) : substr($datosLayout[$configlayout[$y]->NombreVariable][$x], 0, $maxcaracteres);
+                        $countvalor = mb_strlen($datosLayout[$configlayout[$y]->NombreVariable][$x]);
+                        $valor = $countvalor < $maxcaracteres ? str_pad_unicode($datosLayout[$configlayout[$y]->NombreVariable][$x], $maxcaracteres, $configlayout[$y]->Llenado != null ? $configlayout[$y]->Llenado : ' ', $configlayout[$y]->Alineacion == 1 ? STR_PAD_RIGHT : STR_PAD_LEFT) : mb_substr($datosLayout[$configlayout[$y]->NombreVariable][$x], 0, $maxcaracteres);
                         array_push ($variables, $configlayout[$y]->Etiqueta);
                         array_push ($valores, $valor);
                     }
@@ -878,12 +877,111 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                 $codigodocumento = $codigoarchivo . $consecutivo;
                 $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
                 $target_path = $directorio . '/' . $codigodocumento . ".txt";
-                $link = GetLinkArchivo($target_path, $Servidor, $u_storage, $p_storage);
+                $resultado["archivo"]["link"] = GetLinkArchivo($target_path, $Servidor, $u_storage, $p_storage);
                 if(count($IdsBancosOrigen) == 1) {
                     unlink($urldestino);
                 }
             }
         }
 
-        return $datosLayout;
+        return $resultado;
+    }
+
+    function actualizarLayout($pagodetantes, $pagodetdespues, $IdUsuario, $IdEmpresa, $IdLayout, $RFC, $IdPago) {
+        $servidor = getServidorNextcloud();
+        $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
+        $nombreempresa = $DatosEmpresa[0]->nombreempresa;
+        $usuariostorage = $DatosEmpresa[0]->usuario_storage;
+        $passwordstorage = $DatosEmpresa[0]->password_storage;
+        $layoutencontrado = DB::select('SELECT * FROM mc_flw_layouts WHERE id = ?', [$IdLayout]);
+
+        $FechaServidor = date("YmdHis");
+        $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
+        mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
+        $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
+        $nombrearchivonuevo = $layoutencontrado[0]->NombreLayout;
+        $urldestino = $CarpetaDestino . $nombrearchivonuevo;
+        $layouturl = $layoutencontrado[0]->LinkLayout . "/download";
+        $layout = fopen($layouturl, "rb");
+
+        if ($layout) {
+            $nuevolayout = fopen($urldestino, "a");
+            if ($nuevolayout) {
+                while (!feof($layout)) {
+                    fwrite($nuevolayout, fread($layout, 1024 * 8), 1024 * 8);
+                }
+                $contenidolayout = file_get_contents($urldestino);
+                /* $infopago = DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos WHERE mc_flw_pagos.id = ?', [$IdPago]);
+                $ImportePagado = $infopago[0]->Importe;
+                $importepagadosindecimal = str_replace(".", "", $ImportePagado);
+
+                $importetotalnuevo = DB::select('SELECT SUM(Importe) AS Importe, FORMAT(SUM(Importe), 2) AS ImporteConFormato FROM mc_flw_pagos_det WHERE IdPago = ?', [$IdPago]);
+                DB::table('mc_flw_pagos')->where("id", $IdPago)->update([
+                    "Importe" => $importetotalnuevo[0]->Importe
+                ]);
+
+                $ImportePagadoNuevo = $importetotalnuevo[0]->Importe;
+                $importepagadosindecimalnuevo = str_replace(".", "", $ImportePagadoNuevo);
+                $variables = array($ImportePagado, $importepagadosindecimal);
+                $valores   = array($ImportePagadoNuevo, $importepagadosindecimalnuevo);
+
+                $nuevocontenido = str_replace($variables, $valores, $contenidolayout);
+                file_put_contents($urldestino, $nuevocontenido); */
+                fclose($nuevolayout);
+            }
+            fclose($layout);
+
+            /* if($layoutencontrado[0]->UrlLayout != null && $layoutencontrado[0]->NombreLayout != null) {
+                $rutaarchivo = $layoutencontrado[0]->UrlLayout . "/" . $layoutencontrado[0]->NombreLayout;
+                $resp = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaarchivo);
+                $array["resp"] = $resp;
+            }
+
+            $codigoarchivo = substr($layoutencontrado[0]->NombreLayout, 0, -4);
+            $consecutivo = "";
+            $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $RFC, $servidor, $usuariostorage, $passwordstorage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
+            $array["resultado"] = $resultado;
+            if ($resultado["archivo"]["error"] == 0) {
+                $codigodocumento = $codigoarchivo . $consecutivo;
+                $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
+                $target_path = $directorio . '/' . $codigodocumento . ".txt";
+                $link = GetLinkArchivo($target_path, $servidor, $usuariostorage, $passwordstorage);
+                $array["link"] = $link;
+                DB::table('mc_flw_layouts')->where("id", $IdLayout)->update(['UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $link]);
+                unlink($urldestino);
+            } */
+        }
+        /* $urlcarpetaaborrar = substr($CarpetaDestino, 0, -1);
+        rmdir($urlcarpetaaborrar); */
+
+        return $contenidolayout;
+    }
+
+    function str_pad_unicode($str, $pad_len, $pad_str = ' ', $dir = STR_PAD_RIGHT) {
+        $str_len = mb_strlen($str);
+        $pad_str_len = mb_strlen($pad_str);
+        if (!$str_len && ($dir == STR_PAD_RIGHT || $dir == STR_PAD_LEFT)) {
+            $str_len = 1; // @debug
+        }
+        if (!$pad_len || !$pad_str_len || $pad_len <= $str_len) {
+            return $str;
+        }
+    
+        $result = null;
+        $repeat = ceil($str_len - $pad_str_len + $pad_len);
+        if ($dir == STR_PAD_RIGHT) {
+            $result = $str . str_repeat($pad_str, $repeat);
+            $result = mb_substr($result, 0, $pad_len);
+        } else if ($dir == STR_PAD_LEFT) {
+            $result = str_repeat($pad_str, $repeat) . $str;
+            $result = mb_substr($result, -$pad_len);
+        } else if ($dir == STR_PAD_BOTH) {
+            $length = ($pad_len - $str_len) / 2;
+            $repeat = ceil($length / $pad_str_len);
+            $result = mb_substr(str_repeat($pad_str, $repeat), 0, floor($length))
+                        . $str
+                           . mb_substr(str_repeat($pad_str, $repeat), 0, ceil($length));
+        }
+    
+        return $result;
     }

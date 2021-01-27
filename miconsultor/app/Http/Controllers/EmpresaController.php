@@ -911,6 +911,7 @@ class EmpresaController extends Controller
                 IdCuentaDestino INT(11) DEFAULT NULL,
                 IdUsuario INT(11) DEFAULT NULL,
                 Layout INT(11) DEFAULT 0,
+                IdLayout INT(11) DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flw_pagos);
@@ -926,6 +927,59 @@ class EmpresaController extends Controller
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flw_pagos_det);
 
+            $mc_flw_correos = "create table if not exists mc_flw_correos(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                IdPago int(11) DEFAULT NULL,
+                Correo VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Tipo int(11) DEFAULT NULL,
+                CodigoMensaje bigint(20) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_flw_correos);
+            
+            $mc_flw_layouts = "create table if not exists mc_flw_layouts(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                UrlLayout VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                NombreLayout VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                LinkLayout VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_flw_layouts);
+
+            $mc_flw_layouts_config = "create table if not exists mc_flw_layouts_config(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                IdBanco int(11) DEFAULT NULL,
+                NombreLayout VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                LinkLayout VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_flw_layouts_config);
+
+            $mc_flw_layouts_config_content = "create table if not exists mc_flw_layouts_config_content(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                IdLayoutConfig int(11) DEFAULT NULL,
+                NombreVariable VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Etiqueta VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                posicion int(11) DEFAULT NULL,
+                Descripcion VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                PosicionInicial int(11) DEFAULT NULL,
+                PosicionFinal int(11) DEFAULT NULL,
+                Longitud int(11) DEFAULT NULL,
+                Observaciones VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Alineacion int(11) DEFAULT NULL,
+                Llenado VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_flw_layouts_config_content);
+
+            $mc_flw_layouts_usuarios = "create table if not exists mc_flw_layouts_usuarios(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                IdLayoutConfig int(11) DEFAULT NULL,
+                IdUsuario int(11) DEFAULT NULL,
+                IdBanco int(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_flw_layouts_usuarios);
 
             $mc1006 = "insert " . $empresaBD . ".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
             DB::statement($mc1006);
@@ -1897,7 +1951,7 @@ class EmpresaController extends Controller
 
                 $array["pagodetantes"] = $pagodetantes;
 
-                //DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->delete();
+                DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->delete();
 
                 $pagodetdespues = DB::select('SELECT mc_flw_pagos.Fecha, 
                 CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
@@ -1910,17 +1964,17 @@ class EmpresaController extends Controller
                 
                 $respuesta = actualizarLayout($pagodetantes, $pagodetdespues, $IdUsuario, $IdEmpresa, $pagoencontrado[0]->IdLayout, $request->rfc, $pagoencontrado[0]->IdPago);
                 $array["respuesta"] = $respuesta;
-                /* 
+                
 
-                $servidor = getServidorNextcloud();
+                //$servidor = getServidorNextcloud();
                 $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
                 $nombreempresa = $DatosEmpresa[0]->nombreempresa;
-                $usuariostorage = $DatosEmpresa[0]->usuario_storage;
+                /* $usuariostorage = $DatosEmpresa[0]->usuario_storage;
                 $passwordstorage = $DatosEmpresa[0]->password_storage;
-                $layoutencontrado = DB::select('SELECT * FROM mc_flw_layouts WHERE id = ?', [$pagoencontrado[0]->IdLayout]);
+                $layoutencontrado = DB::select('SELECT * FROM mc_flw_layouts WHERE id = ?', [$pagoencontrado[0]->IdLayout]); */
                 //---
                 if (count($pagodetdespues) > 0) {
-                    $RFC = $request->rfc;
+                    /* $RFC = $request->rfc;
                     $FechaServidor = date("YmdHis");
                     $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
                     mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
@@ -1938,7 +1992,7 @@ class EmpresaController extends Controller
                             $contenidolayout = file_get_contents($urldestino);
                             $infopago = DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos WHERE mc_flw_pagos.id = ?', [$pagoencontrado[0]->IdPago]);
                             $ImportePagado = $infopago[0]->Importe;
-                            $importepagadosindecimal = str_replace(".", "", $ImportePagado);
+                            $importepagadosindecimal = str_replace(".", "", $ImportePagado); */
 
                             $importetotalnuevo = DB::select('SELECT SUM(Importe) AS Importe, FORMAT(SUM(Importe), 2) AS ImporteConFormato FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                             $array["importetotalnuevo"] = $importetotalnuevo;
@@ -1946,7 +2000,7 @@ class EmpresaController extends Controller
                                 "Importe" => $importetotalnuevo[0]->Importe
                             ]);
 
-                            $ImportePagadoNuevo = $importetotalnuevo[0]->Importe;
+                            /* $ImportePagadoNuevo = $importetotalnuevo[0]->Importe;
                             $importepagadosindecimalnuevo = str_replace(".", "", $ImportePagadoNuevo);
                             $variables = array($ImportePagado, $importepagadosindecimal);
                             $valores   = array($ImportePagadoNuevo, $importepagadosindecimalnuevo);
@@ -1980,7 +2034,7 @@ class EmpresaController extends Controller
                         }
                     }
                     $urlcarpetaaborrar = substr($CarpetaDestino, 0, -1);
-                    rmdir($urlcarpetaaborrar);
+                    rmdir($urlcarpetaaborrar); */
 
                     $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
                     if (count($infocorreospago) > 0) {
@@ -2020,7 +2074,7 @@ class EmpresaController extends Controller
                         }
                     }
                 } else {
-                    $validacionlayout = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos WHERE IdLayout = ?', [$pagoencontrado[0]->IdLayout]);
+                   /*  $validacionlayout = DB::select('SELECT SUM(Importe) AS Importe FROM mc_flw_pagos WHERE IdLayout = ?', [$pagoencontrado[0]->IdLayout]);
                     $array["UrlLayout2"] = $layoutencontrado[0]->UrlLayout;
                     $array["NombreLayout2"] = $layoutencontrado[0]->NombreLayout;
                     $array["validacionlayout"] = $validacionlayout;
@@ -2035,7 +2089,7 @@ class EmpresaController extends Controller
                             //aqui se debe de editar el layout con el nuevo importe (probar si sirve lo de $validacionlayout[0]->Importe;)
                             $array["ImporteSum"] = $validacionlayout[0]->Importe;
                         }
-                    }
+                    } */
 
                     DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->where("IdUsuario", $IdUsuario)->delete();
                     $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
@@ -2066,7 +2120,7 @@ class EmpresaController extends Controller
                         }
                     }
                 }
-                DB::table('mc_flujosefectivo')->where("id", $pagoencontrado[0]->IdFlw)->update(['Pendiente' => DB::raw('Pendiente + ' . $pagoencontrado[0]->Importe), 'ImporteOriginal' => DB::raw('ImporteOriginal + ' . $pagoencontrado[0]->ImporteOriginal)]); */
+                DB::table('mc_flujosefectivo')->where("id", $pagoencontrado[0]->IdFlw)->update(['Pendiente' => DB::raw('Pendiente + ' . $pagoencontrado[0]->Importe), 'ImporteOriginal' => DB::raw('ImporteOriginal + ' . $pagoencontrado[0]->ImporteOriginal)]);
             }
         }
 

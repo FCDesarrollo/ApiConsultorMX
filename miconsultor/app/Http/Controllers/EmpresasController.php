@@ -574,7 +574,7 @@ class EmpresasController extends Controller
     }
     public function Parametros()
     {      
-        $consulta = DB::connection("General")->select("SELECT * FROM mc0000");  
+        $consulta = DB::connection("General")->select("SELECT * FROM mc0000 WHERE id = 1");  
 
         $datos = array(
             "parametros" => $consulta,

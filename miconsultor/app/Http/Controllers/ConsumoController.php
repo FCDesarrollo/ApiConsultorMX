@@ -1227,7 +1227,7 @@ class ConsumoController extends Controller
     function DatosStorage(Request $request)
     {
         $rfc = $request->rfcempresa;
-        $server = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+        $server = DB::connection("General")->select("SELECT servidor_storage FROM mc0000  WHERE id = 1");
         $storage = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$rfc'");
         $storage[0]->server = $server[0]->servidor_storage;
         return json_encode($storage, JSON_UNESCAPED_UNICODE);
@@ -1235,7 +1235,7 @@ class ConsumoController extends Controller
 
     function DatosStorageADM()
     {
-        $storage = DB::connection("General")->select("SELECT servidor_storage, usuario_storage, password_storage FROM mc0000");
+        $storage = DB::connection("General")->select("SELECT servidor_storage, usuario_storage, password_storage FROM mc0000 WHERE id = 1");
         return json_encode($storage, JSON_UNESCAPED_UNICODE);
     }
 
@@ -1486,7 +1486,7 @@ class ConsumoController extends Controller
 
     public function delDocAPI(String $userSto, String $passSto, String $nomAr, int $idMenu, string $carpIni)
     {
-        $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+        $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000 WHERE id = 1");
         $servidor = $result[0]->servidor_storage;
 
         $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
@@ -1558,7 +1558,7 @@ class ConsumoController extends Controller
     ) {
         $regresa = 'NO';
 
-        $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+        $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000 WHERE id = 1");
         $servidor = $result[0]->servidor_storage;
 
         $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
@@ -1800,7 +1800,7 @@ class ConsumoController extends Controller
 
                 $carpIni = 'CRM/' . $autenticacion[0]["rfc"] . '/Entrada';
 
-                $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+                $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000 WHERE id = 1");
                 $servidor = $result[0]->servidor_storage;
                 $result = DB::connection("General")->select("SELECT nombre_carpeta FROM mc1004 WHERE idmenu=$idMenu");
                 $nomcar = $result[0]->nombre_carpeta;

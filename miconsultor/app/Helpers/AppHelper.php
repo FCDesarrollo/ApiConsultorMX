@@ -507,7 +507,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
     function getServidorNextcloud()
     {
         $servidor ="";
-        $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+        $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000 WHERE id = 1");
         if (!empty($result)) {
             $servidor = $result[0]->servidor_storage;
         }
@@ -517,7 +517,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
     function getParametros()
     {
         $servidor ="";
-        $result = DB::connection("General")->select("SELECT * FROM mc0000");
+        $result = DB::connection("General")->select("SELECT * FROM mc0000 WHERE id = 1");
         if (!empty($result)) {
             $servidor = $result;
         }
@@ -661,11 +661,12 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
     function conectaFTP()
     {
         try {
-            $ftp_server = "ftp.inroute.mx";
+            $result = DB::connection("General")->select("SELECT * FROM mc0000 WHERE id = 2");
+            $ftp_server = $result[0]->servidor_storage;
             $conn_id = ftp_connect($ftp_server);
             // login con usuario y contraseña
-            $ftp_user_name = "validacer@certificados.inroute.mx";
-            $ftp_user_pass = "valida@2020";
+            $ftp_user_name = $result[0]->usuario_storage;
+            $ftp_user_pass = $result[0]->password_storage;
             $login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
                 
         } catch (\Throwable $th) {

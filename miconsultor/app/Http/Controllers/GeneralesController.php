@@ -1856,7 +1856,7 @@ class GeneralesController extends Controller
                     $sucursal = $request->sucursal;
                     $observaciones = $request->observaciones;
                     
-                    $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+                    $result = DB::connection("General")->select("SELECT servidor_storage FROM mc0000 WHERE id = 1");
                     $servidor = $result[0]->servidor_storage;
                     
                     $u_storage = $autenticacion[0]["userstorage"];
@@ -2103,7 +2103,7 @@ class GeneralesController extends Controller
         $SubMenus = DB::connection("General")->select("SELECT sub.*,men.nombre_menu FROM mc1005 sub INNER JOIN mc1004 men ON sub.idmenu=men.idmenu WHERE sub.Status = '1'");
         $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, RFC, usuario_storage, password_storage FROM mc1000 WHERE idempresa='$request->idempresa'");
         $DatosUsuario = DB::connection("General")->select("SELECT nombre, apellidop, apellidom, correo, tipo FROM mc1001 WHERE idusuario='$request->idusuario'");
-        $ServidorStorage = DB::connection("General")->select("SELECT servidor_storage FROM mc0000");
+        $ServidorStorage = DB::connection("General")->select("SELECT servidor_storage FROM mc0000 WHERE id = 1");
 
         $array = array(
             "Menus" => $Menus,

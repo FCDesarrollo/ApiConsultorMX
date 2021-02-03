@@ -1578,13 +1578,13 @@ class EmpresaController extends Controller
 
             switch ($forma) {
                 case 1:
-                    $query .= " AND mc_flujosefectivo.Razon = '$request->razon'";
+                    $query .= " AND mc_flujosefectivo.Razon = '$request->razon' GROUP BY mc_flujosefectivo.id";
                     break;
                 case 2:
-                    $query .= " AND mc_flujosefectivo.Tipo = '$request->tipo'";
+                    $query .= " AND mc_flujosefectivo.Tipo = '$request->tipo' GROUP BY mc_flujosefectivo.id";
                     break;
                 case 3:
-                    $query .= " AND mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo'";
+                    $query .= " AND mc_flujosefectivo.Razon = '$request->razon' AND mc_flujosefectivo.Tipo = '$request->tipo' GROUP BY mc_flujosefectivo.id";
                     break;
                 case 4:
                     $query .= "SELECT mc_flujosefectivo.*, mc_flw_pagos_det.Importe, mc_flw_pagos.Layout FROM mc_flujosefectivo 
@@ -1594,7 +1594,11 @@ class EmpresaController extends Controller
                     for ($x = 1; $x < count($request->ids); $x++) {
                         $query .= " OR mc_flujosefectivo.id = " . $request->ids[$x];
                     }
-                    $query .= ") AND mc_flw_pagos.Layout = 0 ";
+                    $query .= ") AND mc_flw_pagos.Layout = 0 GROUP BY mc_flujosefectivo.id";
+                    break;
+                case 5:
+                    $query .= " GROUP BY mc_flujosefectivo.id";
+                    break;
                 default:
                     break;
             }

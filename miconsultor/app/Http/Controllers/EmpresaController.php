@@ -2093,6 +2093,7 @@ class EmpresaController extends Controller
             $ImportesPorPagos = $request->ImportesPorPagos;
             $IdsFlwPorPago = $request->idsFlwPorPago;
             $RfcProveedores = $request->rfcProveedores;
+            $CombinacionesBancos = $request->combinacionesBancos;
             $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
             mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
             $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";

@@ -819,12 +819,13 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $flag;  		
     }
 
-    function armarLayout($IdUsuario, $idBanco, $datosLayout, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, $Consecutivo, $IdsBancosOrigen) {
-        $layoutsusuario = DB::select('SELECT mc_flw_layouts_usuarios.*, mc_flw_layouts_config.LinkLayout FROM mc_flw_layouts_usuarios 
+    function armarLayout($IdUsuario, $idBanco, $destino, $datosLayout, $ReferenciaNumerica, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, $Consecutivo, $IdsBancosOrigen) {
+        /* $layoutsusuario = DB::select('SELECT mc_flw_layouts_usuarios.*, mc_flw_layouts_config.LinkLayout FROM mc_flw_layouts_usuarios 
         INNER JOIN mc_flw_layouts_config ON mc_flw_layouts_usuarios.IdLayoutConfig = mc_flw_layouts_config.id
-        WHERE mc_flw_layouts_usuarios.IdUsuario = ? AND mc_flw_layouts_usuarios.IdBanco = ?', [$IdUsuario, $idBanco]);
+        WHERE mc_flw_layouts_usuarios.IdUsuario = ? AND mc_flw_layouts_usuarios.IdBanco = ?', [$IdUsuario, $idBanco]); */
+        $layoutsusuario = DB::select('SELECT * FROM mc_flw_layouts_config WHERE IdBanco = ? AND Destino = ?', [$idBanco, $destino]);
         if(count($layoutsusuario) > 0) {
-            $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->IdLayoutConfig]);
+            $configlayout = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY Posicion', [$layoutsusuario[0]->id]);
         }
         else {
             $layoutsusuario = DB::select('SELECT * FROM mc_flw_layouts_config WHERE id = ?', [1]);
@@ -834,8 +835,21 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
 
         for($x=0 ; $x<count($datosLayout["idsFlw"]) ; $x++) {
             $IdsFlw[$x] = explode(",", $datosLayout["idsFlw"][$x]);
-            $infopagoencontrado = DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?', [$IdUsuario, 0, $IdsFlw[$x][0]]);
+            $infopagoencontrado = DB::select('SELECT mc_flw_pagos.*,
+            IF(!ISNULL(mc_flow_bancuentas.Cuenta), mc_flow_bancuentas.Cuenta, mc_flow_bancuentas.Clabe) AS CuentaOrigen,
+            IF(!ISNULL(mc_flow_cliproctas.Cuenta), mc_flow_cliproctas.Cuenta, mc_flow_cliproctas.Clabe) AS CuentaDestino 
+            FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+            LEFT JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
+            LEFT JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id 
+            WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?', [$IdUsuario, 0, $IdsFlw[$x][0]]);
             $datosLayout["llaveMatch"][$x] = $infopagoencontrado[0]->LlaveMatch;
+            $datosLayout["descripcion"][$x] = $infopagoencontrado[0]->LlaveMatch;
+            $datosLayout["numeroCuenta"][$x] = $infopagoencontrado[0]->CuentaOrigen;
+            $datosLayout["numeroCuentaOrigen"][$x] = $infopagoencontrado[0]->CuentaOrigen;
+            $datosLayout["numeroCuentaDestino"][$x] = $infopagoencontrado[0]->CuentaDestino;
+            $datosLayout["proveedor"][$x] = $infopagoencontrado[0]->Proveedor;
+            $datosLayout["clabe"][$x] = $infopagoencontrado[0]->CuentaDestino;
+            $datosLayout["referenciaNumerica"][$x] = $ReferenciaNumerica;
             $datosLayout["importe"][$x] = number_format($datosLayout["importe"][$x], 2, '','');
         }
         

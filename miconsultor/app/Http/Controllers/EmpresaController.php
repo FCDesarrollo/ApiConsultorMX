@@ -2064,6 +2064,8 @@ class EmpresaController extends Controller
             $CuentasOrigen = $request->CuentasOrigen;
             $CuentasDestino = $request->CuentasDestino;
             $IdsFlwsBancos = $request->idsFlwsBancos;
+            $IdsBancosOrigen = $request->IdsBancosOrigen;
+            $CombinacionesBancos = $request->combinacionesBancos; 
 
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $flujo = DB::select('SELECT * FROM mc_flujosefectivo WHERE id = ?', [$IdsFlw[$x]]);
@@ -2076,6 +2078,15 @@ class EmpresaController extends Controller
                 }
             }
 
+            /* for ($x = 0; $x < count($IdsBancosOrigen); $x++) {
+                $layout = DB::select('SELECT * FROM mc_flw_layouts_config WHERE IdBanco = ? AND Destino = ?', [$IdsBancosOrigen[$x], $CombinacionesBancos[$x]]);
+                
+                if(count($layout) == 0) {
+                    $array["error"] = 58;
+                    return json_encode($array, JSON_UNESCAPED_UNICODE);
+                }
+            } */
+
             $IdEmpresa = $request->IdEmpresa;
             $RFC = $request->rfc;
             $Servidor = getServidorNextcloud();
@@ -2086,14 +2097,15 @@ class EmpresaController extends Controller
             /* $IdsCuentasOrigen = $request->IdsCuentasOrigen;
             $IdsCuentasDestino = $request->IdsCuentasDestino; */
             $ProveedoresInfoBancos = $request->ProveedoresInfoBancos;
-            $IdsBancosOrigen = $request->IdsBancosOrigen;
+            
             //$TipoLayout = $request->TipoLayout;
             $CuentasBeneficiarios = $request->CuentasBeneficiarios;
             //$ImportesPagados = $request->ImportesPagados;
             $ImportesPorPagos = $request->ImportesPorPagos;
             $IdsFlwPorPago = $request->idsFlwPorPago;
             $RfcProveedores = $request->rfcProveedores;
-            $CombinacionesBancos = $request->combinacionesBancos;
+            $ReferenciaNumerica = $request->referenciaNumerica;
+              
             $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
             mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
             $CarpetaDestino = $CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "/";
@@ -2104,41 +2116,37 @@ class EmpresaController extends Controller
                 $datosLayout["razon"] = explode("-$-", $ProveedoresInfoBancos[$x]);
 
                 $datosLayout["nombre"] = explode("-$-", $ProveedoresInfoBancos[$x]);
-                $referenciaalfanumerica = "XXXXXAAAAA";
-                $descripcion = "prueba descripción";
-                $referenciaNumerica = "12345";
+                $referenciaalfanumerica = "alfa1";
 
                 $numeroConsecutivo = "001";
-                $clabe = "1234567890abcdefgh";
                 $motivoPago = "prueba motivo";
                 $indicadorComprobanteFiscal = "1";
                 $importeIVA = "000";
+                $sucursal = "suc1";
                 for($y=1 ; $y<count($datosLayout["cuentaBeneficiario"]) ; $y++) {
-                    $referenciaalfanumerica.= "-$-XXXXXAAAAA";
-                    $descripcion.= "-$-prueba descripción";
-                    $referenciaNumerica.= "-$-12345";
+                    $referenciaalfanumerica.= "-$-alfa".($y+1);
                     $numeroConsecutivo.= "-$-00".($y+1);
-                    $clabe.= "-$-1234567890abcdefgh";
                     $motivoPago.= "-$-prueba motivo";
                     $indicadorComprobanteFiscal.= "-$-".($y+1);
                     $importeIVA.= "-$-000";
+                    $sucursal.= "-$-suc1";
                 }
                 $datosLayout["referenciaAlfanumerica"] = explode("-$-", $referenciaalfanumerica);
-                $datosLayout["descripcion"] = explode("-$-", $descripcion);
-                $datosLayout["referenciaNumerica"] = explode("-$-", $referenciaNumerica);
                 $datosLayout["idsFlw"] = explode("-$-", $IdsFlwPorPago[$x]);
 
                 $datosLayout["numeroConsecutivo"] = explode("-$-", $numeroConsecutivo);
-                $datosLayout["clabe"] = explode("-$-", $clabe);
                 $datosLayout["motivoPago"] = explode("-$-", $motivoPago);
                 $datosLayout["indicadorComprobanteFiscal"] = explode("-$-", $indicadorComprobanteFiscal);
                 $datosLayout["importeIVA"] = explode("-$-", $importeIVA);
                 $datosLayout["RFC"] = explode("-$-", $RfcProveedores[$x]);
+                $datosLayout["sucursal"] = explode("-$-", $sucursal);
+                $datosLayout["sucursalOrigen"] = explode("-$-", $sucursal);
+                $datosLayout["sucursalDestino"] = explode("-$-", $sucursal);
                 
                 $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
                 $urldestino = $CarpetaDestino . $nombrearchivonuevo;
 
-                $resultado = armarLayout($IdUsuario, $IdsBancosOrigen[$x], $datosLayout, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, ($x+1), $IdsBancosOrigen);
+                $resultado = armarLayout($IdUsuario, $IdsBancosOrigen[$x], $CombinacionesBancos[$x], $datosLayout, $ReferenciaNumerica, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, ($x+1), $IdsBancosOrigen);
                 $array["resultado"] = $resultado;
                 $array["link"] = $resultado["archivo"]["link"];
 

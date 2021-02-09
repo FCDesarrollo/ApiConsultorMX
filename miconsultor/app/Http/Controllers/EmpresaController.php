@@ -1772,6 +1772,9 @@ class EmpresaController extends Controller
             }
 
             $array["layouts"] = $layouts;
+
+            $layoutsexistentes = DB::select('SELECT * FROM mc_flw_layouts_config');
+            $array["layoutsexistentes"] = $layoutsexistentes;
             
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1902,7 +1905,6 @@ class EmpresaController extends Controller
                         }
                         
                     }
-                    
                 }
             } else {
                 $IdPago = $request->IdPago;
@@ -2484,13 +2486,14 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $idUsuario = $request->idUsuario;
             $idBanco = $request->idBanco;
-            $layouts = DB::select('SELECT mc_flw_layouts_config.*, 
+            $combinacion = $request->combinacion;
+            /* $layouts = DB::select('SELECT mc_flw_layouts_config.*, 
             IF((SELECT mc_flw_layouts_usuarios.id FROM mc_flw_layouts_usuarios 
             WHERE mc_flw_layouts_usuarios.IdLayoutConfig = mc_flw_layouts_config.id AND mc_flw_layouts_usuarios.IdUsuario = ?) > 0 , 1, 0) AS Eleccion 
             FROM mc_flw_layouts_config 
-            WHERE mc_flw_layouts_config.IdBanco = ?', [$idUsuario, $idBanco]);
+            WHERE mc_flw_layouts_config.IdBanco = ?', [$idUsuario, $idBanco]); */
+            $layouts = DB::select('SELECT * FROM mc_flw_layouts_config WHERE IdBanco = ? AND Destino = ?', [$idBanco, $combinacion]);
             $array["layouts"] = $layouts;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

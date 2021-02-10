@@ -2495,6 +2495,14 @@ class EmpresaController extends Controller
             WHERE mc_flw_layouts_config.IdBanco = ?', [$idUsuario, $idBanco]); */
             $layouts = DB::select('SELECT * FROM mc_flw_layouts_config WHERE IdBanco = ? AND Destino = ?', [$idBanco, $combinacion]);
             $array["layouts"] = $layouts;
+
+            $layoutsexistentes = DB::select('SELECT mc_flw_layouts_config.*, (IF(mc_flw_layouts_config.IdBanco = ? AND mc_flw_layouts_config.Destino = ?, 1, 0)) AS Eleccion FROM mc_flw_layouts_config', [$idBanco, $combinacion]);
+
+            for($x=0 ; $x<count($layoutsexistentes) ; $x++) {
+                $layoutconfigcontent = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY posicion', [$layoutsexistentes[$x]->id]);
+                $layoutsexistentes[$x]->ConfigContent = $layoutconfigcontent;
+            }
+            $array["layoutsexistentes"] = $layoutsexistentes;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

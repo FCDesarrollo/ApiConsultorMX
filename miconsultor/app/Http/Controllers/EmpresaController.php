@@ -1662,7 +1662,7 @@ class EmpresaController extends Controller
             for ($x = 0; $x < count($cuentas); $x++) {
                 $cuentaencontrada = DB::select('select * from mc_flow_bancuentas where IdCuenta = ? ', [$cuentas[$x]["IdCuenta"]]);
                 if (count($cuentaencontrada) == 0) {
-                    DB::table('mc_flow_bancuentas')->insert(['IdCuenta' => $cuentas[$x]["IdCuenta"], 'Clabe' => $cuentas[$x]["Clabe"], "Cuenta" => $cuentas[$x]["Cuenta"], "Nombre" => $cuentas[$x]["Nombre"], "IdBanco" => $cuentas[$x]["IdBanco"], "IdMoneda" => $cuentas[$x]["IdMoneda"], "Activa" => $cuentas[$x]["Activa"]]);
+                    DB::table('mc_flow_bancuentas')->insert(['IdCuenta' => $cuentas[$x]["IdCuenta"], 'Clabe' => $cuentas[$x]["Clabe"], "Cuenta" => $cuentas[$x]["Cuenta"], "Nombre" => $cuentas[$x]["Nombre"], "Banco" => $cuentas[$x]["Banco"], "IdBanco" => $cuentas[$x]["IdBanco"], "IdMoneda" => $cuentas[$x]["IdMoneda"], "Sucursal" => $cuentas[$x]["Sucursal"], "Activa" => $cuentas[$x]["Activa"]]);
                 }
             }
         }
@@ -1680,7 +1680,7 @@ class EmpresaController extends Controller
             for ($x = 0; $x < count($cuentas); $x++) {
                 $cuentaencontrada = DB::select('select * from mc_flow_cliproctas where Id = ? ', [$cuentas[$x]["Id"]]);
                 if (count($cuentaencontrada) == 0) {
-                    DB::table('mc_flow_cliproctas')->insert(['Id' => $cuentas[$x]["Id"], 'RFC' => $cuentas[$x]["RFC"], 'Cuenta' => $cuentas[$x]["Cuenta"], "Clabe" => $cuentas[$x]["Clabe"], "Banco" => $cuentas[$x]["Banco"], "IdBanco" => $cuentas[$x]["IdBanco"], "Escliente" => $cuentas[$x]["Escliente"]]);
+                    DB::table('mc_flow_cliproctas')->insert(['Id' => $cuentas[$x]["Id"], 'RFC' => $cuentas[$x]["RFC"], 'Cuenta' => $cuentas[$x]["Cuenta"], "Clabe" => $cuentas[$x]["Clabe"], "Banco" => $cuentas[$x]["Banco"], "IdBanco" => $cuentas[$x]["IdBanco"], "Sucursal" => $cuentas[$x]["Sucursal"], "Escliente" => $cuentas[$x]["Escliente"]]);
                 }
             }
         }
@@ -1720,7 +1720,7 @@ class EmpresaController extends Controller
             $IdUsuario = $request->IdUsuario;
 
             $filtro = $IdUsuario != 0 ? "WHERE mc_flw_pagos.IdUsuario = $IdUsuario ORDER BY mc_flw_pagos.Fecha DESC" : "WHERE Layout = $Layout ORDER BY mc_flw_pagos.Fecha DESC";
-            $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flow_bancuentas.IdBanco AS idBancoOrigen, mc_flow_bancuentas.Nombre AS cuentaOrigen, mc_flow_cliproctas.IdBanco AS idBancoDestino,
+            $pagospendientes = DB::select("SELECT mc_flw_pagos.*, mc_flow_bancuentas.IdBanco AS idBancoOrigen, mc_flow_bancuentas.Nombre AS cuentaOrigen, REPLACE(mc_flow_bancuentas.Banco,', S.A.', '') AS bancoOrigen, mc_flow_cliproctas.IdBanco AS idBancoDestino,
             IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino, mc_flow_cliproctas.Banco AS BancoDestino, mc_flow_cliproctas.Clabe AS ClabeBancoDestino FROM mc_flw_pagos 
             LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
             LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino " . $filtro);
@@ -2124,14 +2124,18 @@ class EmpresaController extends Controller
                 $motivoPago = "prueba motivo";
                 $indicadorComprobanteFiscal = "1";
                 $importeIVA = "000";
-                $sucursal = "suc1";
+                $sucursal = "0394";
+                $sucursalOrigen = "7008";
+                $sucursalDestino = "0441";
                 for($y=1 ; $y<count($datosLayout["cuentaBeneficiario"]) ; $y++) {
                     $referenciaalfanumerica.= "-$-alfa".($y+1);
                     $numeroConsecutivo.= "-$-00".($y+1);
                     $motivoPago.= "-$-prueba motivo";
                     $indicadorComprobanteFiscal.= "-$-".($y+1);
                     $importeIVA.= "-$-000";
-                    $sucursal.= "-$-suc1";
+                    $sucursal.= "-$-0394";
+                    $sucursalOrigen.= "-$-7008";
+                    $sucursalDestino.= "-$-0441";
                 }
                 $datosLayout["referenciaAlfanumerica"] = explode("-$-", $referenciaalfanumerica);
                 $datosLayout["idsFlw"] = explode("-$-", $IdsFlwPorPago[$x]);

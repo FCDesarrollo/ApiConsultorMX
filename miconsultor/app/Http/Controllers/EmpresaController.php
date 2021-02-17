@@ -2490,7 +2490,10 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $layouts = DB::select('SELECT * FROM mc_flw_layouts_config');
+            /* $layouts = DB::select('SELECT * FROM mc_flw_layouts_config'); */
+            $layouts = DB::select('SELECT mc_flw_layouts_config.id, mc_flw_layouts_config.NombreLayout, mc_flw_layouts_config.LinkLayout,
+            mc_flw_layouts_bancos.IdBanco, mc_flw_layouts_bancos.Destino FROM mc_flw_layouts_config
+            LEFT JOIN mc_flw_layouts_bancos ON mc_flw_layouts_config.id = mc_flw_layouts_bancos.IdLayoutConfig');
 
             for($x=0 ; $x<count($layouts) ; $x++) {
                 $layoutconfigcontent = DB::select('SELECT * FROM mc_flw_layouts_config_content WHERE IdLayoutConfig = ? ORDER BY posicion', [$layouts[$x]->id]);
@@ -2507,7 +2510,22 @@ class EmpresaController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $idUsuario = $request->idUsuario;
+            $idsBancosOrigen = $request->idsBancosOrigen;
+            $combinacionesBancos = $request->combinacionesBancos;
+            $idsLayouts = $request->idsLayouts;
+
+            for($x=0 ; $x<count($idsBancosOrigen) ; $x++) {
+                $layoutencontrado = DB::select('SELECT * FROM mc_flw_layouts_bancos WHERE IdBanco = ? AND Destino = ?', [$idsBancosOrigen[$x], $combinacionesBancos[$x]]);
+                if(count($layoutencontrado) > 0) {
+                    DB::table('mc_flw_layouts_bancos')->where("id", $layoutencontrado[0]->id)->update(["IdLayoutConfig" => $idsLayouts[$x]]);
+                }
+                else {
+                    DB::table('mc_flw_layouts_bancos')->insert([
+                        "IdBanco" => $idsBancosOrigen[$x], "Destino" => $combinacionesBancos[$x], "IdLayoutConfig" => $idsLayouts[$x]
+                    ]);
+                }
+            }
+            /* $idUsuario = $request->idUsuario;
             $idBancoActual = $request->idBancoActual;
             $idBanco = $request->idBanco;
             $idLayout = $request->idLayout;
@@ -2526,7 +2544,7 @@ class EmpresaController extends Controller
             WHERE mc_flw_layouts_usuarios.IdLayoutConfig = mc_flw_layouts_config.id AND mc_flw_layouts_usuarios.IdUsuario = ?) > 0 , 1, 0) AS Eleccion 
             FROM mc_flw_layouts_config 
             WHERE mc_flw_layouts_config.IdBanco = ?', [$idUsuario, $idBancoActual]);
-            $array["layouts"] = $layouts;
+            $array["layouts"] = $layouts; */
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

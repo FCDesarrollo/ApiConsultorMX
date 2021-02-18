@@ -972,14 +972,23 @@ class EmpresaController extends Controller
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flw_layouts_config_content);
 
-            $mc_flw_layouts_usuarios = "create table if not exists mc_flw_layouts_usuarios(
+            $mc_flw_layouts_bancos = "create table if not exists mc_flw_layouts_bancos(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                IdBanco int(11) DEFAULT NULL,
+                Destino int(11) DEFAULT NULL,
+                IdLayoutConfig int(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_flw_layouts_bancos);
+
+            /* $mc_flw_layouts_usuarios = "create table if not exists mc_flw_layouts_usuarios(
                 id int(11) NOT NULL AUTO_INCREMENT,
                 IdLayoutConfig int(11) DEFAULT NULL,
                 IdUsuario int(11) DEFAULT NULL,
                 IdBanco int(11) DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
-            DB::statement($mc_flw_layouts_usuarios);
+            DB::statement($mc_flw_layouts_usuarios); */
 
             $mc1006 = "insert " . $empresaBD . ".mc_profiles SELECT * FROM dublockc_MCGenerales.mc1006;";
             DB::statement($mc1006);

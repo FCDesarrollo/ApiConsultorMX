@@ -2618,4 +2618,20 @@ class EmpresaController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    function agregarCuentaProveedor(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $rfcProveedor = $request->rfcProveedor;
+            $cuenta = $request->cuenta;
+            $clabe = $request->clabe;
+            $banco = $request->banco;
+            $idBanco = $request->idBanco;
+            $sucursal = $request->sucursal;
+            $esCliente = $request->esCliente;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

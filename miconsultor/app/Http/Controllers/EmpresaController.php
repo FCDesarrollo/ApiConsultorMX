@@ -2631,6 +2631,29 @@ class EmpresaController extends Controller
             $idBanco = $request->idBanco;
             $sucursal = $request->sucursal;
             $esCliente = $request->esCliente;
+
+            $maxid = DB::select('SELECT Id FROM mc_flow_cliproctas ORDER BY Id DESC LIMIT 1');
+            $maxid = $maxid[0]->Id + 1;
+
+            $existenciaId = true;
+
+            while(!$existenciaId) {
+                $buscarid = DB::select('SELECT * FROM mc_flow_cliproctas WHERE Id = ?', [$maxid]);
+
+                if(count($buscarid) == 0) {
+                    $existenciaId = false;
+                }
+                else {
+                    $maxid = $maxid + 1;
+                }
+            }
+
+            DB::table('mc_flow_cliproctas')->insert(['Id' => $maxid, 'RFC' => $rfcProveedor, 'Cuenta' => $cuenta, 'Clabe' => $clabe, 'Banco' => $banco, 'IdBanco' => $idBanco, 'Sucursal' => $sucursal, 'Escliente' => $esCliente]);
+
+            $cuentas = DB::select("SELECT mc_flow_cliproctas.*,
+            IF(ISNULL(Clabe), CONCAT(REPLACE(Banco,', S.A.', ''),' ',SUBSTRING(Cuenta, -4)), CONCAT(REPLACE(Banco,', S.A.',''), ' ',SUBSTRING(Clabe, -4))) AS Layout
+            FROM mc_flow_cliproctas WHERE Cuenta IS NOT NULL OR Clabe IS NOT NULL GROUP BY Id ORDER BY Layout");
+            $array["cuentas"] = $cuentas;
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

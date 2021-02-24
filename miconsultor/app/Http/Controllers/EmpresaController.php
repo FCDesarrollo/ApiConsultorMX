@@ -2076,7 +2076,9 @@ class EmpresaController extends Controller
             $CuentasDestino = $request->CuentasDestino;
             $IdsFlwsBancos = $request->idsFlwsBancos;
             $IdsBancosOrigen = $request->IdsBancosOrigen;
-            $CombinacionesBancos = $request->combinacionesBancos; 
+            $CombinacionesBancos = $request->combinacionesBancos;
+            $SucursalesOrigen = $request->sucursalesOrigen;
+            $SucursalesDestino = $request->sucursalesDestino; 
 
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $flujo = DB::select('SELECT * FROM mc_flujosefectivo WHERE id = ?', [$IdsFlw[$x]]);

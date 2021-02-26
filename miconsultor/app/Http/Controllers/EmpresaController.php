@@ -2077,8 +2077,8 @@ class EmpresaController extends Controller
             $IdsFlwsBancos = $request->idsFlwsBancos;
             $IdsBancosOrigen = $request->IdsBancosOrigen;
             $CombinacionesBancos = $request->combinacionesBancos;
-            $SucursalesOrigen = $request->sucursalesOrigen;
-            $SucursalesDestino = $request->sucursalesDestino; 
+            /* $SucursalesOrigen = $request->sucursalesOrigen;
+            $SucursalesDestino = $request->sucursalesDestino;  */
 
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $flujo = DB::select('SELECT * FROM mc_flujosefectivo WHERE id = ?', [$IdsFlw[$x]]);
@@ -2117,7 +2117,7 @@ class EmpresaController extends Controller
             $ImportesPorPagos = $request->ImportesPorPagos;
             $IdsFlwPorPago = $request->idsFlwPorPago;
             $RfcProveedores = $request->rfcProveedores;
-            $ReferenciaNumerica = $request->referenciaNumerica;
+            /* $ReferenciaNumerica = $request->referenciaNumerica; */
               
             $CarpetaDestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
             mkdir($CarpetaDestino . "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor, 0700);
@@ -2135,18 +2135,18 @@ class EmpresaController extends Controller
                 $motivoPago = "prueba motivo";
                 $indicadorComprobanteFiscal = "1";
                 $importeIVA = "000";
-                $sucursal = "0394";
+                /* $sucursal = "0394";
                 $sucursalOrigen = "7008";
-                $sucursalDestino = "0441";
+                $sucursalDestino = "0441"; */
                 for($y=1 ; $y<count($datosLayout["cuentaBeneficiario"]) ; $y++) {
                     $referenciaalfanumerica.= "-$-alfa".($y+1);
                     $numeroConsecutivo.= "-$-00".($y+1);
                     $motivoPago.= "-$-prueba motivo";
                     $indicadorComprobanteFiscal.= "-$-".($y+1);
                     $importeIVA.= "-$-000";
-                    $sucursal.= "-$-0394";
+                    /* $sucursal.= "-$-0394";
                     $sucursalOrigen.= "-$-7008";
-                    $sucursalDestino.= "-$-0441";
+                    $sucursalDestino.= "-$-0441"; */
                 }
                 $datosLayout["referenciaAlfanumerica"] = explode("-$-", $referenciaalfanumerica);
                 $datosLayout["idsFlw"] = explode("-$-", $IdsFlwPorPago[$x]);
@@ -2156,15 +2156,16 @@ class EmpresaController extends Controller
                 $datosLayout["indicadorComprobanteFiscal"] = explode("-$-", $indicadorComprobanteFiscal);
                 $datosLayout["importeIVA"] = explode("-$-", $importeIVA);
                 $datosLayout["RFC"] = explode("-$-", $RfcProveedores[$x]);
-                $datosLayout["sucursal"] = explode("-$-", $sucursal);
-                $datosLayout["sucursalOrigen"] = explode("-$-", $sucursal);
-                $datosLayout["sucursalDestino"] = explode("-$-", $sucursal);
+                /* $datosLayout["sucursal"] = explode("-$-", $sucursal);
+                $datosLayout["sucursalOrigen"] = explode("-$-", $SucursalesOrigen[$x]);
+                $datosLayout["sucursalDestino"] = explode("-$-", $SucursalesDestino[$x]); */
                 
                 $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
                 $urldestino = $CarpetaDestino . $nombrearchivonuevo;
 
-                $resultado = armarLayout($IdUsuario, $IdsBancosOrigen[$x], $CombinacionesBancos[$x], $datosLayout, $ReferenciaNumerica, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, ($x+1), $IdsBancosOrigen);
+                $resultado = armarLayout($IdUsuario, $IdsBancosOrigen[$x], $CombinacionesBancos[$x], $datosLayout/* , $ReferenciaNumerica */, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, ($x+1), $IdsBancosOrigen);
                 $array["resultado"] = $resultado;
+                /* return json_encode($array, JSON_UNESCAPED_UNICODE); */
                 $array["link"] = $resultado["archivo"]["link"];
 
                 $layoutinsertado = DB::table('mc_flw_layouts')->insertGetId(['UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $resultado["archivo"]["link"]]);
@@ -2213,6 +2214,7 @@ class EmpresaController extends Controller
 
             $urlcarpetaaborrar = substr($CarpetaDestino, 0, -1);
             rmdir($urlcarpetaaborrar);
+            //return json_encode($array, JSON_UNESCAPED_UNICODE);
 
             $IdsPago = [];
             $CorreosMandar = [];

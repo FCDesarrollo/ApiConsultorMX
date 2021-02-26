@@ -819,7 +819,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         return $flag;  		
     }
 
-    function armarLayout($IdUsuario, $idBanco, $destino, $datosLayout, $ReferenciaNumerica, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, $Consecutivo, $IdsBancosOrigen) {
+    function armarLayout($IdUsuario, $idBanco, $destino, $datosLayout/* , $ReferenciaNumerica */, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, $Consecutivo, $IdsBancosOrigen) {
         /* $layoutsusuario = DB::select('SELECT mc_flw_layouts_usuarios.*, mc_flw_layouts_config.LinkLayout FROM mc_flw_layouts_usuarios 
         INNER JOIN mc_flw_layouts_config ON mc_flw_layouts_usuarios.IdLayoutConfig = mc_flw_layouts_config.id
         WHERE mc_flw_layouts_usuarios.IdUsuario = ? AND mc_flw_layouts_usuarios.IdBanco = ?', [$IdUsuario, $idBanco]); */
@@ -835,23 +835,47 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
 
         for($x=0 ; $x<count($datosLayout["idsFlw"]) ; $x++) {
             $IdsFlw[$x] = explode(",", $datosLayout["idsFlw"][$x]);
-            $infopagoencontrado = DB::select('SELECT mc_flw_pagos.*,
-            IF(!ISNULL(mc_flow_bancuentas.Cuenta), mc_flow_bancuentas.Cuenta, mc_flow_bancuentas.Clabe) AS CuentaOrigen,
-            IF(!ISNULL(mc_flow_cliproctas.Cuenta), mc_flow_cliproctas.Cuenta, mc_flow_cliproctas.Clabe) AS CuentaDestino 
+            $infopagoencontrado = DB::select("SELECT mc_flw_pagos.*, DATE_FORMAT(mc_flw_pagos.Fecha, '%d%m%y') AS ReferenciaNumerica,
+            IF(!ISNULL(mc_flow_bancuentas.Clabe), mc_flow_bancuentas.Clabe, mc_flow_bancuentas.Cuenta) AS CuentaOrigen,
+            IF(!ISNULL(mc_flow_cliproctas.Clabe), mc_flow_cliproctas.Clabe, mc_flow_cliproctas.Cuenta) AS CuentaDestino 
             FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
             LEFT JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
             LEFT JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id 
-            WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?', [$IdUsuario, 0, $IdsFlw[$x][0]]);
+            WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?", [$IdUsuario, 0, $IdsFlw[$x][0]]);
             $datosLayout["llaveMatch"][$x] = $infopagoencontrado[0]->LlaveMatch;
             $datosLayout["descripcion"][$x] = $infopagoencontrado[0]->LlaveMatch;
-            $datosLayout["numeroCuenta"][$x] = $infopagoencontrado[0]->CuentaOrigen;
+            $clabeBancoOrigen = $infopagoencontrado[0]->CuentaOrigen != null ? count($infopagoencontrado[0]->CuentaOrigen) < 18 ? str_pad_unicode($infopagoencontrado[0]->CuentaOrigen, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->CuentaOrigen : '000000000000000000';
+            $clabeBancoDestino = $infopagoencontrado[0]->CuentaDestino != null ? count($infopagoencontrado[0]->CuentaDestino) < 18 ? str_pad_unicode($infopagoencontrado[0]->CuentaDestino, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->CuentaDestino : '000000000000000000';
+            $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
+            $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
+            $sucursalBancoOrigen = substr($clabeBancoOrigen, 3, 3);
+            $sucursalBancoDestino = substr($clabeBancoDestino, 3, 3);
+            $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11);
+            $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11);
+            $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
+            $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+            $datosLayout["clabeBancoOrigen"][$x] = $clabeBancoOrigen;
+            $datosLayout["clabeBancoDestino"][$x] = $clabeBancoDestino;
+            $datosLayout["codigoBancoOrigen"][$x] = $codigoBancoOrigen;
+            $datosLayout["codigoBancoDestino"][$x] = $codigoBancoDestino;
+            $datosLayout["sucursal"][$x] = $sucursalBancoOrigen;
+            $datosLayout["sucursalOrigen"][$x] = $sucursalBancoOrigen;
+            $datosLayout["sucursalDestino"][$x] = $sucursalBancoDestino;
+            /* $datosLayout["numeroCuenta"][$x] = $infopagoencontrado[0]->CuentaOrigen;
             $datosLayout["numeroCuentaOrigen"][$x] = $infopagoencontrado[0]->CuentaOrigen;
-            $datosLayout["numeroCuentaDestino"][$x] = $infopagoencontrado[0]->CuentaDestino;
+            $datosLayout["numeroCuentaDestino"][$x] = $infopagoencontrado[0]->CuentaDestino; */
+            $datosLayout["numeroCuenta"][$x] = $numeroCuentaOrigen;
+            $datosLayout["numeroCuentaOrigen"][$x] = $numeroCuentaOrigen;
+            $datosLayout["numeroCuentaDestino"][$x] = $numeroCuentaDestino;
+            $datosLayout["digitoControlCuentaOrigen"][$x] = $digitoControlCuentaOrigen;
+            $datosLayout["digitoControlCuentaDestino"][$x] = $digitoControlCuentaDestino;
             $datosLayout["proveedor"][$x] = $infopagoencontrado[0]->Proveedor;
-            $datosLayout["clabe"][$x] = $infopagoencontrado[0]->CuentaDestino;
-            $datosLayout["referenciaNumerica"][$x] = $ReferenciaNumerica;
+            $datosLayout["clabe"][$x] = $clabeBancoDestino;
+            $datosLayout["referenciaNumerica"][$x] = $infopagoencontrado[0]->ReferenciaNumerica;
             $datosLayout["importe"][$x] = number_format($datosLayout["importe"][$x], 2, '','');
         }
+
+        //return $datosLayout;
         
         $layouturl = $layoutsusuario[0]->LinkLayout;
         $layout = fopen($layouturl, "rb");
@@ -863,8 +887,12 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                     $layoutcontent = fread($layout, 1024 * 8);
                 }
                 
-                for($x=0 ; $x<count($datosLayout["idsFlw"]) ; $x++) {
+                if(count($datosLayout["idsFlw"]) > 1) {
                     $layoutcontent.= "\n";
+                }
+
+                for($x=0 ; $x<count($datosLayout["idsFlw"]) ; $x++) {
+                    $datosLayout["layoutContent"][$x] = $layoutcontent;
                     fwrite($nuevolayout, $layoutcontent, 1024 * 8);
                     $contenidolayout = file_get_contents($urldestino);
 
@@ -893,6 +921,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                 $directorio = $RFC . '/' . "Administracion" . '/' . "FinanzasTesoreria" . '/' . "LayoutsTemporales";
                 $target_path = $directorio . '/' . $codigodocumento . ".txt";
                 $resultado["archivo"]["link"] = GetLinkArchivo($target_path, $Servidor, $u_storage, $p_storage);
+                /* $resultado["datosLayout"] = $datosLayout; */
                 if(count($IdsBancosOrigen) == 1) {
                     unlink($urldestino);
                 }
@@ -906,11 +935,12 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $servidor = getServidorNextcloud();
         
         $layoutactual = DB::select('SELECT * FROM mc_flw_layouts WHERE id = ?', [$IdLayout]);
-        $pagoslayout = DB::select("SELECT mc_flw_pagos.*, IF(ISNULL(mc_flow_cliproctas.Clabe), 
-        CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',
+        $pagoslayout = DB::select("SELECT mc_flw_pagos.*, DATE_FORMAT(mc_flw_pagos.Fecha, '%d%m%y') AS ReferenciaNumerica, IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',
         SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',
         SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS CuentaBeneficiaria,
         mc_flow_bancuentas.IdBanco AS IdBancoOrigen,
+        IF(!ISNULL(mc_flow_bancuentas.Clabe), mc_flow_bancuentas.Clabe, mc_flow_bancuentas.Cuenta) AS CuentaOrigen,
+        IF(!ISNULL(mc_flow_cliproctas.Clabe), mc_flow_cliproctas.Clabe, mc_flow_cliproctas.Cuenta) AS CuentaDestino,
         (SELECT mc_flw_layouts_usuarios.IdLayoutConfig FROM mc_flw_layouts_usuarios WHERE
         mc_flw_layouts_usuarios.IdUsuario = mc_flw_pagos.IdUsuario AND mc_flw_layouts_usuarios.IdBanco = IdBancoOrigen) 
         AS IdLayoutConfig FROM mc_flw_pagos 
@@ -927,18 +957,41 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $resultado = '';
         if(count($pagoslayout) > 0) {
             for($x=0 ; $x<count($pagoslayout) ; $x++) {
+                $clabeBancoOrigen = $pagoslayout[$x]->CuentaOrigen != null ? count($pagoslayout[$x]->CuentaOrigen) < 18 ? str_pad_unicode($pagoslayout[$x]->CuentaOrigen, 18, '0', STR_PAD_LEFT) : $pagoslayout[$x]->CuentaOrigen : '000000000000000000';
+                $clabeBancoDestino = $pagoslayout[$x]->CuentaDestino != null ? count($pagoslayout[$x]->CuentaDestino) < 18 ? str_pad_unicode($pagoslayout[$x]->CuentaDestino, 18, '0', STR_PAD_LEFT) : $pagoslayout[$x]->CuentaDestino : '000000000000000000';
+                $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
+                $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
+                $sucursalBancoOrigen = substr($clabeBancoOrigen, 3, 3);
+                $sucursalBancoDestino = substr($clabeBancoDestino, 3, 3);
+                $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11);
+                $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11);
+                $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
+                $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+                $datosLayout["clabeBancoOrigen"][$x] = $clabeBancoOrigen;
+                $datosLayout["clabeBancoDestino"][$x] = $clabeBancoDestino;
+                $datosLayout["codigoBancoOrigen"][$x] = $codigoBancoOrigen;
+                $datosLayout["codigoBancoDestino"][$x] = $codigoBancoDestino;
+                $datosLayout["sucursal"][$x] = $sucursalBancoOrigen;
+                $datosLayout["sucursalOrigen"][$x] = $sucursalBancoOrigen;
+                $datosLayout["sucursalDestino"][$x] = $sucursalBancoDestino;
+                $datosLayout["numeroCuenta"][$x] = $numeroCuentaOrigen;
+                $datosLayout["numeroCuentaOrigen"][$x] = $numeroCuentaOrigen;
+                $datosLayout["numeroCuentaDestino"][$x] = $numeroCuentaDestino;
+                $datosLayout["digitoControlCuentaOrigen"][$x] = $digitoControlCuentaOrigen;
+                $datosLayout["digitoControlCuentaDestino"][$x] = $digitoControlCuentaDestino;
+                $datosLayout["clabe"][$x] = $clabeBancoDestino;
                 $datosLayout["cuentaBeneficiario"][$x] = $pagoslayout[$x]->CuentaBeneficiaria;
                 $datosLayout["importe"][$x] = number_format($pagoslayout[$x]->Importe, 2, '','');
                 $datosLayout["razon"][$x] = $pagoslayout[$x]->Proveedor;
     
                 $datosLayout["nombre"][$x] = $pagoslayout[$x]->Proveedor;
+                $datosLayout["proveedor"][$x] = $pagoslayout[$x]->Proveedor;
     
                 $datosLayout["referenciaAlfanumerica"][$x] = "XXXXXAAAAA";
-                $datosLayout["descripcion"][$x] = "prueba descripción";
-                $datosLayout["referenciaNumerica"][$x] = "12345";
+                $datosLayout["descripcion"][$x] = $pagoslayout[$x]->LlaveMatch;
+                $datosLayout["referenciaNumerica"][$x] = $pagoslayout[$x]->ReferenciaNumerica;
     
                 $datosLayout["numeroConsecutivo"][$x] = "00".($x+1);
-                $datosLayout["clabe"][$x] = "1234567890abcdefgh";
                 $datosLayout["motivoPago"][$x] = "prueba motivo";
                 $datosLayout["indicadorComprobanteFiscal"][$x] = "1";
                 $datosLayout["importeIVA"][$x] = "000";
@@ -964,9 +1017,12 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                     while (!feof($layout)) {
                         $layoutcontent = fread($layout, 1024 * 8);
                     }
+
+                    if(count($datosLayout["cuentaBeneficiario"]) > 1) {
+                        $layoutcontent.= "\n";
+                    }
                     
                     for($x=0 ; $x<count($datosLayout["cuentaBeneficiario"]) ; $x++) {
-                        $layoutcontent.= "\n";
                         fwrite($nuevolayout, $layoutcontent, 1024 * 8);
                         $contenidolayout = file_get_contents($urldestino);
     

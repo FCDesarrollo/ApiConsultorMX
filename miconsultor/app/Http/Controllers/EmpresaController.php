@@ -2661,4 +2661,67 @@ class EmpresaController extends Controller
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    function agregarNuevoProveedor(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $razonSocial = $request->razonSocial;
+            $rfcProveedor = $request->rfcProveedor;
+            $codigo = $request->codigo;
+            $sucursal = $request->sucursal;
+            $idMoneda = $request->idMoneda;
+            $correo1 = $request->correo1;
+            $correo2 = $request->correo2;
+            $correo3 = $request->correo3;
+            $cuenta = $request->cuenta;
+            $clabe = $request->clabe;
+            $banco = $request->banco;
+            $idBanco = $request->idBanco;
+            $sucursalBanco = $request->sucursalBanco;
+            $esCliente = $request->esCliente;
+
+            $maxid = DB::select('SELECT Id FROM mc_flow_cliproctas ORDER BY Id DESC LIMIT 1');
+            $maxid = $maxid[0]->Id + 1;
+
+            $existenciaId = true;
+
+            while(!$existenciaId) {
+                $buscarid = DB::select('SELECT * FROM mc_flow_cliproctas WHERE Id = ?', [$maxid]);
+
+                if(count($buscarid) == 0) {
+                    $existenciaId = false;
+                }
+                else {
+                    $maxid = $maxid + 1;
+                }
+            }
+
+            if($rfcProveedor != "XAXX010101000" && $rfcProveedor != "XEXX010101000") {
+                $buscarproveedor = DB::select("SELECT * FROM mc_catproveedores WHERE rfc = ?", [$rfcProveedor]);
+                if(count($buscarproveedor) === 0) {
+                    DB::table('mc_catproveedores')->insert(['codigo' => $codigo, 'rfc' => $rfcProveedor, 'razonsocial' => $razonSocial, 'sucursal' => $sucursal, 'IdMoneda' => $idMoneda, 'Correo1' => $correo1, 'Correo2' => $correo2, 'Correo3' => $correo3]);
+                }
+                else {
+                    $array["error"] = 41;
+                    return json_encode($array, JSON_UNESCAPED_UNICODE);
+                }
+            }
+            else {
+                DB::table('mc_catproveedores')->insert(['codigo' => $codigo, 'rfc' => $rfcProveedor, 'razonsocial' => $razonSocial, 'sucursal' => $sucursal, 'IdMoneda' => $idMoneda, 'Correo1' => $correo1, 'Correo2' => $correo2, 'Correo3' => $correo3]);
+            }
+
+            DB::table('mc_flow_cliproctas')->insert(['Id' => $maxid, 'RFC' => $rfcProveedor, 'Cuenta' => $cuenta, 'Clabe' => $clabe, 'Banco' => $banco, 'IdBanco' => $idBanco, 'Sucursal' => $sucursalBanco, 'Escliente' => $esCliente]);
+
+            $cuentas = DB::select("SELECT mc_flow_cliproctas.*,
+            IF(ISNULL(Clabe), CONCAT(REPLACE(Banco,', S.A.', ''),' ',SUBSTRING(Cuenta, -4)), CONCAT(REPLACE(Banco,', S.A.',''), ' ',SUBSTRING(Clabe, -4))) AS Layout
+            FROM mc_flow_cliproctas WHERE Cuenta IS NOT NULL OR Clabe IS NOT NULL GROUP BY Id ORDER BY Layout");
+            $array["cuentas"] = $cuentas;
+
+            $proveedores = DB::select('SELECT * FROM mc_catproveedores WHERE mc_catproveedores.rfc IS NOT NULL ORDER BY mc_catproveedores.razonsocial');
+            $array["proveedores"] = $proveedores;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

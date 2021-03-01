@@ -299,6 +299,7 @@ Route::get('traerLayoutsPorIdBanco', 'EmpresaController@traerLayoutsPorIdBanco')
 Route::post('cambiarLayoutElegido', 'EmpresaController@cambiarLayoutElegido');
 Route::post('reenviarCorreoLayout', 'EmpresaController@reenviarCorreoLayout');
 Route::post('agregarCuentaProveedor', 'EmpresaController@agregarCuentaProveedor');
+Route::post('agregarNuevoProveedor', 'EmpresaController@agregarNuevoProveedor');
 
 //ACTUALIZA PERFILES GENERALES
 Route::put('actualizaPerfilesGeneral', 'ActualizarBaseDatosController@actualizaPerfilesGeneral'); // 14/02/2020

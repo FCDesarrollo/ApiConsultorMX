@@ -1914,6 +1914,30 @@ class EmpresaController extends Controller
                         }
                         
                     }
+                    
+                    $fechasInstruccionesAdicionales = $request->fechasInstruccionesAdicionales;
+                    $importesInstruccionesAdicionales = $request->importesInstruccionesAdicionales;
+                    $tiposInstruccionesAdicionales = $request->tiposInstruccionesAdicionales;
+                    $rfcsInstruccionesAdicionales = $request->rfcsInstruccionesAdicionales;
+                    $proveedoresInstruccionesAdicionales = $request->proveedoresInstruccionesAdicionales;
+                    $idsCuentasOrigenInstruccionesAdicionales = $request->idsCuentasOrigenInstruccionesAdicionales;
+                    $idsCuentasDestinoInstruccionesAdicionales = $request->idsCuentasDestinoInstruccionesAdicionales;
+
+                    for ($x = 0; $x < count($fechasInstruccionesAdicionales); $x++) {
+                        $IdPago = DB::table('mc_flw_pagos')->insertGetId(['Fecha' => $fechasInstruccionesAdicionales[$x], 'Importe' => $importesInstruccionesAdicionales[$x], 'Tipo' => $tiposInstruccionesAdicionales[$x], 'RFC' => $rfcsInstruccionesAdicionales[$x], 'Proveedor' => $proveedoresInstruccionesAdicionales[$x], 'IdCuentaOrigen' => $idsCuentasOrigenInstruccionesAdicionales[$x], 'IdCuentaDestino' => $idsCuentasDestinoInstruccionesAdicionales[$x], 'IdUsuario' => $IdUsuario]);
+
+                        DB::table('mc_flw_pagos_det')->insert([
+                            "IdPago" => $IdPago, "Importe" => $importesInstruccionesAdicionales[$x], "ImporteOriginal" => $importesInstruccionesAdicionales[$x], "TipoCambio" => 1
+                        ]);
+
+                        $LlaveMatch = "[m";
+                        for($y=0 ; $y<(6 - strlen($IdPago)) ; $y++) {
+                            $LlaveMatch .= "0";
+                        }
+                        $LlaveMatch .= $IdPago."]";
+                        DB::table('mc_flw_pagos')->where("id", $IdPago)->update(['LlaveMatch' => $LlaveMatch]);
+
+                    }
                 }
             } else {
                 $IdPago = $request->IdPago;

@@ -1923,6 +1923,13 @@ class EmpresaController extends Controller
                     $idsCuentasOrigenInstruccionesAdicionales = $request->idsCuentasOrigenInstruccionesAdicionales;
                     $idsCuentasDestinoInstruccionesAdicionales = $request->idsCuentasDestinoInstruccionesAdicionales;
 
+                    $pagosadicionalesencontrados = DB::select('SELECT * FROM mc_flw_pagos WHERE Tipo <> ? AND IdUsuario = ? AND Layout = ?', [1, $IdUsuario, 0]);
+
+                    for($x = 0 ; $x < count($pagosadicionalesencontrados) ; $x++) {
+                        DB::table('mc_flw_pagos')->where("id", $pagosadicionalesencontrados[$x]->id)->delete();
+                        DB::table('mc_flw_pagos_det')->where("IdPago", $pagosadicionalesencontrados[$x]->id)->delete();
+                    }
+
                     for ($x = 0; $x < count($fechasInstruccionesAdicionales); $x++) {
                         $IdPago = DB::table('mc_flw_pagos')->insertGetId(['Fecha' => $fechasInstruccionesAdicionales[$x], 'Importe' => $importesInstruccionesAdicionales[$x], 'Tipo' => $tiposInstruccionesAdicionales[$x], 'RFC' => $rfcsInstruccionesAdicionales[$x], 'Proveedor' => $proveedoresInstruccionesAdicionales[$x], 'IdCuentaOrigen' => $idsCuentasOrigenInstruccionesAdicionales[$x], 'IdCuentaDestino' => $idsCuentasDestinoInstruccionesAdicionales[$x], 'IdUsuario' => $IdUsuario]);
 
@@ -2065,6 +2072,7 @@ class EmpresaController extends Controller
         if ($valida[0]['error'] === 0) {
             $idspagodet = $request->idspagodet;
             $idspago = $request->idspago;
+            $idspagosadicionales = $request->idspagosadicionales;
             $idusuario = $request->idusuario;
 
             for ($x = 0; $x < count($idspagodet); $x++) {
@@ -2079,6 +2087,11 @@ class EmpresaController extends Controller
                 } else {
                     DB::table('mc_flw_pagos')->where("id", $idspago[$x])->where("IdUsuario", $idusuario)->delete();
                 }
+            }
+
+            for ($x = 0; $x < count($idspagosadicionales); $x++) {
+                DB::table('mc_flw_pagos_det')->where("IdPago", $idspagosadicionales[$x])->delete();
+                DB::table('mc_flw_pagos')->where("id", $idspagosadicionales[$x])->where("IdUsuario", $idusuario)->delete();
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -2101,28 +2114,19 @@ class EmpresaController extends Controller
             $IdsFlwsBancos = $request->idsFlwsBancos;
             $IdsBancosOrigen = $request->IdsBancosOrigen;
             $CombinacionesBancos = $request->combinacionesBancos;
+            $TiposDocumentos = $request->TiposDocumentos;
             /* $SucursalesOrigen = $request->sucursalesOrigen;
             $SucursalesDestino = $request->sucursalesDestino;  */
+            return json_encode($array, JSON_UNESCAPED_UNICODE);
 
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $flujo = DB::select('SELECT * FROM mc_flujosefectivo WHERE id = ?', [$IdsFlw[$x]]);
                 
-                /* $array["flujo"][$x] = $flujo;
-                $array["pendiente"][$x] = $flujo[0]->Pendiente; */
                 if($flujo[0]->Pendiente == "0") {
                     $array["error"] = 58;
                     return json_encode($array, JSON_UNESCAPED_UNICODE);
                 }
             }
-
-            /* for ($x = 0; $x < count($IdsBancosOrigen); $x++) {
-                $layout = DB::select('SELECT * FROM mc_flw_layouts_config WHERE IdBanco = ? AND Destino = ?', [$IdsBancosOrigen[$x], $CombinacionesBancos[$x]]);
-                
-                if(count($layout) == 0) {
-                    $array["error"] = 58;
-                    return json_encode($array, JSON_UNESCAPED_UNICODE);
-                }
-            } */
 
             $IdEmpresa = $request->IdEmpresa;
             $RFC = $request->rfc;

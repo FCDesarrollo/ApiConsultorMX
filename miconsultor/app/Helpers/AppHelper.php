@@ -835,6 +835,8 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
 
         for($x=0 ; $x<count($datosLayout["idsFlw"]) ; $x++) {
             $IdsFlw[$x] = explode(",", $datosLayout["idsFlw"][$x]);
+            $datosLayout["idsflwtransaccion"][$x] = $IdsFlw[$x][0];
+            $datosLayout["tipodocumento"][$x] = $IdsFlw[$x][0] > 0 ? 1 : 2;
             $infopagoencontrado = DB::select("SELECT mc_flw_pagos.*, DATE_FORMAT(mc_flw_pagos.Fecha, '%d%m%y') AS ReferenciaNumerica,
             IF(!ISNULL(mc_flow_bancuentas.Clabe), mc_flow_bancuentas.Clabe, mc_flow_bancuentas.Cuenta) AS CuentaOrigen,
             IF(!ISNULL(mc_flow_cliproctas.Clabe), mc_flow_cliproctas.Clabe, mc_flow_cliproctas.Cuenta) AS CuentaDestino 
@@ -861,9 +863,11 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             $datosLayout["sucursal"][$x] = $sucursalBancoOrigen;
             $datosLayout["sucursalOrigen"][$x] = $sucursalBancoOrigen;
             $datosLayout["sucursalDestino"][$x] = $sucursalBancoDestino;
+
             /* $datosLayout["numeroCuenta"][$x] = $infopagoencontrado[0]->CuentaOrigen;
             $datosLayout["numeroCuentaOrigen"][$x] = $infopagoencontrado[0]->CuentaOrigen;
             $datosLayout["numeroCuentaDestino"][$x] = $infopagoencontrado[0]->CuentaDestino; */
+
             $datosLayout["numeroCuenta"][$x] = $numeroCuentaOrigen;
             $datosLayout["numeroCuentaOrigen"][$x] = $numeroCuentaOrigen;
             $datosLayout["numeroCuentaDestino"][$x] = $numeroCuentaDestino;
@@ -875,7 +879,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             $datosLayout["importe"][$x] = number_format($datosLayout["importe"][$x], 2, '','');
         }
 
-        //return $datosLayout;
+        /* return $datosLayout; */
         
         $layouturl = $layoutsusuario[0]->LinkLayout;
         $layout = fopen($layouturl, "rb");

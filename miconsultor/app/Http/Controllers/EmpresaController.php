@@ -2117,7 +2117,6 @@ class EmpresaController extends Controller
             $TiposDocumentos = $request->TiposDocumentos;
             /* $SucursalesOrigen = $request->sucursalesOrigen;
             $SucursalesDestino = $request->sucursalesDestino;  */
-            return json_encode($array, JSON_UNESCAPED_UNICODE);
 
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $flujo = DB::select('SELECT * FROM mc_flujosefectivo WHERE id = ?', [$IdsFlw[$x]]);
@@ -2192,8 +2191,9 @@ class EmpresaController extends Controller
                 $urldestino = $CarpetaDestino . $nombrearchivonuevo;
 
                 $resultado = armarLayout($IdUsuario, $IdsBancosOrigen[$x], $CombinacionesBancos[$x], $datosLayout/* , $ReferenciaNumerica */, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, ($x+1), $IdsBancosOrigen);
-                $array["resultado"] = $resultado;
+                $array["resultado"][$x] = $resultado;
                 /* return json_encode($array, JSON_UNESCAPED_UNICODE); */
+                
                 $array["link"] = $resultado["archivo"]["link"];
 
                 $layoutinsertado = DB::table('mc_flw_layouts')->insertGetId(['UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $resultado["archivo"]["link"]]);
@@ -2202,6 +2202,7 @@ class EmpresaController extends Controller
                     DB::table('mc_flw_pagos')->where("id", $infopagoencontrado[0]->id)->update(['IdLayout' => $layoutinsertado]);
                 }
             }
+            /* return json_encode($array, JSON_UNESCAPED_UNICODE); */
 
             if (count($IdsBancosOrigen) > 1) {
                 $zip = new ZipArchive();

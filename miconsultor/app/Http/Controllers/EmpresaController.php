@@ -1944,6 +1944,8 @@ class EmpresaController extends Controller
                         $LlaveMatch .= $IdPago."]";
                         DB::table('mc_flw_pagos')->where("id", $IdPago)->update(['LlaveMatch' => $LlaveMatch]);
 
+                        $array["idPago"][$x] = $IdPago;
+
                     }
                 }
             } else {

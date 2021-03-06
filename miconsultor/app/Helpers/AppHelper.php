@@ -836,14 +836,20 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         for($x=0 ; $x<count($datosLayout["idsFlw"]) ; $x++) {
             $IdsFlw[$x] = explode(",", $datosLayout["idsFlw"][$x]);
             $datosLayout["idsflwtransaccion"][$x] = $IdsFlw[$x][0];
-            $datosLayout["tipodocumento"][$x] = $IdsFlw[$x][0] > 0 ? 1 : 2;
-            $infopagoencontrado = DB::select("SELECT mc_flw_pagos.*, DATE_FORMAT(mc_flw_pagos.Fecha, '%d%m%y') AS ReferenciaNumerica,
+            /* $datosLayout["tipodocumento"][$x] = $IdsFlw[$x][0] > 0 ? 1 : 2; */
+            $infopagoencontrado = $datosLayout["tipodocumento"][$x] == "1" ? DB::select("SELECT mc_flw_pagos.*, DATE_FORMAT(mc_flw_pagos.Fecha, '%d%m%y') AS ReferenciaNumerica,
             IF(!ISNULL(mc_flow_bancuentas.Clabe), mc_flow_bancuentas.Clabe, mc_flow_bancuentas.Cuenta) AS CuentaOrigen,
             IF(!ISNULL(mc_flow_cliproctas.Clabe), mc_flow_cliproctas.Clabe, mc_flow_cliproctas.Cuenta) AS CuentaDestino 
             FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
             LEFT JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
             LEFT JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id 
-            WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?", [$IdUsuario, 0, $IdsFlw[$x][0]]);
+            WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?", [$IdUsuario, 0, $IdsFlw[$x][0]]) : DB::select("SELECT mc_flw_pagos.*, DATE_FORMAT(mc_flw_pagos.Fecha, '%d%m%y') AS ReferenciaNumerica,
+            IF(!ISNULL(mc_flow_bancuentas.Clabe), mc_flow_bancuentas.Clabe, mc_flow_bancuentas.Cuenta) AS CuentaOrigen,
+            IF(!ISNULL(mc_flow_cliproctas.Clabe), mc_flow_cliproctas.Clabe, mc_flow_cliproctas.Cuenta) AS CuentaDestino 
+            FROM mc_flw_pagos
+            LEFT JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
+            LEFT JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id 
+            WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?", [$IdUsuario, 0, $IdsFlw[$x][0]]);
             $datosLayout["llaveMatch"][$x] = $infopagoencontrado[0]->LlaveMatch;
             $datosLayout["descripcion"][$x] = $infopagoencontrado[0]->LlaveMatch;
             $clabeBancoOrigen = $infopagoencontrado[0]->CuentaOrigen != null ? count($infopagoencontrado[0]->CuentaOrigen) < 18 ? str_pad_unicode($infopagoencontrado[0]->CuentaOrigen, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->CuentaOrigen : '000000000000000000';

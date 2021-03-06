@@ -2117,6 +2117,7 @@ class EmpresaController extends Controller
             $IdsBancosOrigen = $request->IdsBancosOrigen;
             $CombinacionesBancos = $request->combinacionesBancos;
             $TiposDocumentos = $request->TiposDocumentos;
+            $TiposDocumentosBancos = $request->TiposDocumentosBancos;
             /* $SucursalesOrigen = $request->sucursalesOrigen;
             $SucursalesDestino = $request->sucursalesDestino;  */
 
@@ -2185,6 +2186,7 @@ class EmpresaController extends Controller
                 $datosLayout["indicadorComprobanteFiscal"] = explode("-$-", $indicadorComprobanteFiscal);
                 $datosLayout["importeIVA"] = explode("-$-", $importeIVA);
                 $datosLayout["RFC"] = explode("-$-", $RfcProveedores[$x]);
+                $datosLayout["tipodocumento"] = explode("-$-", $TiposDocumentos[$x]);
                 /* $datosLayout["sucursal"] = explode("-$-", $sucursal);
                 $datosLayout["sucursalOrigen"] = explode("-$-", $SucursalesOrigen[$x]);
                 $datosLayout["sucursalDestino"] = explode("-$-", $SucursalesDestino[$x]); */
@@ -2200,7 +2202,8 @@ class EmpresaController extends Controller
 
                 $layoutinsertado = DB::table('mc_flw_layouts')->insertGetId(['UrlLayout' => $resultado["archivo"]["directorio"], 'NombreLayout' => $resultado["archivo"]["filename"], 'LinkLayout' => $resultado["archivo"]["link"]]);
                 for($y=0 ; $y<count($IdsFlwsBancos[$x]) ; $y++) {
-                    $infopagoencontrado = DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?', [$IdUsuario, 0, $IdsFlwsBancos[$x][$y]]);
+                    $infopagoencontrado = $TiposDocumentosBancos[$x][$y] == 1 ? DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?', [$IdUsuario, 0, $IdsFlwsBancos[$x][$y]]) : DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos 
+                    WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?', [$IdUsuario, 0, $IdsFlwsBancos[$x][$y]]);
                     DB::table('mc_flw_pagos')->where("id", $infopagoencontrado[0]->id)->update(['IdLayout' => $layoutinsertado]);
                 }
             }

@@ -1950,116 +1950,131 @@ class EmpresaController extends Controller
                 }
             } else {
                 $IdPago = $request->IdPago;
+                $Tipo = $request->Tipo;
                 $IdEmpresa = $request->IdEmpresa;
 
-                $pagoencontrado = DB::select("SELECT mc_flw_pagos_det.*, FORMAT(mc_flw_pagos.Importe,2) AS ImportePago, mc_flw_pagos.Proveedor,
-                mc_flw_pagos.IdCuentaOrigen, mc_flow_bancuentas.Nombre AS CuentaOrigen, mc_flw_pagos.IdCuentaDestino,
-                IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',
-                SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',
-                SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS CuentaDestino, mc_flw_pagos.IdLayout FROM mc_flw_pagos_det 
-                INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
-                INNER JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
-                INNER JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?", [$IdFlw, $IdUsuario, 1, $IdPago]);
+                if($Tipo == 1) {
+                    $pagoencontrado = DB::select("SELECT mc_flw_pagos_det.*, FORMAT(mc_flw_pagos.Importe,2) AS ImportePago, mc_flw_pagos.Proveedor,
+                    mc_flw_pagos.IdCuentaOrigen, mc_flow_bancuentas.Nombre AS CuentaOrigen, mc_flw_pagos.IdCuentaDestino,
+                    IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',
+                    SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',
+                    SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS CuentaDestino, mc_flw_pagos.IdLayout FROM mc_flw_pagos_det 
+                    INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                    INNER JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
+                    INNER JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?", [$IdFlw, $IdUsuario, 1, $IdPago]);
 
-                $pagodetantes = DB::select('SELECT mc_flw_pagos.Fecha, 
-                CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
-                CONCAT("$",FORMAT((mc_flw_pagos_det.Importe + mc_flujosefectivo.Pendiente), 2)) AS Total, 
-                CONCAT("$", FORMAT(mc_flw_pagos_det.Importe, 2)) AS Pagado, CONCAT("$", FORMAT(mc_flujosefectivo.Pendiente, 2)) AS Pendiente 
-                FROM mc_flw_pagos_det INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
-                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                    $pagodetantes = DB::select('SELECT mc_flw_pagos.Fecha, 
+                    CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
+                    CONCAT("$",FORMAT((mc_flw_pagos_det.Importe + mc_flujosefectivo.Pendiente), 2)) AS Total, 
+                    CONCAT("$", FORMAT(mc_flw_pagos_det.Importe, 2)) AS Pagado, CONCAT("$", FORMAT(mc_flujosefectivo.Pendiente, 2)) AS Pendiente 
+                    FROM mc_flw_pagos_det INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                    INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
 
-                DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->delete();
+                    DB::table('mc_flw_pagos_det')->where("id", $pagoencontrado[0]->id)->delete();
 
-                $pagodetdespues = DB::select('SELECT mc_flw_pagos.Fecha, 
-                CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
-                CONCAT("$",FORMAT((mc_flw_pagos_det.Importe + mc_flujosefectivo.Pendiente), 2)) AS Total, 
-                CONCAT("$", FORMAT(mc_flw_pagos_det.Importe, 2)) AS Pagado, CONCAT("$", FORMAT(mc_flujosefectivo.Pendiente, 2)) AS Pendiente 
-                FROM mc_flw_pagos_det INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
-                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
-    
-                $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
-                $nombreempresa = $DatosEmpresa[0]->nombreempresa;
-                $usuariostorage = $DatosEmpresa[0]->usuario_storage;
-                $passwordstorage = $DatosEmpresa[0]->password_storage;
+                    $pagodetdespues = DB::select('SELECT mc_flw_pagos.Fecha, 
+                    CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
+                    CONCAT("$",FORMAT((mc_flw_pagos_det.Importe + mc_flujosefectivo.Pendiente), 2)) AS Total, 
+                    CONCAT("$", FORMAT(mc_flw_pagos_det.Importe, 2)) AS Pagado, CONCAT("$", FORMAT(mc_flujosefectivo.Pendiente, 2)) AS Pendiente 
+                    FROM mc_flw_pagos_det INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
+                    INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$pagoencontrado[0]->IdPago]);
+        
+                    $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
+                    $nombreempresa = $DatosEmpresa[0]->nombreempresa;
+                    $usuariostorage = $DatosEmpresa[0]->usuario_storage;
+                    $passwordstorage = $DatosEmpresa[0]->password_storage;
 
-                if (count($pagodetdespues) > 0) {
-                    $importetotalnuevo = DB::select('SELECT SUM(Importe) AS Importe, FORMAT(SUM(Importe), 2) AS ImporteConFormato FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                    if (count($pagodetdespues) > 0) {
+                        $importetotalnuevo = DB::select('SELECT SUM(Importe) AS Importe, FORMAT(SUM(Importe), 2) AS ImporteConFormato FROM mc_flw_pagos_det WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
 
-                    DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
-                        "Importe" => $importetotalnuevo[0]->Importe
-                    ]);
+                        DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update([
+                            "Importe" => $importetotalnuevo[0]->Importe
+                        ]);
 
-                    $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
-                    if (count($infocorreospago) > 0) {
+                        $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                        if (count($infocorreospago) > 0) {
 
-                        $CodigoMensajeNuevo = rand(1000000000, 9999999999);
-                        $ValidarCodigoMensajeNuevo = false;
-                        while ($ValidarCodigoMensajeNuevo) {
-                            $codigomensajeencontrado = DB::select('SELECT * FROM mc_flw_correos WHERE CodigoMensaje = ?', [$CodigoMensajeNuevo]);
-                            if (count($codigomensajeencontrado) == 0) {
-                                $ValidarCodigoMensajeNuevo = true;
+                            $CodigoMensajeNuevo = rand(1000000000, 9999999999);
+                            $ValidarCodigoMensajeNuevo = false;
+                            while ($ValidarCodigoMensajeNuevo) {
+                                $codigomensajeencontrado = DB::select('SELECT * FROM mc_flw_correos WHERE CodigoMensaje = ?', [$CodigoMensajeNuevo]);
+                                if (count($codigomensajeencontrado) == 0) {
+                                    $ValidarCodigoMensajeNuevo = true;
+                                } else {
+                                    $CodigoMensajeNuevo = rand(1000000000, 9999999999);
+                                }
+                            }
+
+                            $data["titulo"] = "Modificación De Pago De " . $nombreempresa;
+                            $data["codigoMensaje"] = $CodigoMensajeNuevo. " (Favor de ignorar el mensaje con código " . $infocorreospago[0]->CodigoMensaje . ")";
+                            $data["cuentaOrigen"] = $pagoencontrado[0]->CuentaOrigen;
+                            $data["cuentaDestino"] = $pagoencontrado[0]->CuentaDestino;
+                            $data["proveedor"] = $pagoencontrado[0]->Proveedor;
+                            $data["importePagado"] = "$".$importetotalnuevo[0]->ImporteConFormato;
+                            $data["detallesPago"] = $pagodetdespues;
+
+                            $Correos = [];
+                            for ($x = 0; $x < count($infocorreospago); $x++) {
+                                $Correos[$x] = $infocorreospago[$x]->Correo;
+                            }
+                            $CorreoPrincipal = $Correos[0];
+                            unset($Correos[0]);
+                            $CorreosCC = array_values($Correos);
+
+                            DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->update(['CodigoMensaje' => $CodigoMensajeNuevo]);
+                            if (count($CorreosCC) == 0) {
+                                Mail::to($CorreoPrincipal)->send(new MensajesLayouts($data));
                             } else {
-                                $CodigoMensajeNuevo = rand(1000000000, 9999999999);
+                                Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesLayouts($data));
                             }
                         }
+                    } else {
+                        DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->where("IdUsuario", $IdUsuario)->delete();
+                        $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
+                        DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->delete();
 
-                        $data["titulo"] = "Modificación De Pago De " . $nombreempresa;
-                        $data["codigoMensaje"] = $CodigoMensajeNuevo. " (Favor de ignorar el mensaje con código " . $infocorreospago[0]->CodigoMensaje . ")";
-                        $data["cuentaOrigen"] = $pagoencontrado[0]->CuentaOrigen;
-                        $data["cuentaDestino"] = $pagoencontrado[0]->CuentaDestino;
-                        $data["proveedor"] = $pagoencontrado[0]->Proveedor;
-                        $data["importePagado"] = "$".$importetotalnuevo[0]->ImporteConFormato;
-                        $data["detallesPago"] = $pagodetdespues;
+                        if (count($infocorreospago) > 0) {
 
-                        $Correos = [];
-                        for ($x = 0; $x < count($infocorreospago); $x++) {
-                            $Correos[$x] = $infocorreospago[$x]->Correo;
-                        }
-                        $CorreoPrincipal = $Correos[0];
-                        unset($Correos[0]);
-                        $CorreosCC = array_values($Correos);
+                            $data["titulo"] = "Pago De " . $nombreempresa . " Cancelado";
+                            $data["codigoMensaje"] = $infocorreospago[0]->CodigoMensaje ." (Cancelado)";
+                            $data["cuentaOrigen"] = $pagoencontrado[0]->CuentaOrigen;
+                            $data["cuentaDestino"] = $pagoencontrado[0]->CuentaDestino;
+                            $data["proveedor"] = $pagoencontrado[0]->Proveedor;
+                            $data["importePagado"] = $pagoencontrado[0]->ImportePago;
+                            $data["detallesPago"] = $pagodetantes;
 
-                        DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->update(['CodigoMensaje' => $CodigoMensajeNuevo]);
-                        if (count($CorreosCC) == 0) {
-                            Mail::to($CorreoPrincipal)->send(new MensajesLayouts($data));
-                        } else {
-                            Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesLayouts($data));
-                        }
-                    }
-                } else {
-                    DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->where("IdUsuario", $IdUsuario)->delete();
-                    $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$pagoencontrado[0]->IdPago]);
-                    DB::table('mc_flw_correos')->where("IdPago", $pagoencontrado[0]->IdPago)->delete();
+                            $Correos = [];
+                            for ($x = 0; $x < count($infocorreospago); $x++) {
+                                $Correos[$x] = $infocorreospago[$x]->Correo;
+                            }
+                            $CorreoPrincipal = $Correos[0];
+                            unset($Correos[0]);
+                            $CorreosCC = array_values($Correos);
 
-                    if (count($infocorreospago) > 0) {
-
-                        $data["titulo"] = "Pago De " . $nombreempresa . " Cancelado";
-                        $data["codigoMensaje"] = $infocorreospago[0]->CodigoMensaje ." (Cancelado)";
-                        $data["cuentaOrigen"] = $pagoencontrado[0]->CuentaOrigen;
-                        $data["cuentaDestino"] = $pagoencontrado[0]->CuentaDestino;
-                        $data["proveedor"] = $pagoencontrado[0]->Proveedor;
-                        $data["importePagado"] = $pagoencontrado[0]->ImportePago;
-                        $data["detallesPago"] = $pagodetantes;
-
-                        $Correos = [];
-                        for ($x = 0; $x < count($infocorreospago); $x++) {
-                            $Correos[$x] = $infocorreospago[$x]->Correo;
-                        }
-                        $CorreoPrincipal = $Correos[0];
-                        unset($Correos[0]);
-                        $CorreosCC = array_values($Correos);
-
-                        if (count($CorreosCC) == 0) {
-                            Mail::to($CorreoPrincipal)->send(new MensajesLayouts($data));
-                        } else {
-                            Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesLayouts($data));
+                            if (count($CorreosCC) == 0) {
+                                Mail::to($CorreoPrincipal)->send(new MensajesLayouts($data));
+                            } else {
+                                Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesLayouts($data));
+                            }
                         }
                     }
+
+                    DB::table('mc_flujosefectivo')->where("id", $pagoencontrado[0]->IdFlw)->update(['Pendiente' => DB::raw('Pendiente + ' . $pagoencontrado[0]->Importe), 'ImporteOriginal' => DB::raw('ImporteOriginal + ' . $pagoencontrado[0]->ImporteOriginal)]);
+
+                    $respuesta = actualizarLayout($IdUsuario, $pagoencontrado[0]->IdLayout, $request->rfc, $usuariostorage, $passwordstorage);
                 }
+                else {
+                    $infopago = DB::select('SELECT * FROM mc_flw_pagos WHERE IdLayout = (SELECT IdLayout FROM mc_flw_pagos WHERE id = ?)', [$IdPago]);
+                    DB::table('mc_flw_pagos_det')->where("IdPago", $IdPago)->delete();
+                    DB::table('mc_flw_pagos')->where("id", $IdPago)->where("IdUsuario", $IdUsuario)->delete();
 
-                DB::table('mc_flujosefectivo')->where("id", $pagoencontrado[0]->IdFlw)->update(['Pendiente' => DB::raw('Pendiente + ' . $pagoencontrado[0]->Importe), 'ImporteOriginal' => DB::raw('ImporteOriginal + ' . $pagoencontrado[0]->ImporteOriginal)]);
+                    $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
+                    /* $nombreempresa = $DatosEmpresa[0]->nombreempresa; */
+                    $usuariostorage = $DatosEmpresa[0]->usuario_storage;
+                    $passwordstorage = $DatosEmpresa[0]->password_storage;
 
-                $respuesta = actualizarLayout($IdUsuario, $pagoencontrado[0]->IdLayout, $request->rfc, $usuariostorage, $passwordstorage);
+                    $respuesta = actualizarLayout($IdUsuario, $infopago[0]->IdLayout, $request->rfc, $usuariostorage, $passwordstorage);
+                }
                 $array["respuesta"] = $respuesta;
             }
         }
@@ -2111,6 +2126,7 @@ class EmpresaController extends Controller
             $PagosOriginales = $request->PagosOriginales;
             $TiposCambio = $request->TiposCambio;
             $Correos = $request->Correos;
+            $CorreosPagosAdicionales = $request->CorreosPagosAdicionales;
             $CuentasOrigen = $request->CuentasOrigen;
             $CuentasDestino = $request->CuentasDestino;
             $IdsFlwsBancos = $request->idsFlwsBancos;
@@ -2120,6 +2136,7 @@ class EmpresaController extends Controller
             $TiposDocumentosBancos = $request->TiposDocumentosBancos;
             /* $SucursalesOrigen = $request->sucursalesOrigen;
             $SucursalesDestino = $request->sucursalesDestino;  */
+            return json_encode($array, JSON_UNESCAPED_UNICODE);
 
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $flujo = DB::select('SELECT * FROM mc_flujosefectivo WHERE id = ?', [$IdsFlw[$x]]);
@@ -2191,7 +2208,8 @@ class EmpresaController extends Controller
                 $datosLayout["sucursalOrigen"] = explode("-$-", $SucursalesOrigen[$x]);
                 $datosLayout["sucursalDestino"] = explode("-$-", $SucursalesDestino[$x]); */
                 
-                $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $x . ".txt";
+                /* $nombrearchivonuevo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . ($x+1) . ".txt"; */
+                $nombrearchivonuevo = $IdUsuario . $FechaServidor . ($x+1) . ".txt";
                 $urldestino = $CarpetaDestino . $nombrearchivonuevo;
 
                 $resultado = armarLayout($IdUsuario, $IdsBancosOrigen[$x], $CombinacionesBancos[$x], $datosLayout/* , $ReferenciaNumerica */, $nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, $FechaServidor, ($x+1), $IdsBancosOrigen);
@@ -2204,7 +2222,12 @@ class EmpresaController extends Controller
                 for($y=0 ; $y<count($IdsFlwsBancos[$x]) ; $y++) {
                     $infopagoencontrado = $TiposDocumentosBancos[$x][$y] == 1 ? DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?', [$IdUsuario, 0, $IdsFlwsBancos[$x][$y]]) : DB::select('SELECT mc_flw_pagos.* FROM mc_flw_pagos 
                     WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?', [$IdUsuario, 0, $IdsFlwsBancos[$x][$y]]);
-                    DB::table('mc_flw_pagos')->where("id", $infopagoencontrado[0]->id)->update(['IdLayout' => $layoutinsertado]);
+                    if($TiposDocumentosBancos[$x][$y] == 1) {
+                        DB::table('mc_flw_pagos')->where("id", $infopagoencontrado[0]->id)->update(['IdLayout' => $layoutinsertado]);
+                    }
+                    else {
+                        DB::table('mc_flw_pagos')->where("id", $infopagoencontrado[0]->id)->update(['IdLayout' => $layoutinsertado, 'Layout' => 1]);
+                    }
                 }
             }
             /* return json_encode($array, JSON_UNESCAPED_UNICODE); */

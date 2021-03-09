@@ -8,6 +8,7 @@ use Mail;
 use App\Mail\MensajesValidacion;
 use App\Mail\MensajesGenerales;
 use App\Mail\MensajesLayouts;
+use App\Mail\MensajesLayoutsPagosAdicionales;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
@@ -2136,7 +2137,56 @@ class EmpresaController extends Controller
             $TiposDocumentosBancos = $request->TiposDocumentosBancos;
             /* $SucursalesOrigen = $request->sucursalesOrigen;
             $SucursalesDestino = $request->sucursalesDestino;  */
-            return json_encode($array, JSON_UNESCAPED_UNICODE);
+
+            /* for($x=0 ; $x<count($CorreosPagosAdicionales) ; $x++) {
+                if(count($CorreosPagosAdicionales[$x]) > 0) {
+                    $pagodetalles = DB::select('SELECT * FROM mc_flw_pagos WHERE id = ?', [$CorreosPagosAdicionales[$x][0]["idPago"]]);
+                    $CorreosEnviarPagosAdicionales = [];
+                    $count = 0;
+                    for($y=0 ; $y<count($CorreosPagosAdicionales[$x]) ; $y++) {
+                        if($CorreosPagosAdicionales[$x][$y]["enviar"]) {
+                            $CorreosEnviarPagosAdicionales[$count] = $CorreosPagosAdicionales[$x][$y]["correo"];
+                            $count++;
+                        }
+                    }
+                    if(count($CorreosEnviarPagosAdicionales) > 0) {
+                        $CorreoPrincipalPagosAdicionales = $CorreosEnviarPagosAdicionales[0];
+                        unset($CorreosEnviarPagosAdicionales[0]);
+                        $CorreosCCPagosAdicionales = array_values($CorreosEnviarPagosAdicionales);
+
+                        $CodigoMensajePagosAdicionales = rand(1000000000, 9999999999);
+                        $ValidarCodigoMensajePagosAdicionales = false;
+                        while ($ValidarCodigoMensajePagosAdicionales) {
+                            $codigomensajeencontradopagosadicionales = DB::select('SELECT * FROM mc_flw_correos WHERE CodigoMensaje = ?', [$CodigoMensajePagosAdicionales]);
+                            if (count($codigomensajeencontradopagosadicionales) == 0) {
+                                $ValidarCodigoMensajePagosAdicionales = true;
+                            } else {
+                                $CodigoMensajePagosAdicionales = rand(1000000000, 9999999999);
+                            }
+                        }
+
+                        $data["titulo"] = "Nueva Pago De " . $NombreEmpresa;
+                        $data["codigoMensaje"] = $CodigoMensajePagosAdicionales;
+                        $data["cuentaOrigen"] = $pagodetalles[0]->cuentaOrigen;
+                        $data["cuentaDestino"] = $pagodetalles[0]->cuentaDestino;
+                        $data["proveedor"] = $pagodetalles[0]->Proveedor;
+                        $data["importePagado"] = $pagodetalles[0]->Importe;
+                        $data["detallesPago"] = $pagodetalles[0];
+
+                        DB::table('mc_flw_correos')->insert(['IdPago' => $CorreosPagosAdicionales[$x][0]["idPago"], 'Correo' => $CorreoPrincipalPagosAdicionales, 'Tipo' => 1, 'CodigoMensaje' => $CodigoMensajePagosAdicionales]);
+                        if (count($CorreosCCPagosAdicionales) == 0) {
+                            Mail::to($CorreoPrincipalPagosAdicionales)->send(new MensajesLayouts($data));
+                        } else {
+                            Mail::to($CorreoPrincipalPagosAdicionales)->cc($CorreosCCPagosAdicionales)->send(new MensajesLayouts($data));
+                            for ($y = 0; $y < count($CorreosCCPagosAdicionales); $y++) {
+                                DB::table('mc_flw_correos')->insert(['IdPago' => $CorreosPagosAdicionales[$x][0]["idPago"], 'Correo' => $CorreosCCPagosAdicionales[$y], 'Tipo' => 2, 'CodigoMensaje' => $CodigoMensajePagosAdicionales]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return json_encode($array, JSON_UNESCAPED_UNICODE); */
 
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $flujo = DB::select('SELECT * FROM mc_flujosefectivo WHERE id = ?', [$IdsFlw[$x]]);

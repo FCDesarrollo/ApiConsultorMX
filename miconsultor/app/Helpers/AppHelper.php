@@ -923,7 +923,8 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             }
             fclose($layout);
 
-            $codigoarchivo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $Consecutivo;
+            /* $codigoarchivo = "Layout_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor . "_" . $Consecutivo; */
+            $codigoarchivo = $IdUsuario . $FechaServidor . $Consecutivo;
             $consecutivo = "";
             $resultado = subirArchivoNextcloud($nombrearchivonuevo, $urldestino, $RFC, $Servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
             if ($resultado["archivo"]["error"] == 0) {

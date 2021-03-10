@@ -2138,56 +2138,6 @@ class EmpresaController extends Controller
             /* $SucursalesOrigen = $request->sucursalesOrigen;
             $SucursalesDestino = $request->sucursalesDestino;  */
 
-            /* for($x=0 ; $x<count($CorreosPagosAdicionales) ; $x++) {
-                if(count($CorreosPagosAdicionales[$x]) > 0) {
-                    $pagodetalles = DB::select('SELECT * FROM mc_flw_pagos WHERE id = ?', [$CorreosPagosAdicionales[$x][0]["idPago"]]);
-                    $CorreosEnviarPagosAdicionales = [];
-                    $count = 0;
-                    for($y=0 ; $y<count($CorreosPagosAdicionales[$x]) ; $y++) {
-                        if($CorreosPagosAdicionales[$x][$y]["enviar"]) {
-                            $CorreosEnviarPagosAdicionales[$count] = $CorreosPagosAdicionales[$x][$y]["correo"];
-                            $count++;
-                        }
-                    }
-                    if(count($CorreosEnviarPagosAdicionales) > 0) {
-                        $CorreoPrincipalPagosAdicionales = $CorreosEnviarPagosAdicionales[0];
-                        unset($CorreosEnviarPagosAdicionales[0]);
-                        $CorreosCCPagosAdicionales = array_values($CorreosEnviarPagosAdicionales);
-
-                        $CodigoMensajePagosAdicionales = rand(1000000000, 9999999999);
-                        $ValidarCodigoMensajePagosAdicionales = false;
-                        while ($ValidarCodigoMensajePagosAdicionales) {
-                            $codigomensajeencontradopagosadicionales = DB::select('SELECT * FROM mc_flw_correos WHERE CodigoMensaje = ?', [$CodigoMensajePagosAdicionales]);
-                            if (count($codigomensajeencontradopagosadicionales) == 0) {
-                                $ValidarCodigoMensajePagosAdicionales = true;
-                            } else {
-                                $CodigoMensajePagosAdicionales = rand(1000000000, 9999999999);
-                            }
-                        }
-
-                        $data["titulo"] = "Nueva Pago De " . $NombreEmpresa;
-                        $data["codigoMensaje"] = $CodigoMensajePagosAdicionales;
-                        $data["cuentaOrigen"] = $pagodetalles[0]->cuentaOrigen;
-                        $data["cuentaDestino"] = $pagodetalles[0]->cuentaDestino;
-                        $data["proveedor"] = $pagodetalles[0]->Proveedor;
-                        $data["importePagado"] = $pagodetalles[0]->Importe;
-                        $data["detallesPago"] = $pagodetalles[0];
-
-                        DB::table('mc_flw_correos')->insert(['IdPago' => $CorreosPagosAdicionales[$x][0]["idPago"], 'Correo' => $CorreoPrincipalPagosAdicionales, 'Tipo' => 1, 'CodigoMensaje' => $CodigoMensajePagosAdicionales]);
-                        if (count($CorreosCCPagosAdicionales) == 0) {
-                            Mail::to($CorreoPrincipalPagosAdicionales)->send(new MensajesLayouts($data));
-                        } else {
-                            Mail::to($CorreoPrincipalPagosAdicionales)->cc($CorreosCCPagosAdicionales)->send(new MensajesLayouts($data));
-                            for ($y = 0; $y < count($CorreosCCPagosAdicionales); $y++) {
-                                DB::table('mc_flw_correos')->insert(['IdPago' => $CorreosPagosAdicionales[$x][0]["idPago"], 'Correo' => $CorreosCCPagosAdicionales[$y], 'Tipo' => 2, 'CodigoMensaje' => $CodigoMensajePagosAdicionales]);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return json_encode($array, JSON_UNESCAPED_UNICODE); */
-
             for ($x = 0; $x < count($IdsFlw); $x++) {
                 $flujo = DB::select('SELECT * FROM mc_flujosefectivo WHERE id = ?', [$IdsFlw[$x]]);
                 
@@ -2301,7 +2251,8 @@ class EmpresaController extends Controller
                 $rutaFinal = $CarpetaDestino;
                 rename($zipname, "$rutaFinal/$zipname");
 
-                $codigoarchivo = "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor;
+                /* $codigoarchivo = "Layouts_" . $IdUsuario . "_" . $RFC . "_" . $FechaServidor; */
+                $codigoarchivo = $IdUsuario . $FechaServidor;
                 $consecutivo = "";
                 $resultado = subirArchivoNextcloud($zipname, "$rutaFinal/$zipname", $RFC, $Servidor, $u_storage, $p_storage, "Administracion", "FinanzasTesoreria", "LayoutsTemporales", $codigoarchivo, $consecutivo);
                 if ($resultado["archivo"]["error"] == 0) {
@@ -2406,6 +2357,69 @@ class EmpresaController extends Controller
                         Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesLayouts($data));
                         for ($y = 0; $y < count($CorreosCC); $y++) {
                             DB::table('mc_flw_correos')->insert(['IdPago' => $IdsPago[$x], 'Correo' => $CorreosCC[$y], 'Tipo' => 2, 'CodigoMensaje' => $CodigoMensaje]);
+                        }
+                    }
+                }
+            }
+
+            for($x=0 ; $x<count($CorreosPagosAdicionales) ; $x++) {
+                if(count($CorreosPagosAdicionales[$x]) > 0) {
+                    $pagodetalles = DB::select("SELECT mc_flw_pagos.Fecha, CONCAT('$', FORMAT(mc_flw_pagos.Importe, 2)) AS Importe,
+                    (
+                    CASE
+                        WHEN mc_flw_pagos.Tipo = 2 THEN 'Anticipo a proveedores'
+                        WHEN mc_flw_pagos.Tipo = 3 THEN 'Pago a prestamos a acreedores'
+                        WHEN mc_flw_pagos.Tipo = 4 THEN 'Entrega de prestamos a deudores'
+                        ELSE 'Flujo de efectivo'
+                    END
+                    ) AS TipoPago,
+                    mc_flw_pagos.Proveedor , mc_flow_bancuentas.Nombre AS cuentaOrigen,
+                    IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',
+                    SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',
+                    SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino FROM mc_flw_pagos
+                    LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
+                    LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino
+                    WHERE mc_flw_pagos.id = ?", [$CorreosPagosAdicionales[$x][0]["idPago"]]);
+                    $CorreosEnviarPagosAdicionales = [];
+                    $count = 0;
+                    for($y=0 ; $y<count($CorreosPagosAdicionales[$x]) ; $y++) {
+                        if($CorreosPagosAdicionales[$x][$y]["enviar"]) {
+                            $CorreosEnviarPagosAdicionales[$count] = $CorreosPagosAdicionales[$x][$y]["correo"];
+                            $count++;
+                        }
+                    }
+                    if(count($CorreosEnviarPagosAdicionales) > 0) {
+                        $CorreoPrincipalPagosAdicionales = $CorreosEnviarPagosAdicionales[0];
+                        unset($CorreosEnviarPagosAdicionales[0]);
+                        $CorreosCCPagosAdicionales = array_values($CorreosEnviarPagosAdicionales);
+
+                        $CodigoMensajePagosAdicionales = rand(1000000000, 9999999999);
+                        $ValidarCodigoMensajePagosAdicionales = false;
+                        while ($ValidarCodigoMensajePagosAdicionales) {
+                            $codigomensajeencontradopagosadicionales = DB::select('SELECT * FROM mc_flw_correos WHERE CodigoMensaje = ?', [$CodigoMensajePagosAdicionales]);
+                            if (count($codigomensajeencontradopagosadicionales) == 0) {
+                                $ValidarCodigoMensajePagosAdicionales = true;
+                            } else {
+                                $CodigoMensajePagosAdicionales = rand(1000000000, 9999999999);
+                            }
+                        }
+
+                        $data["titulo"] = "Nueva Pago De " . $NombreEmpresa;
+                        $data["codigoMensaje"] = $CodigoMensajePagosAdicionales;
+                        $data["cuentaOrigen"] = $pagodetalles[0]->cuentaOrigen;
+                        $data["cuentaDestino"] = $pagodetalles[0]->cuentaDestino;
+                        $data["proveedor"] = $pagodetalles[0]->Proveedor;
+                        $data["importePagado"] = $pagodetalles[0]->Importe;
+                        $data["detallesPago"] = $pagodetalles;
+
+                        DB::table('mc_flw_correos')->insert(['IdPago' => $CorreosPagosAdicionales[$x][0]["idPago"], 'Correo' => $CorreoPrincipalPagosAdicionales, 'Tipo' => 1, 'CodigoMensaje' => $CodigoMensajePagosAdicionales]);
+                        if (count($CorreosCCPagosAdicionales) == 0) {
+                            Mail::to($CorreoPrincipalPagosAdicionales)->send(new MensajesLayoutsPagosAdicionales($data));
+                        } else {
+                            Mail::to($CorreoPrincipalPagosAdicionales)->cc($CorreosCCPagosAdicionales)->send(new MensajesLayoutsPagosAdicionales($data));
+                            for ($y = 0; $y < count($CorreosCCPagosAdicionales); $y++) {
+                                DB::table('mc_flw_correos')->insert(['IdPago' => $CorreosPagosAdicionales[$x][0]["idPago"], 'Correo' => $CorreosCCPagosAdicionales[$y], 'Tipo' => 2, 'CodigoMensaje' => $CodigoMensajePagosAdicionales]);
+                            }
                         }
                     }
                 }

@@ -409,3 +409,7 @@ Route::post('servicioscontratadosRFC', 'AdministradorController@servicioscontrat
 Route::post('serviciosfcmodulo', 'AdministradorController@serviciosfcmodulo');
 Route::get('getDatosHome', 'EmpresaController@getDatosHome');
 Route::post('olvidoContra', 'GeneralesController@olvidoContra');
+
+//NUEVA CONTABILIDAD
+Route::get('traerTiposDocumentosNuevaContabilidad', 'NuevaContabilidadController@traerTiposDocumentosNuevaContabilidad');
+Route::get('traerDocumentosNuevaContabilidad', 'NuevaContabilidadController@traerDocumentosNuevaContabilidad');

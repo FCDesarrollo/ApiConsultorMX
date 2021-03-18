@@ -2066,13 +2066,57 @@ class EmpresaController extends Controller
                 }
                 else {
                     $infopago = DB::select('SELECT * FROM mc_flw_pagos WHERE IdLayout = (SELECT IdLayout FROM mc_flw_pagos WHERE id = ?)', [$IdPago]);
+                    $pagodetalles = DB::select("SELECT mc_flw_pagos.Fecha, CONCAT('$', FORMAT(mc_flw_pagos.Importe, 2)) AS Importe,
+                        (
+                        CASE
+                            WHEN mc_flw_pagos.Tipo = 2 THEN 'Anticipo a proveedores'
+                            WHEN mc_flw_pagos.Tipo = 3 THEN 'Pago a prestamos a acreedores'
+                            WHEN mc_flw_pagos.Tipo = 4 THEN 'Entrega de prestamos a deudores'
+                            ELSE 'Flujo de efectivo'
+                        END
+                        ) AS TipoPago,
+                        mc_flw_pagos.Proveedor , mc_flow_bancuentas.Nombre AS cuentaOrigen,
+                        IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',
+                        SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',
+                        SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino FROM mc_flw_pagos
+                        LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
+                        LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino
+                        WHERE mc_flw_pagos.id = ?", [$IdPago]);
                     DB::table('mc_flw_pagos_det')->where("IdPago", $IdPago)->delete();
                     DB::table('mc_flw_pagos')->where("id", $IdPago)->where("IdUsuario", $IdUsuario)->delete();
 
                     $DatosEmpresa = DB::connection("General")->select("SELECT nombreempresa, usuario_storage, password_storage FROM mc1000 WHERE idempresa = $IdEmpresa");
-                    /* $nombreempresa = $DatosEmpresa[0]->nombreempresa; */
+                    $nombreempresa = $DatosEmpresa[0]->nombreempresa;
                     $usuariostorage = $DatosEmpresa[0]->usuario_storage;
                     $passwordstorage = $DatosEmpresa[0]->password_storage;
+
+                    $infocorreospago = DB::select('SELECT * FROM mc_flw_correos WHERE IdPago = ?', [$IdPago]);
+                    DB::table('mc_flw_correos')->where("IdPago", $IdPago)->delete();
+
+                    if (count($infocorreospago) > 0) {
+
+                        $data["titulo"] = "Pago De " . $nombreempresa . " Cancelado";
+                        $data["codigoMensaje"] = $infocorreospago[0]->CodigoMensaje ." (Cancelado)";
+                        $data["cuentaOrigen"] = $pagodetalles[0]->cuentaOrigen;
+                        $data["cuentaDestino"] = $pagodetalles[0]->cuentaDestino;
+                        $data["proveedor"] = $pagodetalles[0]->Proveedor;
+                        $data["importePagado"] = $pagodetalles[0]->Importe;
+                        $data["detallesPago"] = $pagodetalles;
+
+                        $Correos = [];
+                        for ($x = 0; $x < count($infocorreospago); $x++) {
+                            $Correos[$x] = $infocorreospago[$x]->Correo;
+                        }
+                        $CorreoPrincipal = $Correos[0];
+                        unset($Correos[0]);
+                        $CorreosCC = array_values($Correos);
+
+                        if (count($CorreosCC) == 0) {
+                            Mail::to($CorreoPrincipal)->send(new MensajesLayoutsPagosAdicionales($data));
+                        } else {
+                            Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesLayoutsPagosAdicionales($data));
+                        }
+                    }
 
                     $respuesta = actualizarLayout($IdUsuario, $infopago[0]->IdLayout, $request->rfc, $usuariostorage, $passwordstorage);
                 }
@@ -2697,6 +2741,7 @@ class EmpresaController extends Controller
             $importePagado = $request->importePagado;
             $correo = $request->correo;
             $forma = $request->forma;
+            $tipoPago = $request->tipoPago;
 
             $data["titulo"] = $titulo;
             $data["codigoMensaje"] = $codigoMensaje;
@@ -2705,12 +2750,28 @@ class EmpresaController extends Controller
             $data["proveedor"] = $proveedor;
             $data["importePagado"] = $importePagado;
 
-            $detallespago = DB::select('SELECT mc_flw_pagos.Fecha, 
+            $detallespago = $tipoPago == 1 ? DB::select('SELECT mc_flw_pagos.Fecha, 
                 CONCAT(IF(ISNULL(mc_flujosefectivo.Serie),"Sin Serie" ,mc_flujosefectivo.Serie),"-" ,mc_flujosefectivo.Folio) AS SerieFolio, 
                 CONCAT("$",FORMAT((mc_flw_pagos_det.Importe + mc_flujosefectivo.Pendiente), 2)) AS Total, 
                 CONCAT("$", FORMAT(mc_flw_pagos_det.Importe, 2)) AS Pagado, CONCAT("$", FORMAT(mc_flujosefectivo.Pendiente, 2)) AS Pendiente 
                 FROM mc_flw_pagos_det INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
-                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$idPago]);
+                INNER JOIN mc_flujosefectivo ON mc_flw_pagos_det.IdFlw = mc_flujosefectivo.id WHERE mc_flw_pagos_det.IdPago = ?', [$idPago]) : 
+                DB::select("SELECT mc_flw_pagos.Fecha, CONCAT('$', FORMAT(mc_flw_pagos.Importe, 2)) AS Importe,
+                (
+                CASE
+                    WHEN mc_flw_pagos.Tipo = 2 THEN 'Anticipo a proveedores'
+                    WHEN mc_flw_pagos.Tipo = 3 THEN 'Pago a prestamos a acreedores'
+                    WHEN mc_flw_pagos.Tipo = 4 THEN 'Entrega de prestamos a deudores'
+                    ELSE 'Flujo de efectivo'
+                END
+                ) AS TipoPago,
+                mc_flw_pagos.Proveedor , mc_flow_bancuentas.Nombre AS cuentaOrigen,
+                IF(ISNULL(mc_flow_cliproctas.Clabe), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.', ''),' ',
+                SUBSTRING(mc_flow_cliproctas.Cuenta, -4)), CONCAT(REPLACE(mc_flow_cliproctas.Banco,', S.A.',''), ' ',
+                SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS cuentaDestino FROM mc_flw_pagos
+                LEFT JOIN mc_flow_bancuentas ON mc_flow_bancuentas.IdCuenta = mc_flw_pagos.IdCuentaOrigen
+                LEFT JOIN mc_flow_cliproctas ON mc_flow_cliproctas.Id = mc_flw_pagos.IdCuentaDestino
+                WHERE mc_flw_pagos.id = ?", [$idPago]);
             $data["detallesPago"] = $detallespago;
 
             if($forma === 2) {
@@ -2731,14 +2792,24 @@ class EmpresaController extends Controller
                     }
                     
                     DB::table('mc_flw_correos')->insert(['IdPago' => $idPago, 'Correo' => $correo, 'Tipo' => 3, 'CodigoMensaje' => $codigoMensaje]);
-                    Mail::to($correo)->send(new MensajesLayouts($data));
+                    if($tipoPago == 1) {
+                        Mail::to($correo)->send(new MensajesLayouts($data));
+                    }
+                    else {
+                        Mail::to($correo)->send(new MensajesLayoutsPagosAdicionales($data));
+                    }
                 }
                 else {
                     $array["error"] = -2;
                 }
             }
             else {
-                Mail::to($correo)->send(new MensajesLayouts($data));
+                if($tipoPago == 1) {
+                    Mail::to($correo)->send(new MensajesLayouts($data));
+                }
+                else {
+                    Mail::to($correo)->send(new MensajesLayoutsPagosAdicionales($data));
+                }
             }
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

@@ -838,22 +838,41 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             $datosLayout["idsflwtransaccion"][$x] = $IdsFlw[$x][0];
             /* $datosLayout["tipodocumento"][$x] = $IdsFlw[$x][0] > 0 ? 1 : 2; */
             $infopagoencontrado = $datosLayout["tipodocumento"][$x] == "1" ? DB::select("SELECT mc_flw_pagos.*, DATE_FORMAT(mc_flw_pagos.Fecha, '%d%m%y') AS ReferenciaNumerica,
-            IF(!ISNULL(mc_flow_bancuentas.Clabe), mc_flow_bancuentas.Clabe, mc_flow_bancuentas.Cuenta) AS CuentaOrigen,
-            IF(!ISNULL(mc_flow_cliproctas.Clabe), mc_flow_cliproctas.Clabe, mc_flow_cliproctas.Cuenta) AS CuentaDestino 
+            mc_flow_bancuentas.Cuenta AS CuentaOrigen,
+            mc_flow_bancuentas.Clabe AS ClabeOrigen, mc_flow_bancuentas.Sucursal AS SucursalOrigen,
+            mc_flow_cliproctas.Cuenta AS CuentaDestino,
+            mc_flow_cliproctas.Clabe AS ClabeDestino, mc_flow_cliproctas.Sucursal AS SucursalDestino
             FROM mc_flw_pagos INNER JOIN mc_flw_pagos_det ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
             LEFT JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
-            LEFT JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id 
+            LEFT JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id
             WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos_det.IdFlw = ?", [$IdUsuario, 0, $IdsFlw[$x][0]]) : DB::select("SELECT mc_flw_pagos.*, DATE_FORMAT(mc_flw_pagos.Fecha, '%d%m%y') AS ReferenciaNumerica,
-            IF(!ISNULL(mc_flow_bancuentas.Clabe), mc_flow_bancuentas.Clabe, mc_flow_bancuentas.Cuenta) AS CuentaOrigen,
-            IF(!ISNULL(mc_flow_cliproctas.Clabe), mc_flow_cliproctas.Clabe, mc_flow_cliproctas.Cuenta) AS CuentaDestino 
+            mc_flow_bancuentas.Cuenta AS CuentaOrigen,
+            mc_flow_bancuentas.Clabe AS ClabeOrigen, mc_flow_bancuentas.Sucursal AS SucursalOrigen,
+            mc_flow_cliproctas.Cuenta AS CuentaDestino,
+            mc_flow_cliproctas.Clabe AS ClabeDestino, mc_flow_cliproctas.Sucursal AS SucursalDestino
             FROM mc_flw_pagos
             LEFT JOIN mc_flow_bancuentas ON mc_flw_pagos.IdCuentaOrigen = mc_flow_bancuentas.IdCuenta
             LEFT JOIN mc_flow_cliproctas ON mc_flw_pagos.IdCuentaDestino = mc_flow_cliproctas.Id 
             WHERE mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ? AND mc_flw_pagos.id = ?", [$IdUsuario, 0, $IdsFlw[$x][0]]);
             $datosLayout["llaveMatch"][$x] = $infopagoencontrado[0]->LlaveMatch;
             $datosLayout["descripcion"][$x] = $infopagoencontrado[0]->LlaveMatch;
-            $clabeBancoOrigen = $infopagoencontrado[0]->CuentaOrigen != null ? count($infopagoencontrado[0]->CuentaOrigen) < 18 ? str_pad_unicode($infopagoencontrado[0]->CuentaOrigen, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->CuentaOrigen : '000000000000000000';
-            $clabeBancoDestino = $infopagoencontrado[0]->CuentaDestino != null ? count($infopagoencontrado[0]->CuentaDestino) < 18 ? str_pad_unicode($infopagoencontrado[0]->CuentaDestino, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->CuentaDestino : '000000000000000000';
+
+            /* if($infopagoencontrado[0]->ClabeOrigen != null) {
+
+            }
+            else {
+
+            }
+            
+            if($infopagoencontrado[0]->ClabeDestino != null) {
+
+            }
+            else {
+
+            } */
+
+            $clabeBancoOrigen = $infopagoencontrado[0]->ClabeOrigen != null ? count($infopagoencontrado[0]->ClabeOrigen) < 18 ? str_pad_unicode($infopagoencontrado[0]->ClabeOrigen, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->ClabeOrigen : '000000000000000000';
+            $clabeBancoDestino = $infopagoencontrado[0]->ClabeDestino != null ? count($infopagoencontrado[0]->ClabeDestino) < 18 ? str_pad_unicode($infopagoencontrado[0]->ClabeDestino, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->ClabeDestino : '000000000000000000';
             $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
             $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
             $sucursalBancoOrigen = substr($clabeBancoOrigen, 3, 3);

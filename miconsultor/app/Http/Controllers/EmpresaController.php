@@ -275,7 +275,9 @@ class EmpresaController extends Controller
                         $correo = $request->correo;
                         $vigencia = $request->fechavencimiento;
                         $userstorage = $rfc;
-                        $passwordstorage = $request->password;
+                        /* $passwordstorage = $request->password; */
+                        $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                        $contraNextCloud = substr(str_shuffle($permitted_chars), 0, 10);
 
                         //INSERTA EL REGISTRO
                         $idempresa = DB::connection("General")->table('mc1000')->insertGetId([
@@ -283,7 +285,7 @@ class EmpresaController extends Controller
                             "rutaempresa" => $bdd, "RFC" => $rfc, "fecharegistro" => $fecha,
                             "status" => 1, "password" => $password, "correo" => $correo,
                             "empresaBD" => $bdd, "vigencia" => $vigencia,
-                            "usuario_storage" => $userstorage, "password_storage" => $passwordstorage
+                            "usuario_storage" => $userstorage, "password_storage" => $contraNextCloud/* $passwordstorage */
                         ]);
                         if ($idempresa != 0) {
                             //INSERTA LA RELACION USUARIO Y EMPRESA
@@ -319,7 +321,7 @@ class EmpresaController extends Controller
                                 ]);
                             }
 
-                            $validacarpetas = $this->creaCarpetas($rfc, $archivocer, $archivokey, $passwordstorage);
+                            $validacarpetas = $this->creaCarpetas($rfc, $archivocer, $archivokey, $contraNextCloud);
                             $array["error"] = $validacarpetas;
 
                             $dbvacias = DB::connection("General")->select("SELECT id FROM mc1010 WHERE rfc='' AND estatus=0");

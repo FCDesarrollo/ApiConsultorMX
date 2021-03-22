@@ -413,4 +413,5 @@ Route::post('olvidoContra', 'GeneralesController@olvidoContra');
 //NUEVA CONTABILIDAD
 Route::get('traerTiposDocumentosNuevaContabilidad', 'NuevaContabilidadController@traerTiposDocumentosNuevaContabilidad');
 Route::get('traerTemasDocumentosNuevaContabilidad', 'NuevaContabilidadController@traerTemasDocumentosNuevaContabilidad');
+Route::get('traerDatosNuevaContabilidad', 'NuevaContabilidadController@traerDatosNuevaContabilidad');
 Route::get('traerDocumentosNuevaContabilidad', 'NuevaContabilidadController@traerDocumentosNuevaContabilidad');

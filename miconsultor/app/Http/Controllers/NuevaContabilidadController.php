@@ -19,6 +19,14 @@ class NuevaContabilidadController extends Controller {
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    function traerDatosNuevaContabilidad() {
+        $soluciones = DB::connection("NuevaContabilidad")->select("SELECT * FROM soluciones");
+        $array["soluciones"] = $soluciones;
+        $modulos = DB::connection("NuevaContabilidad")->select("SELECT * FROM modulos");
+        $array["modulos"] = $modulos;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     function traerDocumentosNuevaContabilidad() {
         $documentos = DB::connection("NuevaContabilidad")->select("SELECT * FROM documentos ORDER BY fechaSubida");
         $array["documentos"] = $documentos;

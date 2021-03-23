@@ -857,30 +857,77 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
             $datosLayout["llaveMatch"][$x] = $infopagoencontrado[0]->LlaveMatch;
             $datosLayout["descripcion"][$x] = $infopagoencontrado[0]->LlaveMatch;
 
-            /* if($infopagoencontrado[0]->ClabeOrigen != null) {
-
+            if($infopagoencontrado[0]->ClabeOrigen != null) {
+                if(count($infopagoencontrado[0]->ClabeOrigen) < 18) {
+                    $clabeBancoOrigen = str_pad_unicode($infopagoencontrado[0]->ClabeOrigen, 18, '0', STR_PAD_LEFT);
+                }
+                else {
+                    $clabeBancoOrigen = $infopagoencontrado[0]->ClabeOrigen;
+                }
+                $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
+                $sucursalBancoOrigen = substr($clabeBancoOrigen, 3, 3);
+                $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11);
+                $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
             }
             else {
-
+                if($infopagoencontrado[0]->CuentaOrigen != null) {
+                    if(count($infopagoencontrado[0]->CuentaOrigen) < 18) {
+                        $clabeBancoOrigen = str_pad_unicode($infopagoencontrado[0]->CuentaOrigen, 18, '0', STR_PAD_LEFT);
+                    }
+                    else {
+                        $clabeBancoOrigen = $infopagoencontrado[0]->CuentaOrigen;
+                    }
+                    $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
+                    $sucursalBancoOrigen = $infopagoencontrado[0]->SucursalOrigen != null ? $infopagoencontrado[0]->SucursalOrigen : substr($clabeBancoOrigen, 3, 3);
+                    $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11);
+                    $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
+                }
+                else {
+                    $clabeBancoOrigen = '000000000000000000';
+                    $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
+                    $sucursalBancoOrigen = substr($clabeBancoOrigen, 3, 3);
+                    $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11);
+                    $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
+                }
             }
             
             if($infopagoencontrado[0]->ClabeDestino != null) {
-
+                if(count($infopagoencontrado[0]->ClabeDestino) < 18) {
+                    $clabeBancoDestino = str_pad_unicode($infopagoencontrado[0]->ClabeDestino, 18, '0', STR_PAD_LEFT);
+                }
+                else {
+                    $clabeBancoDestino = $infopagoencontrado[0]->ClabeDestino;
+                }
+                $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
+                $sucursalBancoDestino = substr($clabeBancoDestino, 3, 3);
+                $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11);
+                $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
             }
             else {
+                if($infopagoencontrado[0]->CuentaDestino != null) {
+                    if(count($infopagoencontrado[0]->CuentaDestino) < 18) {
+                        $clabeBancoDestino = str_pad_unicode($infopagoencontrado[0]->CuentaDestino, 18, '0', STR_PAD_LEFT);
+                    }
+                    else {
+                        $clabeBancoDestino = $infopagoencontrado[0]->CuentaDestino;
+                    }
+                    $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
+                    $sucursalBancoDestino = $infopagoencontrado[0]->SucursalDestino != null ? $infopagoencontrado[0]->SucursalDestino : substr($clabeBancoDestino, 3, 3);
+                    $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11);
+                    $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+                }
+                else {
+                    $clabeBancoDestino = '000000000000000000';
+                    $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
+                    $sucursalBancoDestino = substr($clabeBancoDestino, 3, 3);
+                    $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11);
+                    $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+                }
+            }
 
-            } */
-
-            $clabeBancoOrigen = $infopagoencontrado[0]->ClabeOrigen != null ? count($infopagoencontrado[0]->ClabeOrigen) < 18 ? str_pad_unicode($infopagoencontrado[0]->ClabeOrigen, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->ClabeOrigen : '000000000000000000';
-            $clabeBancoDestino = $infopagoencontrado[0]->ClabeDestino != null ? count($infopagoencontrado[0]->ClabeDestino) < 18 ? str_pad_unicode($infopagoencontrado[0]->ClabeDestino, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->ClabeDestino : '000000000000000000';
-            $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
-            $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
-            $sucursalBancoOrigen = substr($clabeBancoOrigen, 3, 3);
-            $sucursalBancoDestino = substr($clabeBancoDestino, 3, 3);
-            $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11);
-            $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11);
-            $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
-            $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+            /* $clabeBancoOrigen = $infopagoencontrado[0]->ClabeOrigen != null ? count($infopagoencontrado[0]->ClabeOrigen) < 18 ? str_pad_unicode($infopagoencontrado[0]->ClabeOrigen, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->ClabeOrigen : '000000000000000000';
+            $clabeBancoDestino = $infopagoencontrado[0]->ClabeDestino != null ? count($infopagoencontrado[0]->ClabeDestino) < 18 ? str_pad_unicode($infopagoencontrado[0]->ClabeDestino, 18, '0', STR_PAD_LEFT) : $infopagoencontrado[0]->ClabeDestino : '000000000000000000'; */
+            
             $datosLayout["clabeBancoOrigen"][$x] = $clabeBancoOrigen;
             $datosLayout["clabeBancoDestino"][$x] = $clabeBancoDestino;
             $datosLayout["codigoBancoOrigen"][$x] = $codigoBancoOrigen;

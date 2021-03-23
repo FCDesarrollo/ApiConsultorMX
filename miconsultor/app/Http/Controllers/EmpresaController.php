@@ -1047,6 +1047,9 @@ class EmpresaController extends Controller
             $error = ($response == false ? 46 : 0);
             curl_close($ch);
 
+            $array["response1"] = $response;
+            $array["error1"] = $error;
+
             if ($error == 0) {
                 //CREA CARPETAS
                 $ch = curl_init();
@@ -1058,9 +1061,15 @@ class EmpresaController extends Controller
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "MKCOL");
                 $response = curl_exec($ch);
 
+                $array["response2"] = $response;
+                
+
                 $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc;
                 curl_setopt($ch, CURLOPT_URL, $url);
                 $response = curl_exec($ch);
+
+                $array["response3"] = $response;
+
 
                 $modulos = DB::connection("General")->select('select idmodulo,nombre_carpeta from mc1003');
                 for ($i = 0; $i < count($modulos); $i++) {
@@ -1070,6 +1079,7 @@ class EmpresaController extends Controller
                     $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo;
                     curl_setopt($ch, CURLOPT_URL, $url);
                     $response = curl_exec($ch);
+                    $array["response4"] = $response;
 
                     $menus = DB::connection("General")->select('select idmenu,nombre_carpeta from mc1004 
                                                     where idmodulo = ?', [$idmodulo]);
@@ -1080,6 +1090,7 @@ class EmpresaController extends Controller
                         $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu;
                         curl_setopt($ch, CURLOPT_URL, $url);
                         $response = curl_exec($ch);
+                        $array["response5"] = $response;
 
                         $submenus = DB::connection("General")->select('select nombre_carpeta from mc1005
                                              where idmenu = ?', [$idmenu]);
@@ -1089,6 +1100,7 @@ class EmpresaController extends Controller
                             $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
                             curl_setopt($ch, CURLOPT_URL, $url);
                             $response = curl_exec($ch);
+                            $array["response6"] = $response;
                         }
                     }
                 }
@@ -1110,6 +1122,7 @@ class EmpresaController extends Controller
                     )
                 );
                 $response = curl_exec($ch);
+                $array["response7"] = $response;
 
                 $gestor = fopen($key, "r");
                 $contenido = fread($gestor, filesize($key));
@@ -1127,6 +1140,7 @@ class EmpresaController extends Controller
                     )
                 );
                 $response = curl_exec($ch);
+                $array["response8"] = $response;
 
                 $contenido = $pass;
                 curl_setopt_array(
@@ -1142,6 +1156,7 @@ class EmpresaController extends Controller
                     )
                 );
                 $response = curl_exec($ch);
+                $array["response9"] = $response;
 
                 $error = ($response != '' ? 46 : 0);
                 curl_close($ch);
@@ -1149,7 +1164,7 @@ class EmpresaController extends Controller
         } else {
             $error = 45;
         }
-        return $error;
+        return $array;
     }
 
     public function datosEmpresa(Request $request)

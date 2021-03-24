@@ -1886,19 +1886,15 @@ class EmpresaController extends Controller
                     $idscuentasorigen = $request->idscuentasorigen;
                     $idscuentasdestino = $request->idscuentasdestino;
                     $fechas = $request->fechas;
-                    $tipos = $request->tipos;
-                    /* $array["idsflw"] = $idsflw;
-                    $array["idscuentasorigen"] = $idscuentasorigen;
-                    $array["idscuentasdestino"] = $idscuentasdestino;
-                    $array["fechas"] = $fechas;
-                    $array["tipos"] = $tipos; */
+                    /* $tipos = $request->tipos; */
+
 
                     for ($x = 0; $x < count($idsflw); $x++) {
                         $pagoencontrado = DB::select('SELECT mc_flw_pagos_det.* FROM mc_flw_pagos_det 
                         INNER JOIN mc_flw_pagos ON mc_flw_pagos_det.IdPago = mc_flw_pagos.id
                         WHERE mc_flw_pagos_det.IdFlw = ? AND mc_flw_pagos.IdUsuario = ? AND mc_flw_pagos.Layout = ?', [$idsflw[$x], $IdUsuario, 0]);
                         if (count($pagoencontrado) > 0) {
-                            DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update(['Fecha' => $fechas[$x], 'Tipo' => $tipos[$x], 'idCuentaOrigen' => $idscuentasorigen[$x], 'idCuentaDestino' => $idscuentasdestino[$x]]);
+                            DB::table('mc_flw_pagos')->where("id", $pagoencontrado[0]->IdPago)->update(['Fecha' => $fechas[$x], 'Tipo' => 1/* $tipos[$x] */, 'idCuentaOrigen' => $idscuentasorigen[$x], 'idCuentaDestino' => $idscuentasdestino[$x]]);
                         }
                     }
                     /* for ($x = 0; $x < count($idsflw); $x++) {
@@ -2233,7 +2229,7 @@ class EmpresaController extends Controller
 
             for ($x = 0; $x < count($IdsBancosOrigen); $x++) {
                 $datosLayout["cuentaBeneficiario"] = explode("-$-", $CuentasBeneficiarios[$x]);
-                $datosLayout["importe"] = explode("-$-", $ImportesPorPagos[$x]);
+                /* $datosLayout["importe"] = explode("-$-", $ImportesPorPagos[$x]); */
                 $datosLayout["razon"] = explode("-$-", $ProveedoresInfoBancos[$x]);
 
                 $datosLayout["nombre"] = explode("-$-", $ProveedoresInfoBancos[$x]);

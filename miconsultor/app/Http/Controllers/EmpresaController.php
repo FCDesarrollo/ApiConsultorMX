@@ -321,8 +321,14 @@ class EmpresaController extends Controller
                                 ]);
                             }
 
-                            $validacarpetas = $this->creaCarpetas($rfc, $archivocer, $archivokey, $contraNextCloud);
+                            $validacarpetas = $this->creaCarpetas($rfc, $contraNextCloud);
                             $array["error"] = $validacarpetas;
+
+                            if ($validacarpetas == 0) {
+                                $servercloud = "cloud.dublock.com";
+                                $respuestaCrearCarpetasEmpresa = $this->crearCarpetasEmpresa($servercloud, $rfc, $contraNextCloud, $archivocer, $archivokey);
+                                $array["respuestaCrearCarpetasEmpresa"] = $respuestaCrearCarpetasEmpresa;
+                            }
 
                             $dbvacias = DB::connection("General")->select("SELECT id FROM mc1010 WHERE rfc='' AND estatus=0");
                             $proveedores = DB::connection("General")->select("SELECT * FROM mc1001 WHERE tipo = 4 AND notificaciondb = 1");
@@ -1023,7 +1029,7 @@ class EmpresaController extends Controller
         return $id;
     }
 
-    public function creaCarpetas($rfc, $certificado, $key, $pass)
+    public function creaCarpetas($rfc, $pass)
     {
         set_time_limit(300);
         $error = 0;
@@ -1032,8 +1038,8 @@ class EmpresaController extends Controller
             $servercloud = $datosParam[0]->servidor_storage;
             $usercloud = $datosParam[0]->usuario_storage;
             $passcloud = $datosParam[0]->password_storage;
-
-
+            $array["rfc"] = $rfc;
+            $array["pass"] = $pass;
 
             //CREA USUARIO
             $ch = curl_init();
@@ -1047,123 +1053,126 @@ class EmpresaController extends Controller
             $error = ($response == false ? 46 : 0);
             curl_close($ch);
 
-            $array["response1"] = $response;
-            $array["error1"] = $error;
-
-            if ($error == 0) {
-                //CREA CARPETAS
-                $ch = curl_init();
-                $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM';
-                curl_setopt($ch, CURLOPT_URL, $url);
-                curl_setopt($ch, CURLOPT_VERBOSE, 1);
-                curl_setopt($ch, CURLOPT_USERPWD, $rfc . ':' . $pass);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "MKCOL");
-                $response = curl_exec($ch);
-
-                $array["response2"] = $response;
-                
-
-                $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc;
-                curl_setopt($ch, CURLOPT_URL, $url);
-                $response = curl_exec($ch);
-
-                $array["response3"] = $response;
-
-
-                $modulos = DB::connection("General")->select('select idmodulo,nombre_carpeta from mc1003');
-                for ($i = 0; $i < count($modulos); $i++) {
-                    $idmodulo = $modulos[$i]->idmodulo;
-                    $carpetamodulo = $modulos[$i]->nombre_carpeta;
-
-                    $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo;
-                    curl_setopt($ch, CURLOPT_URL, $url);
-                    $response = curl_exec($ch);
-                    $array["response4"] = $response;
-
-                    $menus = DB::connection("General")->select('select idmenu,nombre_carpeta from mc1004 
-                                                    where idmodulo = ?', [$idmodulo]);
-                    for ($x = 0; $x < count($menus); $x++) {
-                        $idmenu = $menus[$x]->idmenu;
-                        $carpetamenu = $menus[$x]->nombre_carpeta;
-
-                        $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu;
-                        curl_setopt($ch, CURLOPT_URL, $url);
-                        $response = curl_exec($ch);
-                        $array["response5"] = $response;
-
-                        $submenus = DB::connection("General")->select('select nombre_carpeta from mc1005
-                                             where idmenu = ?', [$idmenu]);
-                        for ($z = 0; $z < count($submenus); $z++) {
-                            $carpetasubmenu = $submenus[$z]->nombre_carpeta;
-
-                            $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
-                            curl_setopt($ch, CURLOPT_URL, $url);
-                            $response = curl_exec($ch);
-                            $array["response6"] = $response;
-                        }
-                    }
-                }
-
-                //SUBIR ARCHIVOS
-                $gestor = fopen($certificado, "r");
-                $contenido = fread($gestor, filesize($certificado));
-                fclose($gestor);
-                curl_setopt_array(
-                    $ch,
-                    array(
-                        CURLOPT_URL => 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $certificado->getClientOriginalName(),
-                        CURLOPT_VERBOSE => 1,
-                        CURLOPT_USERPWD => $rfc . ':' . $pass,
-                        CURLOPT_POSTFIELDS => $contenido,
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_BINARYTRANSFER => true,
-                        CURLOPT_CUSTOMREQUEST => 'PUT',
-                    )
-                );
-                $response = curl_exec($ch);
-                $array["response7"] = $response;
-
-                $gestor = fopen($key, "r");
-                $contenido = fread($gestor, filesize($key));
-                fclose($gestor);
-                curl_setopt_array(
-                    $ch,
-                    array(
-                        CURLOPT_URL => 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $key->getClientOriginalName(),
-                        CURLOPT_VERBOSE => 1,
-                        CURLOPT_USERPWD => $rfc . ':' . $pass,
-                        CURLOPT_POSTFIELDS => $contenido,
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_BINARYTRANSFER => true,
-                        CURLOPT_CUSTOMREQUEST => 'PUT',
-                    )
-                );
-                $response = curl_exec($ch);
-                $array["response8"] = $response;
-
-                $contenido = $pass;
-                curl_setopt_array(
-                    $ch,
-                    array(
-                        CURLOPT_URL => 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $rfc . '.txt',
-                        CURLOPT_VERBOSE => 1,
-                        CURLOPT_USERPWD => $rfc . ':' . $pass,
-                        CURLOPT_POSTFIELDS => $contenido,
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_BINARYTRANSFER => true,
-                        CURLOPT_CUSTOMREQUEST => 'PUT',
-                    )
-                );
-                $response = curl_exec($ch);
-                $array["response9"] = $response;
-
-                $error = ($response != '' ? 46 : 0);
-                curl_close($ch);
-            }
+            /* $array["response1"] = $response;
+            $array["error1"] = $error; */
+            
         } else {
             $error = 45;
         }
+        return $error;
+    }
+
+    public function crearCarpetasEmpresa($servercloud, $rfc, $pass, $certificado, $key) {
+        set_time_limit(300);
+        //CREA CARPETAS
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_VERBOSE, 1);
+        curl_setopt($ch, CURLOPT_USERPWD, $rfc . ':' . $pass);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "MKCOL");
+        $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM';
+        curl_setopt($ch, CURLOPT_URL, $url);
+        $response = curl_exec($ch);
+
+        $array["response2"] = $response;
+        
+
+        $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc;
+        curl_setopt($ch, CURLOPT_URL, $url);
+        $response = curl_exec($ch);
+
+        $array["response3"] = $response;
+
+
+        $modulos = DB::connection("General")->select('select idmodulo,nombre_carpeta from mc1003');
+        for ($i = 0; $i < count($modulos); $i++) {
+            $idmodulo = $modulos[$i]->idmodulo;
+            $carpetamodulo = $modulos[$i]->nombre_carpeta;
+
+            $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo;
+            curl_setopt($ch, CURLOPT_URL, $url);
+            $response = curl_exec($ch);
+            $array["response4"] = $response;
+
+            $menus = DB::connection("General")->select('select idmenu,nombre_carpeta from mc1004 
+                                            where idmodulo = ?', [$idmodulo]);
+            for ($x = 0; $x < count($menus); $x++) {
+                $idmenu = $menus[$x]->idmenu;
+                $carpetamenu = $menus[$x]->nombre_carpeta;
+
+                $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu;
+                curl_setopt($ch, CURLOPT_URL, $url);
+                $response = curl_exec($ch);
+                $array["response5"] = $response;
+
+                $submenus = DB::connection("General")->select('select nombre_carpeta from mc1005
+                                     where idmenu = ?', [$idmenu]);
+                for ($z = 0; $z < count($submenus); $z++) {
+                    $carpetasubmenu = $submenus[$z]->nombre_carpeta;
+
+                    $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    $response = curl_exec($ch);
+                    $array["response6"] = $response;
+                }
+            }
+        }
+
+        //SUBIR ARCHIVOS
+        $gestor = fopen($certificado, "r");
+        $contenido = fread($gestor, filesize($certificado));
+        fclose($gestor);
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL => 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $certificado->getClientOriginalName(),
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => $rfc . ':' . $pass,
+                CURLOPT_POSTFIELDS => $contenido,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'PUT',
+            )
+        );
+        $response = curl_exec($ch);
+        $array["response7"] = $response;
+
+        $gestor = fopen($key, "r");
+        $contenido = fread($gestor, filesize($key));
+        fclose($gestor);
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL => 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $key->getClientOriginalName(),
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => $rfc . ':' . $pass,
+                CURLOPT_POSTFIELDS => $contenido,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'PUT',
+            )
+        );
+        $response = curl_exec($ch);
+        $array["response8"] = $response;
+
+        $contenido = $pass;
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL => 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $rfc . '.txt',
+                CURLOPT_VERBOSE => 1,
+                CURLOPT_USERPWD => $rfc . ':' . $pass,
+                CURLOPT_POSTFIELDS => $contenido,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'PUT',
+            )
+        );
+        $response = curl_exec($ch);
+        $array["response9"] = $response;
+
+        $error = ($response != '' ? 46 : 0);
+        curl_close($ch);
         return $array;
     }
 
@@ -1722,6 +1731,7 @@ class EmpresaController extends Controller
             $cuentas = DB::select("SELECT * FROM mc_flow_bancuentas WHERE Activa = 1 ORDER BY Nombre");
             $array["cuentas"] = $cuentas;
         }
+                
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
@@ -2693,6 +2703,62 @@ class EmpresaController extends Controller
 
             $array["layouts"] = $layouts;
         }
+
+        /* set_time_limit(300);
+        $ch = curl_init();
+        $servercloud = "cloud.dublock.com";
+        $rfc = "AAA010101AAA";
+        $pass = "rNgo1vR2cB";
+        curl_setopt($ch, CURLOPT_VERBOSE, 1);
+        curl_setopt($ch, CURLOPT_USERPWD, $rfc . ':' . $pass);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "MKCOL");
+        $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM';
+        curl_setopt($ch, CURLOPT_URL, $url);
+        $response = curl_exec($ch);
+
+        $array["response1"] = $response;
+
+        $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc;
+        curl_setopt($ch, CURLOPT_URL, $url);
+        $response = curl_exec($ch);
+
+        $array["response2"] = $response;
+        $modulos = DB::connection("General")->select('select idmodulo,nombre_carpeta from mc1003');
+        for ($i = 0; $i < count($modulos); $i++) {
+            $idmodulo = $modulos[$i]->idmodulo;
+            $carpetamodulo = $modulos[$i]->nombre_carpeta;
+
+            $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo;
+            curl_setopt($ch, CURLOPT_URL, $url);
+            $response = curl_exec($ch);
+            $array["response3"] = $response;
+
+            $menus = DB::connection("General")->select('select idmenu,nombre_carpeta from mc1004 
+                                            where idmodulo = ?', [$idmodulo]);
+            for ($x = 0; $x < count($menus); $x++) {
+                $idmenu = $menus[$x]->idmenu;
+                $carpetamenu = $menus[$x]->nombre_carpeta;
+
+                $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu;
+                curl_setopt($ch, CURLOPT_URL, $url);
+                $response = curl_exec($ch);
+                $array["response4"] = $response;
+
+                $submenus = DB::connection("General")->select('select nombre_carpeta from mc1005
+                                        where idmenu = ?', [$idmenu]);
+                for ($z = 0; $z < count($submenus); $z++) {
+                    $carpetasubmenu = $submenus[$z]->nombre_carpeta;
+
+                    $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    $response = curl_exec($ch);
+                    $array["response5"] = $response;
+                }
+            }
+        }
+        curl_close($ch); */
+
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 

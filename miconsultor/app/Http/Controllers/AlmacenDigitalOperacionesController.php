@@ -207,6 +207,7 @@ class AlmacenDigitalOperacionesController extends Controller
                                           WHERE documento = '$archivo' AND a.fechadocto = '$fechadocto' AND a.idmodulo = $idsubmenu");
                                 if (empty($existe)) {
                                     $resultado = subirArchivoNextcloud($archivo, $key, $rfc, $servidor, $u_storage, $p_storage,$carpetamodulo, $carpetamenu, $carpetasubmenu, $codigoarchivo, $consecutivo);
+                                    $array["resultado"] = $resultado;
                                     if ($resultado["archivo"]["error"] == 0) {
                                         $codigodocumento = $codigoarchivo . $consecutivo;
                                         $type = explode(".", $archivo);

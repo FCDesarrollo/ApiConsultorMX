@@ -324,11 +324,11 @@ class EmpresaController extends Controller
                             $validacarpetas = $this->creaCarpetas($rfc, $contraNextCloud);
                             $array["error"] = $validacarpetas;
 
-                            if ($validacarpetas == 0) {
+                            /* if ($validacarpetas == 0) {
                                 $servercloud = "cloud.dublock.com";
                                 $respuestaCrearCarpetasEmpresa = $this->crearCarpetasEmpresa($servercloud, $rfc, $contraNextCloud, $archivocer, $archivokey);
                                 $array["respuestaCrearCarpetasEmpresa"] = $respuestaCrearCarpetasEmpresa;
-                            }
+                            } */
 
                             $dbvacias = DB::connection("General")->select("SELECT id FROM mc1010 WHERE rfc='' AND estatus=0");
                             $proveedores = DB::connection("General")->select("SELECT * FROM mc1001 WHERE tipo = 4 AND notificaciondb = 1");

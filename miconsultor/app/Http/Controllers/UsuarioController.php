@@ -52,6 +52,69 @@ class UsuarioController extends Controller
                 $modpermiso[$i]->permisosmenu = $menupermiso;
                 $array["permisomodulos"][$i] = $modpermiso[$i];
             }
+
+            $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE RFC = '$rfc'");
+            $array["empresa"] = $empresa;
+            if($empresa[0]->carpetas == 0) {
+                $servercloudinfo = DB::connection("General")->select("SELECT * FROM mc0000 WHERE id = 1");
+                $servercloud = $servercloudinfo[0]->servidor_storage;
+                set_time_limit(300);
+                //CREA CARPETAS
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_VERBOSE, 1);
+                curl_setopt($ch, CURLOPT_USERPWD, $rfc . ':' . $empresa[0]->password_storage);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "MKCOL");
+                $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM';
+                curl_setopt($ch, CURLOPT_URL, $url);
+                $response = curl_exec($ch);
+
+                $array["response2"] = $response;
+                
+
+                $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc;
+                curl_setopt($ch, CURLOPT_URL, $url);
+                $response = curl_exec($ch);
+
+                $array["response3"] = $response;
+
+
+                $modulos = DB::connection("General")->select('select idmodulo,nombre_carpeta from mc1003');
+                for ($i = 0; $i < count($modulos); $i++) {
+                    $idmodulo = $modulos[$i]->idmodulo;
+                    $carpetamodulo = $modulos[$i]->nombre_carpeta;
+
+                    $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo;
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    $response = curl_exec($ch);
+                    $array["response4"] = $response;
+
+                    $menus = DB::connection("General")->select('select idmenu,nombre_carpeta from mc1004 
+                                                    where idmodulo = ?', [$idmodulo]);
+                    for ($x = 0; $x < count($menus); $x++) {
+                        $idmenu = $menus[$x]->idmenu;
+                        $carpetamenu = $menus[$x]->nombre_carpeta;
+
+                        $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu;
+                        curl_setopt($ch, CURLOPT_URL, $url);
+                        $response = curl_exec($ch);
+                        $array["response5"] = $response;
+
+                        $submenus = DB::connection("General")->select('select nombre_carpeta from mc1005
+                                            where idmenu = ?', [$idmenu]);
+                        for ($z = 0; $z < count($submenus); $z++) {
+                            $carpetasubmenu = $submenus[$z]->nombre_carpeta;
+
+                            $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
+                            curl_setopt($ch, CURLOPT_URL, $url);
+                            $response = curl_exec($ch);
+                            $array["response6"] = $response;
+                        }
+                    }
+                }
+                curl_close($ch);
+                DB::connection("General")->table('mc1000')->where("idempresa", $empresa[0]->idempresa)->update(["carpetas" => 1]);
+            }
             
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);

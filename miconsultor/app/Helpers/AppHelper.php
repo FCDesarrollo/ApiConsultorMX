@@ -199,6 +199,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                 )
             );
             $resp = curl_exec($ch);
+            $array["archivo"]["resp"] = $resp;
             $error_no = curl_errno($ch);
         }else{
             $error_no = 3;

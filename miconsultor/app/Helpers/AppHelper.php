@@ -882,7 +882,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                     $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
                     $sucursalBancoOrigen = $infopagoencontrado[0]->SucursalOrigen != null ? $infopagoencontrado[0]->SucursalOrigen : substr($clabeBancoOrigen, 3, 3);
                     /* $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11); */
-                    $numeroCuentaOrigen = strlen($infopagoencontrado[0]->CuentaOrigen) == 7 ? substr($clabeBancoOrigen, 11, 7) : substr($clabeBancoOrigen, 10, 7);
+                    $numeroCuentaOrigen = strlen($infopagoencontrado[0]->CuentaOrigen) == 7 ? substr($clabeBancoOrigen, 11, 7) : strlen($infopagoencontrado[0]->CuentaOrigen) == 12 ? substr($clabeBancoOrigen, 8, 12) : substr($clabeBancoOrigen, 10, 7);
                     $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
                 }
                 else {
@@ -919,7 +919,7 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                     $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
                     $sucursalBancoDestino = $infopagoencontrado[0]->SucursalDestino != null ? $infopagoencontrado[0]->SucursalDestino : substr($clabeBancoDestino, 3, 3);
                     /* $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11); */
-                    $numeroCuentaDestino = strlen($infopagoencontrado[0]->CuentaDestino) == 7 ? substr($clabeBancoDestino, 11, 7) : substr($clabeBancoDestino, 10, 7);
+                    $numeroCuentaDestino = strlen($infopagoencontrado[0]->CuentaDestino) == 7 ? substr($clabeBancoDestino, 11, 7) : strlen($infopagoencontrado[0]->CuentaDestino) == 12 ? substr($clabeBancoDestino, 8, 12) : substr($clabeBancoDestino, 10, 7);
                     $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
                 }
                 else {

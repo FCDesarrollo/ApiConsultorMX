@@ -24,6 +24,8 @@ class NuevaContabilidadController extends Controller {
         $array["soluciones"] = $soluciones;
         $modulos = DB::connection("NuevaContabilidad")->select("SELECT * FROM modulos");
         $array["modulos"] = $modulos;
+        $modulos = DB::connection("NuevaContabilidad")->select("SELECT * FROM estados");
+        $array["estados"] = $modulos;
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 

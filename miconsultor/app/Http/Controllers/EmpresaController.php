@@ -525,6 +525,8 @@ class EmpresaController extends Controller
               sucursal VARCHAR(100) COLLATE latin1_spanish_ci DEFAULT NULL,
               rutaadw VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
               sincronizado INT(11) DEFAULT '0',
+              idadw INT(11),
+              default tinyint(1) DEFAULT '0',
               PRIMARY KEY (idsucursal)
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catsucursales);

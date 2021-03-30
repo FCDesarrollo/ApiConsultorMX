@@ -415,3 +415,4 @@ Route::get('traerTiposDocumentosNuevaContabilidad', 'NuevaContabilidadController
 Route::get('traerTemasDocumentosNuevaContabilidad', 'NuevaContabilidadController@traerTemasDocumentosNuevaContabilidad');
 Route::get('traerDatosNuevaContabilidad', 'NuevaContabilidadController@traerDatosNuevaContabilidad');
 Route::get('traerDocumentosNuevaContabilidad', 'NuevaContabilidadController@traerDocumentosNuevaContabilidad');
+Route::post('enviarInformacionNuevaContabilidad', 'NuevaContabilidadController@enviarInformacionNuevaContabilidad');

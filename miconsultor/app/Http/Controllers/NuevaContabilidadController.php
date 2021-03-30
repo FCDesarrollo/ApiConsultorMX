@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Mail;
+use App\Mail\MensajesGenerales;
 
 class NuevaContabilidadController extends Controller {
 
@@ -32,6 +34,24 @@ class NuevaContabilidadController extends Controller {
     function traerDocumentosNuevaContabilidad() {
         $documentos = DB::connection("NuevaContabilidad")->select("SELECT * FROM documentos ORDER BY fechaSubida");
         $array["documentos"] = $documentos;
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function enviarInformacionNuevaContabilidad(Request $request) {
+        $nombre = $request->nombre;
+        $apellido = $request->apellido;
+        $nombreEmpresa = $request->nombreEmpresa;
+        $correo = $request->correo;
+        $numeroTelefono = $request->numeroTelefono;
+        $estado = $request->estado;
+        $planInteres = $request->planInteres;
+        $correoDestinatario = "mkt@francocabanillas.com.mx";
+
+        $data["titulo"] = "Solicitud de información";
+        $data["cabecera"] = $nombre . " ".$apellido." solicita información";
+        $data["mensaje"] = $nombre . " ".$apellido." perteneciente a la empresa ".$nombreEmpresa." ubicada en ".$estado." con correo ".$correo." y numero de teléfono ".$numeroTelefono." solicita información acerca de ".$planInteres.".";
+        Mail::to($correoDestinatario)->send(new MensajesGenerales($data));
+        $array["error"] = 0;
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 }

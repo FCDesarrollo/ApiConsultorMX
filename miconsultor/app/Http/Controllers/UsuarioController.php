@@ -100,6 +100,16 @@ class UsuarioController extends Controller
                         $response = curl_exec($ch);
                         $array["response5"] = $response;
 
+                        if($idmenu == 12) {
+                            $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu. '/LayoutsTemporales';
+                            curl_setopt($ch, CURLOPT_URL, $url);
+                            $response = curl_exec($ch);
+
+                            $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu. '/Layouts';
+                            curl_setopt($ch, CURLOPT_URL, $url);
+                            $response = curl_exec($ch);
+                        }
+
                         $submenus = DB::connection("General")->select('select nombre_carpeta from mc1005
                                             where idmenu = ?', [$idmenu]);
                         for ($z = 0; $z < count($submenus); $z++) {

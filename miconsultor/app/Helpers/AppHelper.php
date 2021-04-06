@@ -1025,7 +1025,9 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         SUBSTRING(mc_flow_cliproctas.Clabe, -4))) AS CuentaBeneficiaria,
         mc_flow_bancuentas.IdBanco AS IdBancoOrigen,
         IF(!ISNULL(mc_flow_bancuentas.Clabe), mc_flow_bancuentas.Clabe, mc_flow_bancuentas.Cuenta) AS CuentaOrigen,
+        mc_flow_bancuentas.Clabe AS ClabeOrigen, mc_flow_bancuentas.Sucursal AS SucursalOrigen,
         IF(!ISNULL(mc_flow_cliproctas.Clabe), mc_flow_cliproctas.Clabe, mc_flow_cliproctas.Cuenta) AS CuentaDestino,
+        mc_flow_cliproctas.Clabe AS ClabeDestino, mc_flow_cliproctas.Sucursal AS SucursalDestino,
         (SELECT mc_flw_layouts_usuarios.IdLayoutConfig FROM mc_flw_layouts_usuarios WHERE
         mc_flw_layouts_usuarios.IdUsuario = mc_flw_pagos.IdUsuario AND mc_flw_layouts_usuarios.IdBanco = IdBancoOrigen) 
         AS IdLayoutConfig FROM mc_flw_pagos 
@@ -1042,7 +1044,81 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
         $resultado = '';
         if(count($pagoslayout) > 0) {
             for($x=0 ; $x<count($pagoslayout) ; $x++) {
-                $clabeBancoOrigen = $pagoslayout[$x]->CuentaOrigen != null ? count($pagoslayout[$x]->CuentaOrigen) < 18 ? str_pad_unicode($pagoslayout[$x]->CuentaOrigen, 18, '0', STR_PAD_LEFT) : $pagoslayout[$x]->CuentaOrigen : '000000000000000000';
+                if($pagoslayout[0]->ClabeOrigen != null) {
+                    if(strlen($pagoslayout[0]->ClabeOrigen) < 18) {
+                        $clabeBancoOrigen = str_pad_unicode($pagoslayout[0]->ClabeOrigen, 18, '0', STR_PAD_LEFT);
+                    }
+                    else {
+                        $clabeBancoOrigen = $pagoslayout[0]->ClabeOrigen;
+                    }
+                    $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
+                    $sucursalBancoOrigen = $pagoslayout[0]->SucursalOrigen != null ? $pagoslayout[0]->SucursalOrigen : substr($clabeBancoOrigen, 3, 3);
+                    /* $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11); */
+                    $numeroCuentaOrigen = substr($clabeBancoOrigen, 10, 7);
+                    $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
+                }
+                else {
+                    if($pagoslayout[0]->CuentaOrigen != null) {
+                        if(strlen($pagoslayout[0]->CuentaOrigen) < 18) {
+                            $clabeBancoOrigen = str_pad_unicode($pagoslayout[0]->CuentaOrigen, 18, '0', STR_PAD_LEFT);
+                        }
+                        else {
+                            $clabeBancoOrigen = $pagoslayout[0]->CuentaOrigen;
+                        }
+                        $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
+                        $sucursalBancoOrigen = $pagoslayout[0]->SucursalOrigen != null ? $pagoslayout[0]->SucursalOrigen : substr($clabeBancoOrigen, 3, 3);
+                        /* $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11); */
+                        $numeroCuentaOrigen = strlen($pagoslayout[0]->CuentaOrigen) == 7 ? substr($clabeBancoOrigen, 11, 7) : strlen($pagoslayout[0]->CuentaOrigen) == 12 ? substr($clabeBancoOrigen, 6, 12) : substr($clabeBancoOrigen, 10, 7);
+                        $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
+                    }
+                    else {
+                        $clabeBancoOrigen = '000000000000000000';
+                        $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
+                        $sucursalBancoOrigen = $pagoslayout[0]->SucursalOrigen != null ? $pagoslayout[0]->SucursalOrigen : substr($clabeBancoOrigen, 3, 3);
+                        /* $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11); */
+                        $numeroCuentaOrigen = substr($clabeBancoOrigen, 10, 7);
+                        $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
+                    }
+                }
+
+                if($pagoslayout[0]->ClabeDestino != null) {
+                    if(strlen($pagoslayout[0]->ClabeDestino) < 18) {
+                        $clabeBancoDestino = str_pad_unicode($pagoslayout[0]->ClabeDestino, 18, '0', STR_PAD_LEFT);
+                    }
+                    else {
+                        $clabeBancoDestino = $pagoslayout[0]->ClabeDestino;
+                    }
+                    $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
+                    $sucursalBancoDestino = $pagoslayout[0]->SucursalDestino != null ? $pagoslayout[0]->SucursalDestino : substr($clabeBancoDestino, 3, 3);
+                    /* $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11); */
+                    $numeroCuentaDestino = substr($clabeBancoDestino, 10, 7);
+                    $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+                }
+                else {
+                    if($pagoslayout[0]->CuentaDestino != null) {
+                        if(strlen($pagoslayout[0]->CuentaDestino) < 18) {
+                            $clabeBancoDestino = str_pad_unicode($pagoslayout[0]->CuentaDestino, 18, '0', STR_PAD_LEFT);
+                        }
+                        else {
+                            $clabeBancoDestino = $pagoslayout[0]->CuentaDestino;
+                        }
+                        $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
+                        $sucursalBancoDestino = $pagoslayout[0]->SucursalDestino != null ? $pagoslayout[0]->SucursalDestino : substr($clabeBancoDestino, 3, 3);
+                        /* $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11); */
+                        $numeroCuentaDestino = strlen($pagoslayout[0]->CuentaDestino) == 7 ? substr($clabeBancoDestino, 11, 7) : strlen($pagoslayout[0]->CuentaDestino) == 12 ? substr($clabeBancoDestino, 6, 12) : substr($clabeBancoDestino, 10, 7);
+                        $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+                    }
+                    else {
+                        $clabeBancoDestino = '000000000000000000';
+                        $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
+                        $sucursalBancoDestino = $pagoslayout[0]->SucursalDestino != null ? $pagoslayout[0]->SucursalDestino : substr($clabeBancoDestino, 3, 3);
+                        /* $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11); */
+                        $numeroCuentaDestino = substr($clabeBancoDestino, 10, 7);
+                        $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+                    }
+                }
+
+                /* $clabeBancoOrigen = $pagoslayout[$x]->CuentaOrigen != null ? count($pagoslayout[$x]->CuentaOrigen) < 18 ? str_pad_unicode($pagoslayout[$x]->CuentaOrigen, 18, '0', STR_PAD_LEFT) : $pagoslayout[$x]->CuentaOrigen : '000000000000000000';
                 $clabeBancoDestino = $pagoslayout[$x]->CuentaDestino != null ? count($pagoslayout[$x]->CuentaDestino) < 18 ? str_pad_unicode($pagoslayout[$x]->CuentaDestino, 18, '0', STR_PAD_LEFT) : $pagoslayout[$x]->CuentaDestino : '000000000000000000';
                 $codigoBancoOrigen = substr($clabeBancoOrigen, 0, 3);
                 $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
@@ -1051,7 +1127,8 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                 $numeroCuentaOrigen = substr($clabeBancoOrigen, 6, 11);
                 $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11);
                 $digitoControlCuentaOrigen = substr($clabeBancoOrigen, 17);
-                $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
+                $digitoControlCuentaDestino = substr($clabeBancoDestino, 17); */
+
                 $datosLayout["clabeBancoOrigen"][$x] = $clabeBancoOrigen;
                 $datosLayout["clabeBancoDestino"][$x] = $clabeBancoDestino;
                 $datosLayout["codigoBancoOrigen"][$x] = $codigoBancoOrigen;

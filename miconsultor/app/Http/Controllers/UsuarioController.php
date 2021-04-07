@@ -55,14 +55,17 @@ class UsuarioController extends Controller
 
             $empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE RFC = '$rfc'");
             $array["empresa"] = $empresa;
+
+
             if($empresa[0]->carpetas == 0) {
                 $servercloudinfo = DB::connection("General")->select("SELECT * FROM mc0000 WHERE id = 1");
                 $servercloud = $servercloudinfo[0]->servidor_storage;
+                $pass = $empresa[0]->password_storage;
                 set_time_limit(300);
                 //CREA CARPETAS
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_VERBOSE, 1);
-                curl_setopt($ch, CURLOPT_USERPWD, $rfc . ':' . $empresa[0]->password_storage);
+                curl_setopt($ch, CURLOPT_USERPWD, $rfc . ':' . $pass);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "MKCOL");
                 $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM';
@@ -78,6 +81,34 @@ class UsuarioController extends Controller
 
                 $array["response3"] = $response;
 
+                $ruta = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/'.$rfc.'/';
+                $certificados = $this->obtenerCertificadosEmpresa($ruta, 0);
+                $array["certificados"] = $certificados;
+
+                for($x=0 ; $x<count($certificados) ; $x++) {
+                    $rutacertificado = $ruta.$certificados[$x];
+                    $array["rutacertificado"] = $rutacertificado;
+                    $gestor = fopen($rutacertificado, "r");
+                    $contenido = fread($gestor, filesize($rutacertificado));
+                    fclose($gestor);
+                    curl_setopt_array(
+                        $ch,
+                        array(
+                            CURLOPT_URL => 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $certificados[$x],
+                            CURLOPT_VERBOSE => 1,
+                            CURLOPT_USERPWD => $rfc . ':' . $pass,
+                            CURLOPT_POSTFIELDS => $contenido,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_BINARYTRANSFER => true,
+                            CURLOPT_CUSTOMREQUEST => 'PUT',
+                        )
+                    );
+                    $response = curl_exec($ch);
+                    $array["responsecertificados"] = $response;
+                    unlink($rutacertificado);
+                }
+
+                rmdir($ruta);
 
                 $modulos = DB::connection("General")->select('select idmodulo,nombre_carpeta from mc1003');
                 for ($i = 0; $i < count($modulos); $i++) {
@@ -128,6 +159,40 @@ class UsuarioController extends Controller
             
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function obtenerCertificadosEmpresa($ruta, $contador){
+        // Se comprueba que realmente sea la ruta de un directorio
+        $certificados = [];
+        if (is_dir($ruta)){
+            // Abre un gestor de directorios para la ruta indicada
+            $gestor = opendir($ruta);
+    
+            // Recorre todos los elementos del directorio
+            while (($archivo = readdir($gestor)) !== false)  {
+                    
+                $ruta_completa = $ruta . "/" . $archivo;
+    
+                // Se muestran todos los archivos y carpetas excepto "." y ".."
+                if ($archivo != "." && $archivo != "..") {
+                    // Si es un directorio se recorre recursivamente
+                    if (is_dir($ruta_completa)) {
+                        $certificados[$contador] = $archivo;
+                        $contador++;
+                        obtenerCertificadosEmpresa($ruta_completa, $contador);
+                    } else {
+                        $certificados[$contador] = $archivo;
+                        $contador++;
+                    }
+                }
+            }
+            
+            // Cierra el gestor de directorios
+            closedir($gestor);
+        } else {
+            $certificados = "No es una ruta de directorio valida<br/>";
+        }
+        return $certificados;
     }
 
     public function registrarUsuario(Request $request)

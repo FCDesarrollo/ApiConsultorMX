@@ -81,7 +81,7 @@ class UsuarioController extends Controller
 
                 $array["response3"] = $response;
 
-                $ruta = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/'.$rfc.'/';
+                /* $ruta = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/'.$rfc.'/';
                 $certificados = $this->obtenerCertificadosEmpresa($ruta, 0);
                 $array["certificados"] = $certificados;
 
@@ -106,9 +106,9 @@ class UsuarioController extends Controller
                     $response = curl_exec($ch);
                     $array["responsecertificados"] = $response;
                     unlink($rutacertificado);
-                }
+                } */
 
-                rmdir($ruta);
+                /* rmdir($ruta); */
 
                 $modulos = DB::connection("General")->select('select idmodulo,nombre_carpeta from mc1003');
                 for ($i = 0; $i < count($modulos); $i++) {

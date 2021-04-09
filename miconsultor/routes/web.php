@@ -416,3 +416,7 @@ Route::get('traerTemasDocumentosNuevaContabilidad', 'NuevaContabilidadController
 Route::get('traerDatosNuevaContabilidad', 'NuevaContabilidadController@traerDatosNuevaContabilidad');
 Route::get('traerDocumentosNuevaContabilidad', 'NuevaContabilidadController@traerDocumentosNuevaContabilidad');
 Route::post('enviarInformacionNuevaContabilidad', 'NuevaContabilidadController@enviarInformacionNuevaContabilidad');
+
+//PUBLICACIONES
+Route::get('getPublicaciones', 'PublicacionesController@getPublicaciones');
+Route::delete('eliminarPublicacion', 'PublicacionesController@eliminarPublicacion');

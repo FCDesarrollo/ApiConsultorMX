@@ -335,7 +335,7 @@ class EmpresaController extends Controller
                             for ($i = 0; $i < count($proveedores); $i++) {
                                 $data["titulo"] = "Nueva base de datos ocupada";
                                 $data["cabecera"] = "Nueva base de datos ocupada";
-                                $data["mensaje"] = "La base de datos " . $bdd . " ha sido ocupada por la empresa " . $empresa . ". Base de datos diponibles: " . count($dbvacias) . ".";
+                                $data["mensaje"] = "La base de datos " . $bdd . " ha sido ocupada por la empresa " . $empresa . ". Base de datos disponibles: " . count($dbvacias) . ".";
                                 Mail::to($proveedores[$i]->correo)->send(new MensajesGenerales($data));
                             }
                         } else {
@@ -991,6 +991,27 @@ class EmpresaController extends Controller
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flw_layouts_bancos);
+
+            $mc_publicaciones = "create table if not exists mc_publicaciones(
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                titulo VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                descripcion VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                tipo int(11) DEFAULT NULL,
+                fechaPublicacion DATETIME DEFAULT NULL,
+                fechaEliminado DATETIME DEFAULT NULL,
+                status int(11) DEFAULT 1,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_publicaciones);
+
+            $mc_publicaciones_docs = "create table if not exists mc_publicaciones_docs(
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                idPublicacion bigint(20) DEFAULT NULL,
+                nombre VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                link VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_publicaciones_docs);
 
             /* $mc_flw_layouts_usuarios = "create table if not exists mc_flw_layouts_usuarios(
                 id int(11) NOT NULL AUTO_INCREMENT,

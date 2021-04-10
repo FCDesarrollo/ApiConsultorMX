@@ -996,7 +996,8 @@ class EmpresaController extends Controller
                 id bigint(20) NOT NULL AUTO_INCREMENT,
                 titulo VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
                 descripcion VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
-                tipo int(11) DEFAULT NULL,
+                tipoPublicacion int(11) DEFAULT NULL,
+                tipoCatalogo int(11) DEFAULT NULL,
                 fechaPublicacion DATETIME DEFAULT NULL,
                 fechaEliminado DATETIME DEFAULT NULL,
                 status int(11) DEFAULT 1,
@@ -1012,6 +1013,14 @@ class EmpresaController extends Controller
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_publicaciones_docs);
+
+            $mc_publicaciones_catalogos = "create table if not exists mc_publicaciones_catalogos(
+                id int(11) NOT NULL AUTO_INCREMENT,
+                nombre VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                tipo int(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_publicaciones_catalogos);
 
             /* $mc_flw_layouts_usuarios = "create table if not exists mc_flw_layouts_usuarios(
                 id int(11) NOT NULL AUTO_INCREMENT,

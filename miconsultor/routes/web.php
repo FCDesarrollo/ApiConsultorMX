@@ -420,3 +420,7 @@ Route::post('enviarInformacionNuevaContabilidad', 'NuevaContabilidadController@e
 //PUBLICACIONES
 Route::get('getPublicaciones', 'PublicacionesController@getPublicaciones');
 Route::delete('eliminarPublicacion', 'PublicacionesController@eliminarPublicacion');
+Route::get('getCatalogosPublicaciones', 'PublicacionesController@getCatalogosPublicaciones');
+Route::delete('eliminarCatalogoPublicacion', 'PublicacionesController@eliminarCatalogoPublicacion');
+Route::post('agregarPublicacion', 'PublicacionesController@agregarPublicacion');
+Route::post('agregarCatalogoPublicacion', 'PublicacionesController@agregarCatalogoPublicacion');

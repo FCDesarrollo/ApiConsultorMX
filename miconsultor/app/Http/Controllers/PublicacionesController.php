@@ -93,14 +93,21 @@ class PublicacionesController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    function agregarCatalogoPublicacion(Request $request)
+    function guardarCatalogoPublicacion(Request $request)
     {
+        $idCatalogo = $request->idCatalogo;
         $nombre = $request->nombre;
         $tipo = $request->tipo;
+        $accion = $request->accion;
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            DB::table('mc_publicaciones_catalogos')->insert(['nombre' => $nombre, 'tipo' => $tipo]);
+            if($accion == 1) {
+                DB::table('mc_publicaciones_catalogos')->insert(['nombre' => $nombre, 'tipo' => $tipo]);
+            }
+            else {
+                DB::table('mc_publicaciones_catalogos')->where("id", $idCatalogo)->update(['nombre' => $nombre, 'tipo' => $tipo]);
+            }
         }
                 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

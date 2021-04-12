@@ -423,4 +423,4 @@ Route::delete('eliminarPublicacion', 'PublicacionesController@eliminarPublicacio
 Route::get('getCatalogosPublicaciones', 'PublicacionesController@getCatalogosPublicaciones');
 Route::delete('eliminarCatalogoPublicacion', 'PublicacionesController@eliminarCatalogoPublicacion');
 Route::post('agregarPublicacion', 'PublicacionesController@agregarPublicacion');
-Route::post('agregarCatalogoPublicacion', 'PublicacionesController@agregarCatalogoPublicacion');
+Route::post('guardarCatalogoPublicacion', 'PublicacionesController@guardarCatalogoPublicacion');

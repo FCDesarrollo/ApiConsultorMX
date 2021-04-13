@@ -78,7 +78,7 @@ class PublicacionesController extends Controller
         $tipoCatalogo = $request->tipoCatalogo;
         $idUsuario = $request->idUsuario;
         $fechaPublicacion = $request->fechaPublicacion;
-        $documentos = $request->documentos;
+        $documentos = $request->file();
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {

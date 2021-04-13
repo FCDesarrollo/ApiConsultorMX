@@ -905,8 +905,8 @@ function subirArchivoNextcloud($archivo_name, $ruta_temp, $rfcempresa, $servidor
                 $codigoBancoDestino = substr($clabeBancoDestino, 0, 3);
                 $sucursalBancoDestino = $infopagoencontrado[0]->SucursalDestino != null ? $infopagoencontrado[0]->SucursalDestino : substr($clabeBancoDestino, 3, 3);
                 /* $numeroCuentaDestino = substr($clabeBancoDestino, 6, 11); */
-                /* $numeroCuentaDestino = substr($clabeBancoDestino, 10, 7); */
-                $numeroCuentaDestino = $clabeBancoDestino;
+                $numeroCuentaDestino = substr($clabeBancoDestino, 10, 7);
+                /* $numeroCuentaDestino = $clabeBancoDestino; */
                 $digitoControlCuentaDestino = substr($clabeBancoDestino, 17);
             }
             else {

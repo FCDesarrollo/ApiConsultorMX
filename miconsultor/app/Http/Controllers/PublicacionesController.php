@@ -12,10 +12,12 @@ class PublicacionesController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $publicaciones = DB::select("SELECT * FROM mc_publicaciones ORDER BY fechaPublicacion DESC");
+            $publicaciones = DB::select("SELECT * FROM mc_publicaciones WHERE status = 1 ORDER BY fechaPublicacion DESC");
             for($x=0 ; $x<count($publicaciones) ; $x++) {
-                $documentos = DB::select("SELECT * FROM mc_publicaciones_docs WHERE idPublicacion = ?", [$publicaciones[$x]->id]);
+                $documentos = DB::select("SELECT * FROM mc_publicaciones_docs WHERE idPublicacion = ? ORDER BY id ASC", [$publicaciones[$x]->id]);
                 $publicaciones[$x]->documentos = $documentos;
+                $nombreUsuario = DB::connection("General")->select("SELECT CONCAT(nombre, ' ', apellidop, ' ', apellidom) AS nombreUsuario FROM mc1001 WHERE idusuario = ?", [$publicaciones[$x]->idUsuario]);
+                $publicaciones[$x]->nombreUsuario = $nombreUsuario[0]->nombreUsuario;
             }
             $array["publicaciones"] = $publicaciones;
         }
@@ -72,24 +74,77 @@ class PublicacionesController extends Controller
 
     function agregarPublicacion(Request $request)
     { 
+        $idmenu = $request->idmenu;
+        $idmodulo = $request->idmodulo;
         $titulo = $request->titulo;
         $descripcion = $request->descripcion;
         $tipoPublicacion = $request->tipoPublicacion;
         $tipoCatalogo = $request->tipoCatalogo;
         $idUsuario = $request->idUsuario;
         $fechaPublicacion = $request->fechaPublicacion;
+        $codigoArchivo = $request->codigoArchivo;
         $documentos = $request->file();
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             $idPublicacion = DB::table('mc_publicaciones')->insertGetId(['titulo' => $titulo, 'descripcion' => $descripcion, 'tipoPublicacion' => $tipoPublicacion, 'tipoCatalogo' => $tipoCatalogo, 'idUsuario' => $idUsuario, 'fechaPublicacion' => $fechaPublicacion]);
 
-            $nombreDocumento = "";
-            $linkDocumento = "";
+            $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $request->idsubmenu);
+            $array["error"] = $validaCarpetas[0]["error"];
+            if ($validaCarpetas[0]['error'] == 0) {
+                $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+                $x=0;
+                $y=0;
+                $servidor = getServidorNextcloud();
+                $datosempresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$request->rfc'");
+                $u_storage = $datosempresa[0]->usuario_storage;
+                $p_storage = $datosempresa[0]->password_storage;
+                foreach ($documentos as $key => $file) {
+                    $archivo = $file->getClientOriginalName();
 
-            DB::table('mc_publicaciones_docs')->insert(['idPublicacion' => $idPublicacion, 'nombre' => $nombreDocumento, 'link' => $linkDocumento]);
+                    $codigoarchivo = $request->rfc . "_" . $codigoArchivo . "_" . $idUsuario . "_";
+
+                    $resultado = subirArchivoNextcloud($archivo, $file, $request->rfc, $servidor, $u_storage, $p_storage, $carpetamodulo, $carpetamenu, $carpetasubmenu, $codigoarchivo, $x);
+                    if ($resultado["archivo"]["error"] == 0) {
+                        $codigodocumento = $codigoarchivo . $x;
+                        $type = explode(".", $archivo);
+                        $directorio = $request->rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
+                        $target_path = $directorio . '/' . $codigodocumento . "." . $type[count($type) - 1];
+                        $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                        /* $array["directorio"][$x] = $directorio;
+                        $array["target_path"][$x] = $target_path;
+                        $array["link"][$x] = $link; */
+                        DB::table('mc_publicaciones_docs')->insert(['idPublicacion' => $idPublicacion, 'nombre' => $codigodocumento . "." . $type[count($type) - 1], 'link' => $link]);
+                        $array["archivo"][$y] = $archivo;
+                        $array["statusDocumentos"][$y] = $link != "" ? 1 : 0;
+                        $y++;
+                    }
+                    $x++;
+                }
+            }
         }
                 
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function agregarDocumentosPublicacion(Request $request) {
+
+    }
+
+    function editarPublicacion(Request $request) {
+        $idPublicacion = $request->idPublicacion;
+        $titulo = $request->titulo;
+        $descripcion = $request->descripcion;
+        $tipoCatalogo = $request->tipoCatalogo;
+        $fechaEditado = $request->fechaEditado;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            DB::table('mc_publicaciones_catalogos')->where("id", $idPublicacion)->update(['titulo' => $titulo, 'descripcion' => $descripcion , 'tipoCatalogo' => $tipoCatalogo, 'fechaEdicion' => $fechaEditado]);
+        }
+
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 

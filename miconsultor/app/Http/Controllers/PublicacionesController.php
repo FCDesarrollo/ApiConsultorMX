@@ -12,7 +12,7 @@ class PublicacionesController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            $publicaciones = DB::select("SELECT * FROM mc_publicaciones WHERE status = 1 ORDER BY fechaPublicacion DESC");
+            $publicaciones = DB::select("SELECT *, IF(ISNULL(fechaEditado), fechaPublicacion, fechaEditado) AS ultimaModificacion FROM mc_publicaciones WHERE STATUS = 1 ORDER BY ultimaModificacion DESC");
             for($x=0 ; $x<count($publicaciones) ; $x++) {
                 $documentos = DB::select("SELECT * FROM mc_publicaciones_docs WHERE idPublicacion = ? ORDER BY id ASC", [$publicaciones[$x]->id]);
                 $publicaciones[$x]->documentos = $documentos;
@@ -135,6 +135,7 @@ class PublicacionesController extends Controller
         $idmodulo = $request->idmodulo;
         $idUsuario = $request->idUsuario;
         $codigoArchivo = $request->codigoArchivo;
+        $fechaEditado = $request->fechaEditado;
         $documentos = $request->file();
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
@@ -167,6 +168,7 @@ class PublicacionesController extends Controller
                         DB::table('mc_publicaciones_docs')->insert(['idPublicacion' => $idPublicacion, 'nombre' => $codigodocumento . "." . $type[count($type) - 1], 'ruta' => $resultado["archivo"]["directorio"], 'link' => $link]);
                         $array["archivo"][$y] = $archivo;
                         $array["statusDocumentos"][$y] = $link != "" ? 1 : 0;
+                        DB::table('mc_publicaciones')->where("id", $idPublicacion)->update(['fechaEditado' => $fechaEditado]);
                         $y++;
                     }
                     $x++;
@@ -180,6 +182,8 @@ class PublicacionesController extends Controller
     function eliminarDocumentoPublicacion(Request $request) {
         $idDocumento = $request->idDocumento;
         $rutaDocumento = $request->rutaDocumento;
+        $idPublicacion = $request->idPublicacion;
+        $fechaEditado = $request->fechaEditado;
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
@@ -190,6 +194,7 @@ class PublicacionesController extends Controller
             DB::table('mc_publicaciones_docs')->where("id", $idDocumento)->delete();
             $datosEliminacionDocumentoPublicacion = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaDocumento);
             $array["datosEliminacionDocumentoPublicacion"] = $datosEliminacionDocumentoPublicacion;
+            DB::table('mc_publicaciones')->where("id", $idPublicacion)->update(['fechaEditado' => $fechaEditado]);
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

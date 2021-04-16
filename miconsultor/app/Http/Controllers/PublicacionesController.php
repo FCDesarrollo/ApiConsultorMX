@@ -34,14 +34,6 @@ class PublicacionesController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             DB::table('mc_publicaciones')->where("id", $idPublicacion)->update(["fechaEliminado" => $fechaEliminacion, "status" => 0]);
-            /* if($tipoPublicacion == 1) { // borrado logico
-                DB::table('mc_publicaciones')->where("id", $idPublicacion)->update(["fechaEliminado" => $fechaEliminacion]);
-            }
-            else { //borrado fisico
-                DB::table('mc_publicaciones')->where("id", $idPublicacion)->delete();
-                DB::table('mc_publicaciones_docs')->where("idPublicacion", $idPublicacion)->delete();
-                //falta eliminar los documentos de NextCloud
-            } */
         }
                 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -67,6 +59,14 @@ class PublicacionesController extends Controller
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
             DB::table('mc_publicaciones_catalogos')->where("id", $idCatalogo)->delete();
+
+            $publicaciones = DB::select("SELECT * FROM mc_publicaciones WHERE tipoCatalogo = ?", [$idCatalogo]);
+
+            if(count($publicaciones) > 0) {
+                for($x=0 ; $x<count($publicaciones) ; $x++) {
+                    DB::table('mc_publicaciones')->where("id", $publicaciones[$x]->id)->update(['tipoCatalogo' => 1]);
+                }
+            }
         }
                 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -116,7 +116,7 @@ class PublicacionesController extends Controller
                         /* $array["directorio"][$x] = $directorio;
                         $array["target_path"][$x] = $target_path;
                         $array["link"][$x] = $link; */
-                        DB::table('mc_publicaciones_docs')->insert(['idPublicacion' => $idPublicacion, 'nombre' => $codigodocumento . "." . $type[count($type) - 1], 'link' => $link]);
+                        DB::table('mc_publicaciones_docs')->insert(['idPublicacion' => $idPublicacion, 'nombre' => $codigodocumento . "." . $type[count($type) - 1], 'ruta' => $resultado["archivo"]["directorio"], 'link' => $link]);
                         $array["archivo"][$y] = $archivo;
                         $array["statusDocumentos"][$y] = $link != "" ? 1 : 0;
                         $y++;
@@ -130,7 +130,68 @@ class PublicacionesController extends Controller
     }
 
     function agregarDocumentosPublicacion(Request $request) {
+        $idPublicacion = $request->idPublicacion;
+        $idmenu = $request->idmenu;
+        $idmodulo = $request->idmodulo;
+        $idUsuario = $request->idUsuario;
+        $codigoArchivo = $request->codigoArchivo;
+        $documentos = $request->file();
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
 
+            $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $request->idsubmenu);
+            $array["error"] = $validaCarpetas[0]["error"];
+            if ($validaCarpetas[0]['error'] == 0) {
+                $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+                $x=0;
+                $y=0;
+                $servidor = getServidorNextcloud();
+                $datosempresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$request->rfc'");
+                $u_storage = $datosempresa[0]->usuario_storage;
+                $p_storage = $datosempresa[0]->password_storage;
+                foreach ($documentos as $key => $file) {
+                    $archivo = $file->getClientOriginalName();
+
+                    $codigoarchivo = $request->rfc . "_" . $codigoArchivo . "_" . $idUsuario . "_";
+
+                    $resultado = subirArchivoNextcloud($archivo, $file, $request->rfc, $servidor, $u_storage, $p_storage, $carpetamodulo, $carpetamenu, $carpetasubmenu, $codigoarchivo, $x);
+                    if ($resultado["archivo"]["error"] == 0) {
+                        $codigodocumento = $codigoarchivo . $x;
+                        $type = explode(".", $archivo);
+                        $directorio = $request->rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
+                        $target_path = $directorio . '/' . $codigodocumento . "." . $type[count($type) - 1];
+                        $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                        DB::table('mc_publicaciones_docs')->insert(['idPublicacion' => $idPublicacion, 'nombre' => $codigodocumento . "." . $type[count($type) - 1], 'ruta' => $resultado["archivo"]["directorio"], 'link' => $link]);
+                        $array["archivo"][$y] = $archivo;
+                        $array["statusDocumentos"][$y] = $link != "" ? 1 : 0;
+                        $y++;
+                    }
+                    $x++;
+                }
+            }
+        }
+                
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function eliminarDocumentoPublicacion(Request $request) {
+        $idDocumento = $request->idDocumento;
+        $rutaDocumento = $request->rutaDocumento;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $servidor = getServidorNextcloud();
+            $DatosEmpresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$request->rfc'");
+            $usuariostorage = $DatosEmpresa[0]->usuario_storage;
+            $passwordstorage = $DatosEmpresa[0]->password_storage;
+            DB::table('mc_publicaciones_docs')->where("id", $idDocumento)->delete();
+            $datosEliminacionDocumentoPublicacion = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutaDocumento);
+            $array["datosEliminacionDocumentoPublicacion"] = $datosEliminacionDocumentoPublicacion;
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
     function editarPublicacion(Request $request) {
@@ -142,7 +203,7 @@ class PublicacionesController extends Controller
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
         if ($valida[0]['error'] === 0) {
-            DB::table('mc_publicaciones_catalogos')->where("id", $idPublicacion)->update(['titulo' => $titulo, 'descripcion' => $descripcion , 'tipoCatalogo' => $tipoCatalogo, 'fechaEdicion' => $fechaEditado]);
+            DB::table('mc_publicaciones')->where("id", $idPublicacion)->update(['titulo' => $titulo, 'descripcion' => $descripcion , 'tipoCatalogo' => $tipoCatalogo, 'fechaEditado' => $fechaEditado]);
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

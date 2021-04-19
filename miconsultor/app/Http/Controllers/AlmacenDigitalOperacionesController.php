@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use ZipArchive;
 
 
 class AlmacenDigitalOperacionesController extends Controller
@@ -102,6 +103,91 @@ class AlmacenDigitalOperacionesController extends Controller
                 }
                 $array["archivos"] = $archivos;
             }
+        }
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+    public function descargarArchivosAlmacenDigital(Request $request)
+    {
+        $idmenu = $request->idmenu;
+        $idmodulo = $request->idmodulo;
+        $u_storage = $request->usuario_storage;
+        $p_storage = $request->password_storage;
+        $fechaActual = $request->fechaActual;
+        $archivos = $request->archivos;
+        $extencionesArchivos = $request->extencionesArchivos;
+        $valida = verificaPermisos($request->usuario, $request->pwd,$request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] == 0) {
+            $carpetadestino = $_SERVER['DOCUMENT_ROOT'] . '/public/archivostemp/';
+            mkdir($carpetadestino . "DOCS_" . $request->rfc . "_" . $fechaActual, 0700);
+            $carpetadestino = $carpetadestino . "DOCS_" . $request->rfc . "_" . $fechaActual . "/";
+
+            for ($x = 0; $x < count($archivos); $x++) {
+                $urldestino = $carpetadestino . "Doc_".($x + 1).".".$extencionesArchivos[$x];
+                $archivo = fopen($archivos[$x], "rb");
+                if ($archivo) {
+                    $nuevoArchivo = fopen($urldestino, "a");
+                    if ($nuevoArchivo) {
+                        while (!feof($archivo)) {
+                            fwrite($nuevoArchivo, fread($archivo, 1024 * 8), 1024 * 8);
+                        }
+                        fclose($nuevoArchivo);
+                    }
+                }
+                fclose($archivo);
+            }
+
+            $zip = new ZipArchive();
+            $zipname = "layouts.zip";
+            $zip->open($zipname, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+            $da = opendir($carpetadestino);
+            $archibosaborrar = [];
+            $y = 0;
+            while (($archivo = readdir($da)) !== false) {
+                if (is_file($carpetadestino . $archivo) && $archivo != "." && $archivo != ".." && $archivo != $zipname) {
+                    $zip->addFile($carpetadestino . $archivo, $archivo);
+                    $archibosaborrar[$y] = $carpetadestino . $archivo;
+                    $y++;
+                }
+            }
+            closedir($da);
+            $zip->close();
+            $rutaFinal = $carpetadestino;
+            rename($zipname, "$rutaFinal/$zipname");
+
+            $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $request->idsubmenu);
+            $array["error"] = $validaCarpetas[0]["error"];
+            if ($validaCarpetas[0]['error'] == 0) {
+                $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+
+                $servidor = getServidorNextcloud();
+
+                $codigoarchivo = $fechaActual;
+                $consecutivo = "";
+                $resultado = subirArchivoNextcloud($zipname, "$rutaFinal/$zipname", $request->rfc, $servidor, $u_storage, $p_storage, $carpetamodulo, $carpetamenu, $carpetasubmenu, $codigoarchivo, $consecutivo);
+                $array["resultado"] = $resultado;
+                if ($resultado["archivo"]["error"] == 0) {
+                    $codigodocumento = $codigoarchivo . $consecutivo;
+                    $directorio = $request->rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
+                    $target_path = $directorio . '/' . $codigodocumento . ".zip";
+                    $array["target_path"] = $target_path;
+                    $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                    $array["link"] = $link;
+                    unlink($carpetadestino . $zipname);
+                    /* $datosEliminacionLayoutAntiguo = eliminaArchivoNextcloud($servidor, $u_storage, $p_storage, $target_path);
+                    $array["datosEliminacionLayoutAntiguo"] = $datosEliminacionLayoutAntiguo; */
+                }
+
+                for ($x = 0; $x < count($archibosaborrar); $x++) {
+                    unlink($archibosaborrar[$x]);
+                }
+            }
+
+            $urlcarpetaaborrar = substr($carpetadestino, 0, -1);
+            rmdir($urlcarpetaaborrar);
         }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

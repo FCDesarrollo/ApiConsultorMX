@@ -998,7 +998,9 @@ class EmpresaController extends Controller
                 descripcion VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
                 tipoPublicacion int(11) DEFAULT NULL,
                 tipoCatalogo int(11) DEFAULT NULL,
+                idUsuario int(11) DEFAULT NULL,
                 fechaPublicacion DATETIME DEFAULT NULL,
+                fechaEditado DATETIME DEFAULT NULL,
                 fechaEliminado DATETIME DEFAULT NULL,
                 status int(11) DEFAULT 1,
                 PRIMARY KEY (id)
@@ -1008,6 +1010,7 @@ class EmpresaController extends Controller
             $mc_publicaciones_docs = "create table if not exists mc_publicaciones_docs(
                 id bigint(20) NOT NULL AUTO_INCREMENT,
                 idPublicacion bigint(20) DEFAULT NULL,
+                ruta VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
                 nombre VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
                 link VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
                 PRIMARY KEY (id)
@@ -2234,6 +2237,7 @@ class EmpresaController extends Controller
             $CombinacionesBancos = $request->combinacionesBancos;
             $TiposDocumentos = $request->TiposDocumentos;
             $TiposDocumentosBancos = $request->TiposDocumentosBancos;
+            $FechaHoraLayout = $request->FechaHoraLayout;
             /* $SucursalesOrigen = $request->sucursalesOrigen;
             $SucursalesDestino = $request->sucursalesDestino;  */
 
@@ -2281,6 +2285,7 @@ class EmpresaController extends Controller
                 $motivoPago = "prueba motivo";
                 $indicadorComprobanteFiscal = "1";
                 $importeIVA = "000";
+                $fechaHora = $FechaHoraLayout;
                 /* $sucursal = "0394";
                 $sucursalOrigen = "7008";
                 $sucursalDestino = "0441"; */
@@ -2290,6 +2295,7 @@ class EmpresaController extends Controller
                     $motivoPago.= "-$-prueba motivo";
                     $indicadorComprobanteFiscal.= "-$-".($y+1);
                     $importeIVA.= "-$-000";
+                    $fechaHora.= "-$-".$FechaHoraLayout;
                     /* $sucursal.= "-$-0394";
                     $sucursalOrigen.= "-$-7008";
                     $sucursalDestino.= "-$-0441"; */
@@ -2301,6 +2307,7 @@ class EmpresaController extends Controller
                 $datosLayout["motivoPago"] = explode("-$-", $motivoPago);
                 $datosLayout["indicadorComprobanteFiscal"] = explode("-$-", $indicadorComprobanteFiscal);
                 $datosLayout["importeIVA"] = explode("-$-", $importeIVA);
+                $datosLayout["fechaHora"] = explode("-$-", $fechaHora);
                 $datosLayout["RFC"] = explode("-$-", $RfcProveedores[$x]);
                 $datosLayout["tipodocumento"] = explode("-$-", $TiposDocumentos[$x]);
                 /* $datosLayout["sucursal"] = explode("-$-", $sucursal);

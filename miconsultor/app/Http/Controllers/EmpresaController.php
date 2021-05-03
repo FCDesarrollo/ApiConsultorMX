@@ -894,6 +894,7 @@ class EmpresaController extends Controller
                 Clabe VARCHAR(20) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Banco VARCHAR(250) COLLATE utf8_spanish_ci DEFAULT NULL,
                 IdBanco INT(11) DEFAULT NULL,
+                Sucursal INT(11) DEFAULT NULL,
                 Escliente INT(11) DEFAULT NULL,
                 PRIMARY KEY (Id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
@@ -904,8 +905,10 @@ class EmpresaController extends Controller
                 Clabe VARCHAR(100) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Cuenta VARCHAR(50) COLLATE utf8_spanish_ci DEFAULT NULL,
                 Nombre VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
+                Banco VARCHAR(255) COLLATE utf8_spanish_ci DEFAULT NULL,
                 IdBanco INT(11) DEFAULT NULL,
                 IdMoneda INT(11) DEFAULT NULL,
+                Sucursal INT(11) DEFAULT NULL,
                 Activa int(11) DEFAULT NULL
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_flow_bancuentas);
@@ -1024,6 +1027,97 @@ class EmpresaController extends Controller
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_publicaciones_catalogos);
+
+            $mc_pry_proyectos = "create table if not exists mc_pry_proyectos(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                Proyecto VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                Codigo VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                IdClas1 INT(11) DEFAULT NULL,
+                IdClas2 INT(11) DEFAULT NULL,
+                IdClas3 INT(11) DEFAULT NULL,
+                IdClas4 INT(11) DEFAULT NULL,
+                idAgente INT(11) DEFAULT NULL,
+                Estatus INT(11) DEFAULT NULL,
+                FecIni DATE DEFAULT NULL,
+                FecFin DATE DEFAULT NULL,
+                Avance INT(11) DEFAULT NULL,
+                FecUltAccion DATE DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_pry_proyectos);
+
+            $mc_pry_agentes = "create table if not exists mc_pry_agentes(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                Agente VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                Estatus INT(11) DEFAULT NULL,
+                tipo INT(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_pry_agentes);
+
+            $mc_pry_proycatagentes = "create table if not exists mc_pry_proycatagentes(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                IDPersona INT(11) DEFAULT NULL,
+                IDProyecto INT(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_pry_proycatagentes);
+
+            $mc_pry_proyactividades = "create table if not exists mc_pry_proyactividades(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                IdProyecto INT(11) DEFAULT NULL,
+                Pos INT(11) DEFAULT NULL,
+                Nivel INT(11) DEFAULT NULL,
+                Actividad VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                FecIni DATE DEFAULT NULL,
+                FecFin DATE DEFAULT NULL,
+                idAgente INT(11) DEFAULT NULL,
+                Avance INT(11) DEFAULT NULL,
+                Estatus INT(11) DEFAULT NULL,
+                FecUltAccion DATE DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_pry_proyactividades);
+
+            $mc_pry_proyacciones = "create table if not exists mc_pry_proyacciones(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                idproyecto INT(11) DEFAULT NULL,
+                idactividad INT(11) DEFAULT NULL,
+                fecha DATE DEFAULT NULL,
+                Avance INT(11) DEFAULT NULL,
+                estatus INT(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_pry_proyacciones);
+
+            $mc_pry_proypersonas = "create table if not exists mc_pry_proypersonas(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                idproyecto INT(11) DEFAULT NULL,
+                idactividad INT(11) DEFAULT NULL,
+                idaccion INT(11) DEFAULT NULL,
+                idpersona INT(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_pry_proypersonas);
+
+            $mc_pry_proydocumentos = "create table if not exists mc_pry_proydocumentos(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                idproyecto INT(11) DEFAULT NULL,
+                idactividad INT(11) DEFAULT NULL,
+                idaccion INT(11) DEFAULT NULL,
+                Archivo VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_pry_proydocumentos);
+
+            $mc_pry_proyplanes = "create table if not exists mc_pry_proyplanes(
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                fecini DATE DEFAULT NULL,
+                fecfin DATE DEFAULT NULL,
+                idagente INT(11) DEFAULT NULL,
+                PRIMARY KEY (id)
+              ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
+            DB::statement($mc_pry_proyplanes);
 
             /* $mc_flw_layouts_usuarios = "create table if not exists mc_flw_layouts_usuarios(
                 id int(11) NOT NULL AUTO_INCREMENT,
@@ -2742,61 +2836,6 @@ class EmpresaController extends Controller
 
             $array["layouts"] = $layouts;
         }
-
-        /* set_time_limit(300);
-        $ch = curl_init();
-        $servercloud = "cloud.dublock.com";
-        $rfc = "AAA010101AAA";
-        $pass = "rNgo1vR2cB";
-        curl_setopt($ch, CURLOPT_VERBOSE, 1);
-        curl_setopt($ch, CURLOPT_USERPWD, $rfc . ':' . $pass);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "MKCOL");
-        $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM';
-        curl_setopt($ch, CURLOPT_URL, $url);
-        $response = curl_exec($ch);
-
-        $array["response1"] = $response;
-
-        $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc;
-        curl_setopt($ch, CURLOPT_URL, $url);
-        $response = curl_exec($ch);
-
-        $array["response2"] = $response;
-        $modulos = DB::connection("General")->select('select idmodulo,nombre_carpeta from mc1003');
-        for ($i = 0; $i < count($modulos); $i++) {
-            $idmodulo = $modulos[$i]->idmodulo;
-            $carpetamodulo = $modulos[$i]->nombre_carpeta;
-
-            $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo;
-            curl_setopt($ch, CURLOPT_URL, $url);
-            $response = curl_exec($ch);
-            $array["response3"] = $response;
-
-            $menus = DB::connection("General")->select('select idmenu,nombre_carpeta from mc1004 
-                                            where idmodulo = ?', [$idmodulo]);
-            for ($x = 0; $x < count($menus); $x++) {
-                $idmenu = $menus[$x]->idmenu;
-                $carpetamenu = $menus[$x]->nombre_carpeta;
-
-                $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu;
-                curl_setopt($ch, CURLOPT_URL, $url);
-                $response = curl_exec($ch);
-                $array["response4"] = $response;
-
-                $submenus = DB::connection("General")->select('select nombre_carpeta from mc1005
-                                        where idmenu = ?', [$idmenu]);
-                for ($z = 0; $z < count($submenus); $z++) {
-                    $carpetasubmenu = $submenus[$z]->nombre_carpeta;
-
-                    $url = 'https://' . $servercloud . '/remote.php/dav/files/' . $rfc . '/CRM/' . $rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
-                    curl_setopt($ch, CURLOPT_URL, $url);
-                    $response = curl_exec($ch);
-                    $array["response5"] = $response;
-                }
-            }
-        }
-        curl_close($ch); */
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

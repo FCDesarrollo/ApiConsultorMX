@@ -428,3 +428,22 @@ Route::post('agregarDocumentosPublicacion', 'PublicacionesController@agregarDocu
 Route::delete('eliminarDocumentoPublicacion', 'PublicacionesController@eliminarDocumentoPublicacion');
 Route::post('editarPublicacion', 'PublicacionesController@editarPublicacion');
 Route::post('guardarCatalogoPublicacion', 'PublicacionesController@guardarCatalogoPublicacion');
+
+//GESTION EMPRESARIAL
+Route::get('getPryProyectos', 'GestionEmpresarialController@getPryProyectos');
+Route::post('guardarPryProyecto', 'GestionEmpresarialController@guardarPryProyecto');
+Route::delete('borrarPryProyecto', 'GestionEmpresarialController@borrarPryProyecto');
+Route::get('getPryAgentesPersonas', 'GestionEmpresarialController@getPryAgentesPersonas');
+Route::post('guardarPryAgentePersona', 'GestionEmpresarialController@guardarPryAgentePersona');
+Route::delete('borrarPryAgentePersona', 'GestionEmpresarialController@borrarPryAgentePersona');
+Route::get('getPryProyCatAgentes', 'GestionEmpresarialController@getPryProyCatAgentes');
+Route::post('guardarPryProyCatAgentes', 'GestionEmpresarialController@guardarPryProyCatAgentes');
+Route::delete('borrarPryProyCatAgente', 'GestionEmpresarialController@borrarPryProyCatAgente');
+Route::get('getPryProyActividades', 'GestionEmpresarialController@getPryProyActividades');
+Route::post('guardarPryProyActividad', 'GestionEmpresarialController@guardarPryProyActividad');
+Route::delete('borrarPryProyActividad', 'GestionEmpresarialController@borrarPryProyActividad');
+Route::post('guardarPryProyAccion', 'GestionEmpresarialController@guardarPryProyAccion');
+Route::delete('borrarPryProyAccion', 'GestionEmpresarialController@borrarPryProyAccion');
+Route::post('guardarPryProyPerson', 'GestionEmpresarialController@guardarPryProyPerson');
+Route::post('guardarPryProyDocumento', 'GestionEmpresarialController@guardarPryProyDocumento');
+Route::post('guardarPryProyPlan', 'GestionEmpresarialController@guardarPryProyPlan');

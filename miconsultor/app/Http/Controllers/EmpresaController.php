@@ -1112,6 +1112,8 @@ class EmpresaController extends Controller
 
             $mc_pry_proyplanes = "create table if not exists mc_pry_proyplanes(
                 id INT(11) NOT NULL AUTO_INCREMENT,
+                idproyecto INT(11) DEFAULT NULL,
+                idactividades INT(11) DEFAULT NULL,
                 fecini DATE DEFAULT NULL,
                 fecfin DATE DEFAULT NULL,
                 idagente INT(11) DEFAULT NULL,

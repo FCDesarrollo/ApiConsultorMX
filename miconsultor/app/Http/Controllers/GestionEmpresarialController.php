@@ -13,7 +13,7 @@ class GestionEmpresarialController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            $proyectos = DB::select('SELECT * FROM mc_pry_proyectos ORDER BY FecUltAccion DESC');
+            $proyectos = DB::select('SELECT mc_pry_proyectos.*, mc_pry_agentes.Agente FROM mc_pry_proyectos INNER JOIN mc_pry_agentes ON mc_pry_proyectos.idAgente = mc_pry_agentes.id ORDER BY mc_pry_proyectos.FecUltAccion DESC');
             $array["proyectos"] = $proyectos;
         }
 

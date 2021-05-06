@@ -61,6 +61,10 @@ class GestionEmpresarialController extends Controller
             DB::table('mc_pry_proyectos')->where("id", $idProyecto)->delete();
             DB::table('mc_pry_proyactividades')->where("IdProyecto", $idProyecto)->delete();
             DB::table('mc_pry_proyacciones')->where("idproyecto", $idProyecto)->delete();
+            DB::table('mc_pry_proycatagentes')->where("IDProyecto", $idProyecto)->delete();
+            DB::table('mc_pry_proypersonas')->where("idproyecto", $idProyecto)->delete();
+            DB::table('mc_pry_proyplanes')->where("idproyecto", $idProyecto)->delete();
+            DB::table('mc_pry_proydocumentos')->where("idproyecto", $idProyecto)->delete(); //aqui falta eliminar los documentos en NextCloud.
             //Definir que pasara despues de eliminar un proyecto con los agentes, personas, actividades y acciones que esten relacionados con el proyecto eliminado.
         }
 
@@ -97,6 +101,20 @@ class GestionEmpresarialController extends Controller
             else {
                 DB::table('mc_pry_agentes')->where("id", $idAgentePersona)->update(['Agente' => $Agente, 'Estatus' => $Estatus, 'tipo' => $tipo]);
             }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function cambiarEstatusPryAgentePersona(Request $request)
+    {
+        $idAgentePersona = $request->idAgentePersona;
+        $Estatus = $request->Estatus;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            DB::table('mc_pry_agentes')->where("id", $idAgentePersona)->update(['Estatus' => $Estatus]);
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

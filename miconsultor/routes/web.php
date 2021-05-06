@@ -435,6 +435,7 @@ Route::post('guardarPryProyecto', 'GestionEmpresarialController@guardarPryProyec
 Route::delete('borrarPryProyecto', 'GestionEmpresarialController@borrarPryProyecto');
 Route::get('getPryAgentesPersonas', 'GestionEmpresarialController@getPryAgentesPersonas');
 Route::post('guardarPryAgentePersona', 'GestionEmpresarialController@guardarPryAgentePersona');
+Route::post('cambiarEstatusPryAgentePersona', 'GestionEmpresarialController@cambiarEstatusPryAgentePersona');
 Route::delete('borrarPryAgentePersona', 'GestionEmpresarialController@borrarPryAgentePersona');
 Route::get('getPryProyCatAgentes', 'GestionEmpresarialController@getPryProyCatAgentes');
 Route::post('guardarPryProyCatAgentes', 'GestionEmpresarialController@guardarPryProyCatAgentes');

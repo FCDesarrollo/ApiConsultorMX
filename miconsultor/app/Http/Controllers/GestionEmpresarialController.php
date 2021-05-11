@@ -191,13 +191,16 @@ class GestionEmpresarialController extends Controller
         if ($valida[0]['error'] === 0) {
             $proyactividades = DB::select('SELECT * FROM mc_pry_proyactividades WHERE IdProyecto = ?', [$IdProyecto]);
             for($x=0 ; $x<count($proyactividades) ; $x++) {
-                $acciones = DB::select('SELECT * FROM mc_pry_proyacciones WHERE idproyecto = ? AND idactividad = ?', [$IdProyecto, $proyactividades[$x]->idactividad]);
+                $acciones = DB::select('SELECT * FROM mc_pry_proyacciones WHERE idproyecto = ? AND idactividad = ?', [$IdProyecto, $proyactividades[$x]->id]);
                 for($y=0 ; $y<count($acciones) ; $y++) {
-                    $acciones[$y]->Personas = DB::select('SELECT * FROM mc_pry_proypersonas WHERE idproyecto = ? AND idactividad = ? AND idaccion = ?', [$IdProyecto, $proyactividades[$x]->idactividad, $acciones[$y]->id]);
-                    $acciones[$y]->Documentos = DB::select('SELECT * FROM mc_pry_proydocumentos WHERE idproyecto = ? AND idactividad = ? AND idaccion = ?', [$IdProyecto, $proyactividades[$x]->idactividad, $acciones[$y]->id]);
+                    $acciones[$y]->Personas = DB::select('SELECT mc_pry_proypersonas.*, mc_pry_agentes.Agente AS persona FROM mc_pry_proypersonas 
+                    INNER JOIN mc_pry_agentes ON mc_pry_proypersonas.idpersona = mc_pry_agentes.id
+                    WHERE mc_pry_proypersonas.idproyecto = ? 
+                    AND mc_pry_proypersonas.idactividad = ? AND mc_pry_proypersonas.idaccion = ?', [$IdProyecto, $proyactividades[$x]->id, $acciones[$y]->id]);
+                    $acciones[$y]->Documentos = DB::select('SELECT * FROM mc_pry_proydocumentos WHERE idproyecto = ? AND idactividad = ? AND idaccion = ?', [$IdProyecto, $proyactividades[$x]->id, $acciones[$y]->id]);
                 }
                 $proyactividades[$x]->Acciones = $acciones;
-                $proyactividades[$x]->Planes = DB::select('SELECT * FROM mc_pry_proyplanes WHERE idproyecto = ? AND idactividad = ?', [$IdProyecto, $proyactividades[$x]->idactividad]);
+                $proyactividades[$x]->Planes = DB::select('SELECT * FROM mc_pry_proyplanes WHERE idproyecto = ? AND idactividades = ?', [$IdProyecto, $proyactividades[$x]->id]);
             }
             $array["proyactividades"] = $proyactividades;
         }

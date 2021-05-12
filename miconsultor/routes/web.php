@@ -440,7 +440,7 @@ Route::delete('borrarPryAgentePersona', 'GestionEmpresarialController@borrarPryA
 Route::get('getPryProyCatAgentes', 'GestionEmpresarialController@getPryProyCatAgentes');
 Route::post('guardarPryProyCatAgentes', 'GestionEmpresarialController@guardarPryProyCatAgentes');
 Route::delete('borrarPryProyCatAgente', 'GestionEmpresarialController@borrarPryProyCatAgente');
-Route::get('getPryProyActividades', 'GestionEmpresarialController@getPryProyActividades');
+Route::get('getPryProyActividadesInfo', 'GestionEmpresarialController@getPryProyActividadesInfo');
 Route::post('guardarPryProyActividad', 'GestionEmpresarialController@guardarPryProyActividad');
 Route::delete('borrarPryProyActividad', 'GestionEmpresarialController@borrarPryProyActividad');
 Route::post('guardarPryProyAccion', 'GestionEmpresarialController@guardarPryProyAccion');

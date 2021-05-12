@@ -182,27 +182,32 @@ class GestionEmpresarialController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function getPryProyActividades(Request $request)
+    public function getPryProyActividadesInfo(Request $request)
     {
         $IdProyecto = $request->IdProyecto;
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            $proyactividades = DB::select('SELECT * FROM mc_pry_proyactividades WHERE IdProyecto = ?', [$IdProyecto]);
-            for($x=0 ; $x<count($proyactividades) ; $x++) {
-                $acciones = DB::select('SELECT * FROM mc_pry_proyacciones WHERE idproyecto = ? AND idactividad = ?', [$IdProyecto, $proyactividades[$x]->id]);
-                for($y=0 ; $y<count($acciones) ; $y++) {
-                    $acciones[$y]->Personas = DB::select('SELECT mc_pry_proypersonas.*, mc_pry_agentes.Agente AS persona FROM mc_pry_proypersonas 
-                    INNER JOIN mc_pry_agentes ON mc_pry_proypersonas.idpersona = mc_pry_agentes.id
-                    WHERE mc_pry_proypersonas.idproyecto = ? 
-                    AND mc_pry_proypersonas.idactividad = ? AND mc_pry_proypersonas.idaccion = ?', [$IdProyecto, $proyactividades[$x]->id, $acciones[$y]->id]);
-                    $acciones[$y]->Documentos = DB::select('SELECT * FROM mc_pry_proydocumentos WHERE idproyecto = ? AND idactividad = ? AND idaccion = ?', [$IdProyecto, $proyactividades[$x]->id, $acciones[$y]->id]);
+            $proyectos = DB::select('SELECT mc_pry_proyectos.*, mc_pry_agentes.Agente FROM mc_pry_proyectos INNER JOIN mc_pry_agentes ON mc_pry_proyectos.idAgente = mc_pry_agentes.id WHERE mc_pry_proyectos.id = ? ORDER BY mc_pry_proyectos.FecUltAccion DESC', [$IdProyecto]);
+            for($x=0 ; $x<count($proyectos) ; $x++) {
+                $proyactividades = DB::select('SELECT * FROM mc_pry_proyactividades WHERE IdProyecto = ?', [$proyectos[$x]->id]);
+                for($y=0 ; $y<count($proyactividades) ; $y++) {
+                    $acciones = DB::select('SELECT * FROM mc_pry_proyacciones WHERE idproyecto = ? AND idactividad = ?', [$proyectos[$x]->id, $proyactividades[$y]->id]);
+                    for($z=0 ; $z<count($acciones) ; $z++) {
+                        $acciones[$z]->Personas = DB::select('SELECT mc_pry_proypersonas.*, mc_pry_agentes.Agente AS persona FROM mc_pry_proypersonas 
+                        INNER JOIN mc_pry_agentes ON mc_pry_proypersonas.idpersona = mc_pry_agentes.id
+                        WHERE mc_pry_proypersonas.idproyecto = ? 
+                        AND mc_pry_proypersonas.idactividad = ? AND mc_pry_proypersonas.idaccion = ?', [$proyectos[$x]->id, $proyactividades[$y]->id, $acciones[$z]->id]);
+                        $acciones[$z]->Documentos = DB::select('SELECT * FROM mc_pry_proydocumentos WHERE idproyecto = ? AND idactividad = ? AND idaccion = ?', [$proyectos[$x]->id, $proyactividades[$x]->id, $acciones[$y]->id]);
+                    }
+                    $proyactividades[$y]->Acciones = $acciones;
+                    $proyactividades[$y]->Planes = DB::select('SELECT * FROM mc_pry_proyplanes WHERE idproyecto = ? AND idactividades = ?', [$proyectos[$x]->id, $proyactividades[$y]->id]);
                 }
-                $proyactividades[$x]->Acciones = $acciones;
-                $proyactividades[$x]->Planes = DB::select('SELECT * FROM mc_pry_proyplanes WHERE idproyecto = ? AND idactividades = ?', [$IdProyecto, $proyactividades[$x]->id]);
+                $proyectos[$x]->Actividades = $proyactividades;
             }
-            $array["proyactividades"] = $proyactividades;
+
+            $array["actividadesInfo"] = $proyectos;
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

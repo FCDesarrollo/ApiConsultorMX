@@ -194,7 +194,7 @@ class GestionEmpresarialController extends Controller
                 $proyactividades = DB::select('SELECT * FROM mc_pry_proyactividades WHERE IdProyecto = ?', [$proyectos[$x]->id]);
                 $proyectos[$x]->Actividades = $proyactividades;
                 $proyectos[$x]->Acciones = DB::select('SELECT mc_pry_proyacciones.*, mc_pry_proyactividades.Actividad FROM mc_pry_proyacciones
-                INNER JOIN mc_pry_proyactividades ON mc_pry_proyacciones.idactividad = mc_pry_proyactividades.id WHERE mc_pry_proyacciones.idproyecto = ?', [$proyectos[$x]->id]);
+                LEFT JOIN mc_pry_proyactividades ON mc_pry_proyacciones.idactividad = mc_pry_proyactividades.id WHERE mc_pry_proyacciones.idproyecto = ? ORDER BY mc_pry_proyacciones.fecha DESC', [$proyectos[$x]->id]);
                 $proyectos[$x]->Documentos = DB::select('SELECT * FROM mc_pry_proydocumentos WHERE idproyecto = ?', [$proyectos[$x]->id]);
                 $proyectos[$x]->Planes = DB::select('SELECT * FROM mc_pry_proyplanes WHERE idproyecto = ?', [$proyectos[$x]->id]);
                 $proyectos[$x]->AgentesPersonas = DB::select('SELECT mc_pry_agentes.* FROM mc_pry_agentes INNER JOIN mc_pry_proyectos

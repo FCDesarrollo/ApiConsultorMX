@@ -203,7 +203,11 @@ class GestionEmpresarialController extends Controller
                 UNION 
                 SELECT mc_pry_agentes.* FROM mc_pry_agentes 
                 INNER JOIN mc_pry_proyactividades ON mc_pry_agentes.id = mc_pry_proyactividades.idAgente 
-                WHERE mc_pry_proyactividades.IdProyecto = ?', [$proyectos[$x]->id, $proyectos[$x]->id]);
+                WHERE mc_pry_proyactividades.IdProyecto = ?
+                UNION 
+                SELECT mc_pry_agentes.* FROM mc_pry_agentes 
+                INNER JOIN mc_pry_proypersonas ON mc_pry_agentes.id = mc_pry_proypersonas.idpersona 
+                WHERE mc_pry_proypersonas.Idproyecto = ?', [$proyectos[$x]->id, $proyectos[$x]->id, $proyectos[$x]->id]);
             }
 
             $array["actividadesInfo"] = $proyectos;
@@ -292,23 +296,18 @@ class GestionEmpresarialController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function guardarPryProyPerson(Request $request)
+    public function guardarPryProyPersonas(Request $request)
     {
-        $idProyPersona = $request->idProyPersona;
         $idproyecto = $request->idproyecto;
         $idactividad = $request->idactividad;
         $idaccion = $request->idaccion;
-        $idpersona = $request->idpersona;
-        $accion = $request->accion;
+        $idsAgentespersonas = $request->idsAgentespersonas;
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            if($accion === 1) {
-                DB::table('mc_pry_proypersonas')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'idpersona' => $idpersona]);
-            }
-            else {
-                DB::table('mc_pry_proypersonas')->where("id", $idProyPersona)->delete();
+            for($x=0 ; $x<count($idsAgentespersonas) ; $x++) {
+                DB::table('mc_pry_proypersonas')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'idpersona' => $idsAgentespersonas[$x]]);
             }
         }
 

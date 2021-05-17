@@ -447,4 +447,5 @@ Route::post('guardarPryProyAccion', 'GestionEmpresarialController@guardarPryProy
 Route::delete('borrarPryProyAccion', 'GestionEmpresarialController@borrarPryProyAccion');
 Route::post('guardarPryProyPerson', 'GestionEmpresarialController@guardarPryProyPerson');
 Route::post('guardarPryProyDocumento', 'GestionEmpresarialController@guardarPryProyDocumento');
+Route::delete('borrarPryProyDocumento', 'GestionEmpresarialController@borrarPryProyDocumento');
 Route::post('guardarPryProyPlan', 'GestionEmpresarialController@guardarPryProyPlan');

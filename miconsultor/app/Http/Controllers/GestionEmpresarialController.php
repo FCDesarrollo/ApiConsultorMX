@@ -317,27 +317,71 @@ class GestionEmpresarialController extends Controller
 
     public function guardarPryProyDocumento(Request $request)
     {
-        $idProyDocumento = $request->idProyDocumento;
+        $idmenu = $request->idmenu;
+        $idmodulo = $request->idmodulo;
+        $idUsuario = $request->idUsuario;
+        $codigoArchivo = $request->codigoArchivo;
         $idproyecto = $request->idproyecto;
         $idactividad = $request->idactividad;
         $idaccion = $request->idaccion;
         $documentos = $request->file();
-        $accion = $request->accion;
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            if($accion === 1) {
-                $link = "";
-                DB::table('mc_pry_proydocumentos')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'Archivo' => $link]);
-                //falta subir el archivo a NextCloud
-            }
-            else {
-                DB::table('mc_pry_proydocumentos')->where("id", $idProyDocumento)->delete();
-                //falta borrar el archivo en NextCloud
+            $validaCarpetas = getExisteCarpeta($idmodulo, $idmenu, $request->idsubmenu);
+            $array["error"] = $validaCarpetas[0]["error"];
+            if ($validaCarpetas[0]['error'] == 0) {
+                $carpetamodulo = $validaCarpetas[0]['carpetamodulo'];
+                $carpetamenu = $validaCarpetas[0]['carpetamenu'];
+                $carpetasubmenu = $validaCarpetas[0]['carpetasubmenu'];
+                $x=0;
+                $y=0;
+                $servidor = getServidorNextcloud();
+                $datosempresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$request->rfc'");
+                $u_storage = $datosempresa[0]->usuario_storage;
+                $p_storage = $datosempresa[0]->password_storage;
+                foreach ($documentos as $key => $file) {
+                    $archivo = $file->getClientOriginalName();
+
+                    $codigoarchivo = /* $request->rfc . "_" .  */$codigoArchivo . "_" . $idUsuario . "_";
+
+                    $resultado = subirArchivoNextcloud($archivo, $file, $request->rfc, $servidor, $u_storage, $p_storage, $carpetamodulo, $carpetamenu, $carpetasubmenu, $codigoarchivo, $x);
+                    if ($resultado["archivo"]["error"] == 0) {
+                        $codigodocumento = $codigoarchivo . $x;
+                        $type = explode(".", $archivo);
+                        $directorio = $request->rfc . '/' . $carpetamodulo . '/' . $carpetamenu . '/' . $carpetasubmenu;
+                        $target_path = $directorio . '/' . $codigodocumento . "." . $type[count($type) - 1];
+                        $link = GetLinkArchivo($target_path, $servidor, $u_storage, $p_storage);
+                        DB::table('mc_pry_proydocumentos')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'NombreDocumento' => $codigodocumento, 'ExtencionDocumento' => ".".$type[count($type) - 1], 'rutaDocumento' => $directorio, 'LinkDocumento' => $link]);
+                        $array["archivo"][$y] = $archivo;
+                        $array["statusDocumentos"][$y] = $link != "" ? 1 : 0;
+                        $y++;
+                    }
+                    $x++;
+                }
             }
         }
 
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    function borrarPryProyDocumento(Request $request) {
+        $idsPryProyDocumento = $request->idsPryProyDocumento;
+        $rutasDocumentos = $request->rutasDocumentos;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+        if ($valida[0]['error'] === 0) {
+            $servidor = getServidorNextcloud();
+            $DatosEmpresa = DB::connection("General")->select("SELECT usuario_storage, password_storage FROM mc1000 WHERE RFC = '$request->rfc'");
+            $usuariostorage = $DatosEmpresa[0]->usuario_storage;
+            $passwordstorage = $DatosEmpresa[0]->password_storage;
+            for($x=0 ; $x<count($idsPryProyDocumento) ; $x++) {
+                $datosEliminacionDocumentoPublicacion = eliminaArchivoNextcloud($servidor, $usuariostorage, $passwordstorage, $rutasDocumentos[$x]);
+                $array["datosEliminacionDocumentoPublicacion"][$x] = $datosEliminacionDocumentoPublicacion;
+                DB::table('mc_pry_proydocumentos')->where("id", $idsPryProyDocumento[$x])->delete();
+            }
+        }
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 

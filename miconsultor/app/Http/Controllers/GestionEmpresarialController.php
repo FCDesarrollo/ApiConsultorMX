@@ -195,17 +195,22 @@ class GestionEmpresarialController extends Controller
                 $proyectos[$x]->Actividades = $proyactividades;
                 $proyectos[$x]->Acciones = DB::select('SELECT mc_pry_proyacciones.*, mc_pry_proyactividades.Actividad FROM mc_pry_proyacciones
                 LEFT JOIN mc_pry_proyactividades ON mc_pry_proyacciones.idactividad = mc_pry_proyactividades.id WHERE mc_pry_proyacciones.idproyecto = ? ORDER BY mc_pry_proyacciones.fecha DESC', [$proyectos[$x]->id]);
-                $proyectos[$x]->Documentos = DB::select('SELECT * FROM mc_pry_proydocumentos WHERE idproyecto = ?', [$proyectos[$x]->id]);
+                $proyectos[$x]->Documentos = DB::select("SELECT mc_pry_proydocumentos.*, 
+                IF(ISNULL(mc_pry_proyactividades.Actividad),'Sin Actividad', mc_pry_proyactividades.Actividad) AS Actividad,
+                IF(ISNULL(mc_pry_proyacciones.fecha),'Sin Acción', mc_pry_proyacciones.fecha) AS Accion FROM mc_pry_proydocumentos
+                LEFT JOIN mc_pry_proyactividades ON mc_pry_proydocumentos.idactividad = mc_pry_proyactividades.id 
+                LEFT JOIN mc_pry_proyacciones ON mc_pry_proydocumentos.idaccion = mc_pry_proyacciones.id
+                WHERE mc_pry_proydocumentos.idproyecto = ?", [$proyectos[$x]->id]);
                 $proyectos[$x]->Planes = DB::select('SELECT * FROM mc_pry_proyplanes WHERE idproyecto = ?', [$proyectos[$x]->id]);
-                $proyectos[$x]->AgentesPersonas = DB::select('SELECT mc_pry_agentes.* FROM mc_pry_agentes INNER JOIN mc_pry_proyectos
+                $proyectos[$x]->AgentesPersonas = DB::select('SELECT mc_pry_agentes.*, 0 AS idActividad, 0 AS idAccion FROM mc_pry_agentes INNER JOIN mc_pry_proyectos
                 ON mc_pry_agentes.id = mc_pry_proyectos.idAgente
                 WHERE mc_pry_proyectos.id = ?
                 UNION 
-                SELECT mc_pry_agentes.* FROM mc_pry_agentes 
+                SELECT mc_pry_agentes.*, mc_pry_proyactividades.id AS idActividad, 0 AS idAccion FROM mc_pry_agentes 
                 INNER JOIN mc_pry_proyactividades ON mc_pry_agentes.id = mc_pry_proyactividades.idAgente 
                 WHERE mc_pry_proyactividades.IdProyecto = ?
                 UNION 
-                SELECT mc_pry_agentes.* FROM mc_pry_agentes 
+                SELECT mc_pry_agentes.*, mc_pry_proypersonas.idactividad AS idActividad, mc_pry_proypersonas.idaccion AS idAccion FROM mc_pry_agentes 
                 INNER JOIN mc_pry_proypersonas ON mc_pry_agentes.id = mc_pry_proypersonas.idpersona 
                 WHERE mc_pry_proypersonas.Idproyecto = ?', [$proyectos[$x]->id, $proyectos[$x]->id, $proyectos[$x]->id]);
             }

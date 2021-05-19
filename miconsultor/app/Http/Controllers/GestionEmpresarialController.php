@@ -272,13 +272,17 @@ class GestionEmpresarialController extends Controller
         $fecha = $request->fecha;
         $Avance = $request->Avance;
         $estatus = $request->estatus;
+        $agentesPersonas = $request->agentesPersonas;
         $accion = $request->accion;
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
             if($accion === 1) {
-                DB::table('mc_pry_proyacciones')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
+                $idaccion = DB::table('mc_pry_proyacciones')->insertGetId(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
+                for($x=0 ; $x<count($agentesPersonas) ; $x++) {
+                    DB::table('mc_pry_proypersonas')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'idpersona' => $agentesPersonas[$x]]);
+                }
             }
             else {
                 DB::table('mc_pry_proyacciones')->where("id", $idProyAccion)->update(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);

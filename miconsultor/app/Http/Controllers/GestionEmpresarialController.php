@@ -286,6 +286,8 @@ class GestionEmpresarialController extends Controller
             }
             else {
                 DB::table('mc_pry_proyacciones')->where("id", $idProyAccion)->update(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
+                $nuevaAccion = DB::select('SELECT * FROM mc_pry_proyacciones WHERE id = ?', [$idProyAccion]);
+                $array["nuevaAccion"] = $nuevaAccion;
             }
         }
 

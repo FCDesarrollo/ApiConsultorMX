@@ -191,7 +191,7 @@ class GestionEmpresarialController extends Controller
         if ($valida[0]['error'] === 0) {
             $proyectos = DB::select('SELECT mc_pry_proyectos.*, mc_pry_agentes.Agente FROM mc_pry_proyectos INNER JOIN mc_pry_agentes ON mc_pry_proyectos.idAgente = mc_pry_agentes.id WHERE mc_pry_proyectos.id = ? ORDER BY mc_pry_proyectos.FecUltAccion DESC', [$IdProyecto]);
             for($x=0 ; $x<count($proyectos) ; $x++) {
-                $proyactividades = DB::select('SELECT * FROM mc_pry_proyactividades WHERE IdProyecto = ?', [$proyectos[$x]->id]);
+                $proyactividades = DB::select('SELECT * FROM mc_pry_proyactividades WHERE IdProyecto = ? ORDER BY Pos', [$proyectos[$x]->id]);
                 $proyectos[$x]->Actividades = $proyactividades;
                 $proyectos[$x]->Acciones = DB::select('SELECT mc_pry_proyacciones.*, mc_pry_proyactividades.Actividad FROM mc_pry_proyacciones
                 LEFT JOIN mc_pry_proyactividades ON mc_pry_proyacciones.idactividad = mc_pry_proyactividades.id WHERE mc_pry_proyacciones.idproyecto = ? ORDER BY mc_pry_proyacciones.fecha DESC', [$proyectos[$x]->id]);
@@ -244,6 +244,31 @@ class GestionEmpresarialController extends Controller
             }
             else {
                 DB::table('mc_pry_proyactividades')->where("id", $idProyActividad)->update(['IdProyecto' => $IdProyecto, 'Pos' => $Pos, 'Nivel' => $Nivel, 'Actividad' => $Actividad, 'FecIni' => $FecIni, 'FecFin' => $FecFin, 'idAgente' => $idAgente, 'Avance' => $Avance, 'Estatus' => $Estatus, 'FecUltAccion' => $FecUltAccion]);
+            }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function modificarInfoPryProyActividad(Request $request)
+    {
+        $idProyecto = $request->idProyecto;
+        $idProyActividad = $request->idProyActividad;
+        $FecUltAccion = $request->FecUltAccion;
+        $accion = $request->accion;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            if($accion === 1) {
+                $PosActual = $request->PosActual;
+                $PosNueva = $request->PosNueva;
+                DB::table('mc_pry_proyactividades')->where("IdProyecto", $idProyecto)->where("Pos", $PosNueva)->update(['Pos' => $PosActual, 'FecUltAccion' => $FecUltAccion]);
+                DB::table('mc_pry_proyactividades')->where("id", $idProyActividad)->update(['Pos' => $PosNueva, 'FecUltAccion' => $FecUltAccion]);
+            }
+            else {
+                $Nivel = $request->Nivel;
+                DB::table('mc_pry_proyactividades')->where("id", $idProyActividad)->update(['Nivel' => $Nivel, 'FecUltAccion' => $FecUltAccion]);
             }
         }
 

@@ -448,5 +448,7 @@ Route::post('guardarPryProyAccion', 'GestionEmpresarialController@guardarPryProy
 Route::delete('borrarPryProyAccion', 'GestionEmpresarialController@borrarPryProyAccion');
 Route::post('guardarPryProyPersonas', 'GestionEmpresarialController@guardarPryProyPersonas');
 Route::post('guardarPryProyDocumento', 'GestionEmpresarialController@guardarPryProyDocumento');
+Route::post('modificarActividadAccionPryProyDocumento', 'GestionEmpresarialController@modificarActividadAccionPryProyDocumento');
+Route::post('descargarDocumentosPryProyDocumento', 'GestionEmpresarialController@descargarDocumentosPryProyDocumento');
 Route::delete('borrarPryProyDocumento', 'GestionEmpresarialController@borrarPryProyDocumento');
 Route::post('guardarPryProyPlan', 'GestionEmpresarialController@guardarPryProyPlan');

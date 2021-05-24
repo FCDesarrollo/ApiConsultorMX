@@ -1105,7 +1105,10 @@ class EmpresaController extends Controller
                 idproyecto INT(11) DEFAULT NULL,
                 idactividad INT(11) DEFAULT NULL,
                 idaccion INT(11) DEFAULT NULL,
-                Archivo VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                NombreDocumento VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                ExtencionDocumento VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                RutaDocumento VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+                LinkDocumento VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
                 PRIMARY KEY (id)
               ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_pry_proydocumentos);

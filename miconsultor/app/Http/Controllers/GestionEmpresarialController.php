@@ -115,7 +115,25 @@ class GestionEmpresarialController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            DB::table('mc_pry_agentes')->where("id", $idAgentePersona)->update(['Estatus' => $Estatus]);
+            $agentesPersonasActivas = [];
+            if($Estatus == 0) {
+                $agentesPersonasActivas = DB::select('SELECT mc_pry_proyactividades.idAgente FROM mc_pry_proyactividades WHERE mc_pry_proyactividades.idAgente = ?
+                UNION
+                SELECT mc_pry_proycatagentes.IDPersona FROM mc_pry_proycatagentes WHERE mc_pry_proycatagentes.IDPersona = ?
+                UNION
+                SELECT mc_pry_proyectos.idAgente FROM mc_pry_proyectos WHERE mc_pry_proyectos.idAgente = ?
+                UNION
+                SELECT mc_pry_proypersonas.idpersona FROM mc_pry_proypersonas WHERE mc_pry_proypersonas.idpersona = ?
+                UNION
+                SELECT mc_pry_proyplanes.idagente FROM mc_pry_proyplanes WHERE mc_pry_proyplanes.idagente = ?', [$idAgentePersona, $idAgentePersona, $idAgentePersona, $idAgentePersona, $idAgentePersona]);
+            }
+            
+            if(count($agentesPersonasActivas) == 0) {
+                DB::table('mc_pry_agentes')->where("id", $idAgentePersona)->update(['Estatus' => $Estatus]);
+            }
+            else {
+                $array["error"] = 59;
+            }
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -128,8 +146,21 @@ class GestionEmpresarialController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            DB::table('mc_pry_agentes')->where("id", $idAgentePersona)->delete();
-            //Definir que pasara despues de eliminar un agente o persona con los proyectos, actividades o acciones en los que este involucrado.
+            $agentesPersonasActivas = DB::select('SELECT mc_pry_proyactividades.idAgente FROM mc_pry_proyactividades WHERE mc_pry_proyactividades.idAgente = ?
+            UNION
+            SELECT mc_pry_proycatagentes.IDPersona FROM mc_pry_proycatagentes WHERE mc_pry_proycatagentes.IDPersona = ?
+            UNION
+            SELECT mc_pry_proyectos.idAgente FROM mc_pry_proyectos WHERE mc_pry_proyectos.idAgente = ?
+            UNION
+            SELECT mc_pry_proypersonas.idpersona FROM mc_pry_proypersonas WHERE mc_pry_proypersonas.idpersona = ?
+            UNION
+            SELECT mc_pry_proyplanes.idagente FROM mc_pry_proyplanes WHERE mc_pry_proyplanes.idagente = ?', [$idAgentePersona, $idAgentePersona, $idAgentePersona, $idAgentePersona, $idAgentePersona]);
+            if(count($agentesPersonasActivas) == 0) {
+                DB::table('mc_pry_agentes')->where("id", $idAgentePersona)->delete();
+            }
+            else {
+                $array["error"] = 59;
+            }
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -202,7 +233,10 @@ class GestionEmpresarialController extends Controller
                 LEFT JOIN mc_pry_proyactividades ON mc_pry_proydocumentos.idactividad = mc_pry_proyactividades.id 
                 LEFT JOIN mc_pry_proyacciones ON mc_pry_proydocumentos.idaccion = mc_pry_proyacciones.id
                 WHERE mc_pry_proydocumentos.idproyecto = ?", [$proyectos[$x]->id]);
-                $proyectos[$x]->Planes = DB::select('SELECT * FROM mc_pry_proyplanes WHERE idproyecto = ?', [$proyectos[$x]->id]);
+                $proyectos[$x]->Planes = DB::select("SELECT mc_pry_proyplanes.*, mc_pry_agentes.Agente,
+                IF(ISNULL(mc_pry_proyactividades.Actividad),'Sin Actividad', mc_pry_proyactividades.Actividad) AS Actividad FROM mc_pry_proyplanes
+                INNER JOIN mc_pry_agentes ON mc_pry_proyplanes.idagente = mc_pry_agentes.id
+                LEFT JOIN mc_pry_proyactividades ON mc_pry_proyplanes.idactividades = mc_pry_proyactividades.id  WHERE mc_pry_proyplanes.idproyecto = ?", [$proyectos[$x]->id]);
                 $proyectos[$x]->AgentesPersonas = DB::select('SELECT mc_pry_agentes.*, 0 AS idActividad, 0 AS idAccion FROM mc_pry_agentes INNER JOIN mc_pry_proyectos
                 ON mc_pry_agentes.id = mc_pry_proyectos.idAgente
                 WHERE mc_pry_proyectos.id = ?
@@ -312,7 +346,9 @@ class GestionEmpresarialController extends Controller
             }
             else {
                 DB::table('mc_pry_proyacciones')->where("id", $idProyAccion)->update(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
-                $nuevaAccion = DB::select('SELECT * FROM mc_pry_proyacciones WHERE id = ?', [$idProyAccion]);
+                $nuevaAccion = DB::select("SELECT mc_pry_proyacciones.*,  IF(ISNULL(mc_pry_proyactividades.Actividad),'Sin Actividad', mc_pry_proyactividades.Actividad) AS Actividad
+                FROM mc_pry_proyacciones LEFT JOIN mc_pry_proyactividades ON mc_pry_proyacciones.idactividad = mc_pry_proyactividades.id 
+                WHERE mc_pry_proyacciones.id = ?", [$idProyAccion]);
                 $array["nuevaAccion"] = $nuevaAccion;
             }
         }
@@ -539,8 +575,24 @@ class GestionEmpresarialController extends Controller
                 DB::table('mc_pry_proyplanes')->insert(['idproyecto' => $idproyecto, 'idactividades' => $idactividades, 'fecini' => $fecini, 'fecfin' => $fecfin, 'idagente' => $idagente]);
             }
             else {
-                DB::table('mc_pry_proyplanes')->where("id", $idProyPlan)->delete();
+                DB::table('mc_pry_proyplanes')->where("id", $idProyPlan)->update(['idproyecto' => $idproyecto, 'idactividades' => $idactividades, 'fecini' => $fecini, 'fecfin' => $fecfin, 'idagente' => $idagente]);
+                $nuevoPlan = DB::select("SELECT mc_pry_proyplanes.*,  IF(ISNULL(mc_pry_proyactividades.Actividad),'Sin Actividad', mc_pry_proyactividades.Actividad) AS Actividad
+                FROM mc_pry_proyplanes LEFT JOIN mc_pry_proyactividades ON mc_pry_proyplanes.idactividades = mc_pry_proyactividades.id WHERE mc_pry_proyplanes.id = ?", [$idProyPlan]);
+                $array["nuevoPlan"] = $nuevoPlan;
             }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function borrarPryProyPlan(Request $request)
+    {
+        $idProyPlan = $request->idProyPlan;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            DB::table('mc_pry_proyplanes')->where("id", $idProyPlan)->delete();
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

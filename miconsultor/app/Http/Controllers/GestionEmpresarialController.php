@@ -14,7 +14,23 @@ class GestionEmpresarialController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            $proyectos = DB::select('SELECT mc_pry_proyectos.*, mc_pry_agentes.Agente FROM mc_pry_proyectos INNER JOIN mc_pry_agentes ON mc_pry_proyectos.idAgente = mc_pry_agentes.id ORDER BY mc_pry_proyectos.FecUltAccion DESC');
+            $proyectos = DB::select("SELECT mc_pry_proyectos.*,
+            (
+            CASE
+                WHEN mc_pry_proyectos.Estatus = 1 THEN 'Pendiente'
+                WHEN mc_pry_proyectos.Estatus = 2 THEN 'En proceso'
+                WHEN mc_pry_proyectos.Estatus = 3 THEN 'Terminado'
+                ELSE 'Cerrado'
+            END
+            ) AS nombreEstatus,
+            mc_pry_agentes.Agente,
+            (SELECT COUNT(mc_pry_proyactividades.id) FROM mc_pry_proyactividades WHERE mc_pry_proyactividades.IdProyecto = mc_pry_proyectos.id) AS numActividades,
+            (SELECT COUNT(mc_pry_proyacciones.id) FROM mc_pry_proyacciones WHERE mc_pry_proyacciones.idproyecto = mc_pry_proyectos.id) AS numAcciones,
+            (SELECT COUNT(mc_pry_proydocumentos.id) FROM mc_pry_proydocumentos WHERE mc_pry_proydocumentos.idproyecto = mc_pry_proyectos.id) AS numDocumentos,
+            (SELECT COUNT(mc_pry_proyplanes.id) FROM mc_pry_proyplanes WHERE mc_pry_proyplanes.idproyecto = mc_pry_proyectos.id) AS numPlanes
+            FROM mc_pry_proyectos 
+            INNER JOIN mc_pry_agentes ON mc_pry_proyectos.idAgente = mc_pry_agentes.id 
+            ORDER BY mc_pry_proyectos.FecUltAccion DESC");
             $array["proyectos"] = $proyectos;
         }
 
@@ -260,8 +276,8 @@ class GestionEmpresarialController extends Controller
     {
         $idProyActividad = $request->idProyActividad;
         $IdProyecto = $request->IdProyecto;
-        $Pos = $request->Pos;
-        $Nivel = $request->Nivel;
+        /* $Pos = $request->Pos;
+        $Nivel = $request->Nivel; */
         $Actividad = $request->Actividad;
         $FecIni = $request->FecIni;
         $FecFin = $request->FecFin;
@@ -269,16 +285,27 @@ class GestionEmpresarialController extends Controller
         $Avance = $request->Avance;
         $Estatus = $request->Estatus;
         $FecUltAccion = $request->FecUltAccion;
+        $idActividadSelected = $request->idActividadSelected;
+        $posicionActividadNueva = $request->posicionActividadNueva;
+        $nivelActividadNueva = $request->nivelActividadNueva;
         $accion = $request->accion;
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
             if($accion === 1) {
-                DB::table('mc_pry_proyactividades')->insert(['IdProyecto' => $IdProyecto, 'Pos' => $Pos, 'Nivel' => $Nivel, 'Actividad' => $Actividad, 'FecIni' => $FecIni, 'FecFin' => $FecFin, 'idAgente' => $idAgente, 'Avance' => $Avance, 'Estatus' => $Estatus, 'FecUltAccion' => $FecUltAccion]);
+                if($idActividadSelected != 0) {
+                    DB::table('mc_pry_proyactividades')->where("Pos", ">=" ,$posicionActividadNueva)->update(['Pos' => DB::raw('Pos + 1')]);
+                    $Pos = $posicionActividadNueva;
+                }
+                else {
+                    $posSiguiente = DB::select('SELECT Pos + 1 AS PosSiguiente FROM mc_pry_proyactividades ORDER BY Pos DESC LIMIT 1');
+                    $Pos = $posSiguiente[0]->PosSiguiente;
+                }
+                DB::table('mc_pry_proyactividades')->insert(['IdProyecto' => $IdProyecto, 'Pos' => $Pos, 'Nivel' => $nivelActividadNueva, 'Actividad' => $Actividad, 'FecIni' => $FecIni, 'FecFin' => $FecFin, 'idAgente' => $idAgente, 'Avance' => $Avance, 'Estatus' => $Estatus, 'FecUltAccion' => $FecUltAccion]);
             }
             else {
-                DB::table('mc_pry_proyactividades')->where("id", $idProyActividad)->update(['IdProyecto' => $IdProyecto, 'Pos' => $Pos, 'Nivel' => $Nivel, 'Actividad' => $Actividad, 'FecIni' => $FecIni, 'FecFin' => $FecFin, 'idAgente' => $idAgente, 'Avance' => $Avance, 'Estatus' => $Estatus, 'FecUltAccion' => $FecUltAccion]);
+                DB::table('mc_pry_proyactividades')->where("id", $idProyActividad)->update(['IdProyecto' => $IdProyecto/* , 'Pos' => $Pos, 'Nivel' => $Nivel */, 'Actividad' => $Actividad, 'FecIni' => $FecIni, 'FecFin' => $FecFin, 'idAgente' => $idAgente, 'Avance' => $Avance, 'Estatus' => $Estatus, 'FecUltAccion' => $FecUltAccion]);
             }
         }
 
@@ -329,6 +356,7 @@ class GestionEmpresarialController extends Controller
         $idProyAccion = $request->idProyAccion;
         $idproyecto = $request->idproyecto;
         $idactividad = $request->idactividad;
+        $nombre = $request->nombre;
         $fecha = $request->fecha;
         $Avance = $request->Avance;
         $estatus = $request->estatus;
@@ -339,13 +367,13 @@ class GestionEmpresarialController extends Controller
 
         if ($valida[0]['error'] === 0) {
             if($accion === 1) {
-                $idaccion = DB::table('mc_pry_proyacciones')->insertGetId(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
+                $idaccion = DB::table('mc_pry_proyacciones')->insertGetId(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'nombre' => $nombre, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
                 for($x=0 ; $x<count($agentesPersonas) ; $x++) {
                     DB::table('mc_pry_proypersonas')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'idpersona' => $agentesPersonas[$x]]);
                 }
             }
             else {
-                DB::table('mc_pry_proyacciones')->where("id", $idProyAccion)->update(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
+                DB::table('mc_pry_proyacciones')->where("id", $idProyAccion)->update(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'nombre' => $nombre, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
                 $nuevaAccion = DB::select("SELECT mc_pry_proyacciones.*,  IF(ISNULL(mc_pry_proyactividades.Actividad),'Sin Actividad', mc_pry_proyactividades.Actividad) AS Actividad
                 FROM mc_pry_proyacciones LEFT JOIN mc_pry_proyactividades ON mc_pry_proyacciones.idactividad = mc_pry_proyactividades.id 
                 WHERE mc_pry_proyacciones.id = ?", [$idProyAccion]);
@@ -563,6 +591,7 @@ class GestionEmpresarialController extends Controller
         $idProyPlan = $request->idProyPlan;
         $idproyecto = $request->idproyecto;
         $idactividades = $request->idactividades;
+        $nombre = $request->nombre;
         $fecini = $request->fecini;
         $fecfin = $request->fecfin;
         $idagente = $request->idagente;
@@ -572,10 +601,10 @@ class GestionEmpresarialController extends Controller
 
         if ($valida[0]['error'] === 0) {
             if($accion === 1) {
-                DB::table('mc_pry_proyplanes')->insert(['idproyecto' => $idproyecto, 'idactividades' => $idactividades, 'fecini' => $fecini, 'fecfin' => $fecfin, 'idagente' => $idagente]);
+                DB::table('mc_pry_proyplanes')->insert(['idproyecto' => $idproyecto, 'idactividades' => $idactividades, 'nombre' => $nombre, 'fecini' => $fecini, 'fecfin' => $fecfin, 'idagente' => $idagente]);
             }
             else {
-                DB::table('mc_pry_proyplanes')->where("id", $idProyPlan)->update(['idproyecto' => $idproyecto, 'idactividades' => $idactividades, 'fecini' => $fecini, 'fecfin' => $fecfin, 'idagente' => $idagente]);
+                DB::table('mc_pry_proyplanes')->where("id", $idProyPlan)->update(['idproyecto' => $idproyecto, 'idactividades' => $idactividades, 'nombre' => $nombre, 'fecini' => $fecini, 'fecfin' => $fecfin, 'idagente' => $idagente]);
                 $nuevoPlan = DB::select("SELECT mc_pry_proyplanes.*,  IF(ISNULL(mc_pry_proyactividades.Actividad),'Sin Actividad', mc_pry_proyactividades.Actividad) AS Actividad
                 FROM mc_pry_proyplanes LEFT JOIN mc_pry_proyactividades ON mc_pry_proyplanes.idactividades = mc_pry_proyactividades.id WHERE mc_pry_proyplanes.id = ?", [$idProyPlan]);
                 $array["nuevoPlan"] = $nuevoPlan;

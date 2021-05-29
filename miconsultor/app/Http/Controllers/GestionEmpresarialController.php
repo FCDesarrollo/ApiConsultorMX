@@ -182,6 +182,22 @@ class GestionEmpresarialController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
+    public function getTodosPryProyCatAgentes(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $proycatagentes = DB::select('SELECT mc_pry_proyectos.id AS idProyecto, mc_pry_proyectos.Proyecto,
+            mc_pry_agentes.id AS idPersona, mc_pry_agentes.Agente FROM mc_pry_proycatagentes
+            INNER JOIN mc_pry_proyectos ON mc_pry_proycatagentes.IDProyecto = mc_pry_proyectos.id
+            INNER JOIN mc_pry_agentes ON mc_pry_proycatagentes.IDPersona = mc_pry_agentes.id');
+            $array["proycatagentes"] = $proycatagentes;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
     public function getPryProyCatAgentes(Request $request)
     {
         $IDProyecto = $request->IDProyecto;
@@ -370,6 +386,10 @@ class GestionEmpresarialController extends Controller
                 $idaccion = DB::table('mc_pry_proyacciones')->insertGetId(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'nombre' => $nombre, 'fecha' => $fecha, 'Avance' => $Avance, 'estatus' => $estatus]);
                 for($x=0 ; $x<count($agentesPersonas) ; $x++) {
                     DB::table('mc_pry_proypersonas')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'idpersona' => $agentesPersonas[$x]]);
+                    $busquedaPersonaProyecto = DB::select("SELECT * FROM mc_pry_proycatagentes WHERE IDPersona = ? AND IDProyecto = ?", [$agentesPersonas[$x], $idproyecto]);
+                    if(count($busquedaPersonaProyecto) === 0) {
+                        DB::table('mc_pry_proycatagentes')->insert(['IDPersona' => $agentesPersonas[$x], 'IDProyecto' => $idproyecto]);
+                    }
                 }
             }
             else {

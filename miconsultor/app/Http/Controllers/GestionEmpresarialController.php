@@ -188,10 +188,13 @@ class GestionEmpresarialController extends Controller
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
-            $proycatagentes = DB::select('SELECT mc_pry_proyectos.id AS idProyecto, mc_pry_proyectos.Proyecto,
+            /* $proycatagentes = DB::select('SELECT mc_pry_proyectos.id AS idProyecto, mc_pry_proyectos.Proyecto,
             mc_pry_agentes.id AS idPersona, mc_pry_agentes.Agente FROM mc_pry_proycatagentes
             INNER JOIN mc_pry_proyectos ON mc_pry_proycatagentes.IDProyecto = mc_pry_proyectos.id
-            INNER JOIN mc_pry_agentes ON mc_pry_proycatagentes.IDPersona = mc_pry_agentes.id');
+            INNER JOIN mc_pry_agentes ON mc_pry_proycatagentes.IDPersona = mc_pry_agentes.id'); */
+            $proycatagentes = DB::select('SELECT mc_pry_agentes.*, IF(ISNULL(mc_pry_proycatagentes.IDProyecto), 0, mc_pry_proycatagentes.IDProyecto) AS idProyecto FROM mc_pry_agentes 
+            LEFT JOIN mc_pry_proycatagentes ON mc_pry_agentes.id = mc_pry_proycatagentes.IDPersona
+            WHERE mc_pry_agentes.tipo = ?', [2]);
             $array["proycatagentes"] = $proycatagentes;
         }
 
@@ -269,6 +272,10 @@ class GestionEmpresarialController extends Controller
                 IF(ISNULL(mc_pry_proyactividades.Actividad),'Sin Actividad', mc_pry_proyactividades.Actividad) AS Actividad FROM mc_pry_proyplanes
                 INNER JOIN mc_pry_agentes ON mc_pry_proyplanes.idagente = mc_pry_agentes.id
                 LEFT JOIN mc_pry_proyactividades ON mc_pry_proyplanes.idactividades = mc_pry_proyactividades.id  WHERE mc_pry_proyplanes.idproyecto = ?", [$proyectos[$x]->id]);
+                /* $proyectos[$x]->AgentesPersonas = DB::select('SELECT mc_pry_proyectos.id AS idProyecto, mc_pry_proyectos.Proyecto,
+                mc_pry_agentes.id AS idPersona, mc_pry_agentes.Agente FROM mc_pry_proycatagentes
+                INNER JOIN mc_pry_proyectos ON mc_pry_proycatagentes.IDProyecto = mc_pry_proyectos.id
+                INNER JOIN mc_pry_agentes ON mc_pry_proycatagentes.IDPersona = mc_pry_agentes.id WHERE mc_pry_proycatagentes.IDProyecto = ?', [$proyectos[$x]->id]); */
                 $proyectos[$x]->AgentesPersonas = DB::select('SELECT mc_pry_agentes.*, 0 AS idActividad, 0 AS idAccion FROM mc_pry_agentes INNER JOIN mc_pry_proyectos
                 ON mc_pry_agentes.id = mc_pry_proyectos.idAgente
                 WHERE mc_pry_proyectos.id = ?
@@ -279,7 +286,11 @@ class GestionEmpresarialController extends Controller
                 UNION 
                 SELECT mc_pry_agentes.*, mc_pry_proypersonas.idactividad AS idActividad, mc_pry_proypersonas.idaccion AS idAccion FROM mc_pry_agentes 
                 INNER JOIN mc_pry_proypersonas ON mc_pry_agentes.id = mc_pry_proypersonas.idpersona 
-                WHERE mc_pry_proypersonas.Idproyecto = ?', [$proyectos[$x]->id, $proyectos[$x]->id, $proyectos[$x]->id]);
+                WHERE mc_pry_proypersonas.Idproyecto = ?
+                UNION 
+                SELECT mc_pry_agentes.*, 0 AS idActividad, 0 AS idAccion FROM mc_pry_agentes 
+                INNER JOIN mc_pry_proycatagentes ON mc_pry_agentes.id = mc_pry_proycatagentes.IDPersona 
+                WHERE mc_pry_proycatagentes.IDProyecto = ?', [$proyectos[$x]->id, $proyectos[$x]->id, $proyectos[$x]->id, $proyectos[$x]->id]);
             }
 
             $array["actividadesInfo"] = $proyectos;
@@ -420,15 +431,16 @@ class GestionEmpresarialController extends Controller
     public function guardarPryProyPersonas(Request $request)
     {
         $idproyecto = $request->idproyecto;
-        $idactividad = $request->idactividad;
-        $idaccion = $request->idaccion;
+        /* $idactividad = $request->idactividad;
+        $idaccion = $request->idaccion; */
         $idsAgentespersonas = $request->idsAgentespersonas;
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
             for($x=0 ; $x<count($idsAgentespersonas) ; $x++) {
-                DB::table('mc_pry_proypersonas')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'idpersona' => $idsAgentespersonas[$x]]);
+                /* DB::table('mc_pry_proypersonas')->insert(['idproyecto' => $idproyecto, 'idactividad' => $idactividad, 'idaccion' => $idaccion, 'idpersona' => $idsAgentespersonas[$x]]); */
+                DB::table('mc_pry_proycatagentes')->insert(['IDPersona' => $idsAgentespersonas[$x], 'IDProyecto' => $idproyecto]);
             }
         }
 

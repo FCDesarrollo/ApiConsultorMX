@@ -273,6 +273,8 @@ Route::put('editarDatosFacturacionEmpresa', 'EmpresaController@editarDatosFactur
 Route::post('renovarCertificadoEmpresa', 'EmpresaController@renovarCertificadoEmpresa');
 Route::get('getServiciosEmpresaCliente', 'EmpresaController@getServiciosEmpresaCliente');
 Route::post('agregarServicioEmpresaCliente', 'EmpresaController@agregarServicioEmpresaCliente');
+Route::get('getNotificacionesServicios', 'EmpresaController@getNotificacionesServicios');
+Route::post('agregarNotificacionFavoritas', 'EmpresaController@agregarNotificacionFavoritas');
 Route::get('getMovimientosEmpresaCliente', 'EmpresaController@getMovimientosEmpresaCliente');
 Route::get('getMovimientoEmpresaCliente', 'EmpresaController@getMovimientoEmpresaCliente');
 Route::get('getContenidoServicioClientes', 'EmpresaController@getContenidoServicioClientes');
@@ -454,3 +456,4 @@ Route::post('descargarDocumentosPryProyDocumento', 'GestionEmpresarialController
 Route::delete('borrarPryProyDocumento', 'GestionEmpresarialController@borrarPryProyDocumento');
 Route::post('guardarPryProyPlan', 'GestionEmpresarialController@guardarPryProyPlan');
 Route::delete('borrarPryProyPlan', 'GestionEmpresarialController@borrarPryProyPlan');
+Route::get('getPryProyDocumentos', 'GestionEmpresarialController@getPryProyDocumentos');

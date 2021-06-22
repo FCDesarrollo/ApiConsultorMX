@@ -526,7 +526,7 @@ class EmpresaController extends Controller
               rutaadw VARCHAR(250) COLLATE latin1_spanish_ci DEFAULT NULL,
               sincronizado INT(11) DEFAULT '0',
               idadw INT(11),
-              default tinyint(1) DEFAULT '0',
+              mc_catsucursales.default tinyint(1) DEFAULT '0',
               PRIMARY KEY (idsucursal)
             ) ENGINE=INNODB DEFAULT CHARSET=latin1 COLLATE=latin1_spanish_ci;";
             DB::statement($mc_catsucursales);
@@ -1458,6 +1458,40 @@ class EmpresaController extends Controller
                 DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicios[$x], "fecha" => $fecha]);
             }
         }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getNotificacionesServicios(Request $request)
+    {
+        $idusuario = $request->idusuario;
+        $idempresa = $request->idempresa;
+        $accion = $request->accion;
+
+        switch($accion){
+            case 0:
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001.nombre AS nombreusuario FROM mc0005 INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa INNER JOIN mc1001 ON mc0005.idUsuario = mc1001.idusuario WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ?", [$idempresa, $idusuario]);
+                break;
+            case 1:
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001.nombre AS nombreusuario FROM mc0005 INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa INNER JOIN mc1001 ON mc0005.idUsuario = mc1001.idusuario WHERE mc0005.idUsuario = ?", [$idusuario]);
+                break;
+            case 2:
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001.nombre AS nombreusuario FROM mc0005 INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa INNER JOIN mc1001 ON mc0005.idUsuario = mc1001.idusuario WHERE mc0005.idUsuario = ? AND mc0005.favorita = ?", [$idusuario, 1]);
+                break;
+        }
+
+        $array["notificaciones"] = $notificaciones;
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function agregarNotificacionFavoritas(Request $request)
+    {
+        $idnotificacion = $request->idnotificacion;
+        $favorita = $request->favorita;
+        $array["error"] = 0;
+
+        DB::connection("General")->table('mc0005')->where("id", $idnotificacion)->update(["favorita" => $favorita]);
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

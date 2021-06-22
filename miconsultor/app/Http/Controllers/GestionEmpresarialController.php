@@ -658,4 +658,23 @@ class GestionEmpresarialController extends Controller
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
+
+    public function getPryProyDocumentos(Request $request)
+    {
+        $IdProyecto = $request->IdProyecto;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $proyectosDocumentos = DB::select('SELECT * FROM mc_pry_proyectos ORDER BY id');
+            for($x=0 ; $x<count($proyectosDocumentos) ; $x++) {
+                $proyectosDocumentos[$x]->documentos = DB::select('SELECT mc_pry_proydocumentos.*, mc_pry_proyectos.Proyecto
+                FROM mc_pry_proydocumentos INNER JOIN mc_pry_proyectos ON mc_pry_proydocumentos.idproyecto = mc_pry_proyectos.id WHERE mc_pry_proydocumentos.idproyecto = ? ORDER BY mc_pry_proydocumentos.idproyecto', [$proyectosDocumentos[$x]->id]);
+            }
+
+            $array["proyectosDocumentos"] = $proyectosDocumentos;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
 }

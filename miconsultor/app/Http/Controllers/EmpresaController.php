@@ -1470,13 +1470,47 @@ class EmpresaController extends Controller
 
         switch($accion){
             case 0:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001.nombre AS nombreusuario FROM mc0005 INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa INNER JOIN mc1001 ON mc0005.idUsuario = mc1001.idusuario WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ?", [$idempresa, $idusuario]);
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, mc1001B.nombre AS nombreusuariocreador, 
+                mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
+                mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
+                mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
+                FROM mc0005 
+                INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
+                INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
+                INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
+                LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
+                LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
+                LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
+                LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu 
+                WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ?", [$idempresa, $idusuario]);
                 break;
             case 1:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001.nombre AS nombreusuario FROM mc0005 INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa INNER JOIN mc1001 ON mc0005.idUsuario = mc1001.idusuario WHERE mc0005.idUsuario = ?", [$idusuario]);
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, mc1001B.nombre AS nombreusuariocreador, 
+                mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
+                mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
+                mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
+                FROM mc0005 
+                INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
+                INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
+                INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
+                LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
+                LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
+                LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
+                LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ?", [$idusuario]);
                 break;
             case 2:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001.nombre AS nombreusuario FROM mc0005 INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa INNER JOIN mc1001 ON mc0005.idUsuario = mc1001.idusuario WHERE mc0005.idUsuario = ? AND mc0005.favorita = ?", [$idusuario, 1]);
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, mc1001B.nombre AS nombreusuariocreador, 
+                mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
+                mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
+                mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
+                FROM mc0005 
+                INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
+                INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
+                INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
+                LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
+                LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
+                LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
+                LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ? AND mc0005.favorita = ?", [$idusuario, 1]);
                 break;
         }
 

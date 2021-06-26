@@ -1470,7 +1470,7 @@ class EmpresaController extends Controller
 
         switch($accion){
             case 0:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, mc1001B.nombre AS nombreusuariocreador, 
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
                 mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
                 mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
                 mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
@@ -1485,7 +1485,7 @@ class EmpresaController extends Controller
                 WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ?", [$idempresa, $idusuario]);
                 break;
             case 1:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, mc1001B.nombre AS nombreusuariocreador, 
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
                 mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
                 mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
                 mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
@@ -1499,7 +1499,7 @@ class EmpresaController extends Controller
                 LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ?", [$idusuario]);
                 break;
             case 2:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, mc1001B.nombre AS nombreusuariocreador, 
+                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
                 mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
                 mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
                 mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 

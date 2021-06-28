@@ -1482,7 +1482,7 @@ class EmpresaController extends Controller
                 LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
                 LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
                 LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu 
-                WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ?", [$idempresa, $idusuario]);
+                WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ? ORDER BY mc0005.fecha DESC, mc0005.hora DESC", [$idempresa, $idusuario]);
                 break;
             case 1:
                 $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 

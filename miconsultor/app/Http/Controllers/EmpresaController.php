@@ -1455,8 +1455,24 @@ class EmpresaController extends Controller
             $array["idservicioslength"] = count($idservicios); */
             $fecha = $request->fecha;
             for ($x = 0; $x < count($idservicios); $x++) {
-                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicios[$x], "fecha" => $fecha]);
+                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicios[$x], "fechaContratacion" => $fecha]);
             }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function quitarServicioEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $idempresa = $request->idempresa;
+            $idservicio = $request->idservicio;
+            $fechacancelacion = $request->fechacancelacion;
+            $idusuariocancelacion = $request->idusuariocancelacion;
+            DB::connection("General")->table("mc0002")->where("idempresa", $idempresa)->where("idservicio", $idservicio)->update(["fechaCancelacion" => $fechacancelacion, "idUsuarioCancelacion" => $idusuariocancelacion, "status" => 0]);
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
@@ -1467,54 +1483,58 @@ class EmpresaController extends Controller
         $idusuario = $request->idusuario;
         $idempresa = $request->idempresa;
         $accion = $request->accion;
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
 
-        switch($accion){
-            case 0:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
-                mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
-                mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
-                mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
-                FROM mc0005 
-                INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
-                INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
-                INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
-                LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
-                LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
-                LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
-                LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu 
-                WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ? ORDER BY mc0005.fecha DESC, mc0005.hora DESC", [$idempresa, $idusuario]);
-                break;
-            case 1:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
-                mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
-                mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
-                mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
-                FROM mc0005 
-                INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
-                INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
-                INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
-                LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
-                LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
-                LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
-                LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ?", [$idusuario]);
-                break;
-            case 2:
-                $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
-                mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
-                mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
-                mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
-                FROM mc0005 
-                INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
-                INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
-                INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
-                LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
-                LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
-                LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
-                LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ? AND mc0005.favorita = ?", [$idusuario, 1]);
-                break;
+        if ($valida[0]['error'] === 0) {
+            switch($accion){
+                case 0:
+                    $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
+                    mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
+                    mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
+                    mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
+                    FROM mc0005 
+                    INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
+                    INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
+                    INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
+                    LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
+                    LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
+                    LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
+                    LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu 
+                    WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ? AND mc0005.status = ? ORDER BY mc0005.fecha DESC, mc0005.hora DESC", [$idempresa, $idusuario, 1]);
+                    break;
+                case 1:
+                    $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
+                    mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
+                    mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
+                    mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
+                    FROM mc0005 
+                    INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
+                    INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
+                    INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
+                    LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
+                    LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
+                    LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
+                    LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ?  AND mc0005.status = ?", [$idusuario, 1]);
+                    break;
+                case 2:
+                    $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
+                    mc1003.idmodulo, mc1003.nombre_modulo AS nombremodulo, mc1003.nombre_carpeta AS nombrecarpetamodulo,
+                    mc1004.idmenu, mc1004.nombre_menu AS nombremenu, mc1004.nombre_carpeta AS nombrecarpetamenu, mc1004.ref AS refmenu,
+                    mc1005.idsubmenu, mc1005.nombre_submenu AS nombresubmenu, mc1005.nombre_carpeta AS nombrecarpetasubmenu 
+                    FROM mc0005 
+                    INNER JOIN mc0001 ON mc0005.idServicio = mc0001.id 
+                    INNER JOIN mc1000 ON mc0005.idEmpresa = mc1000.idempresa 
+                    INNER JOIN mc1001 AS mc1001A ON mc0005.idUsuario = mc1001A.idusuario 
+                    LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
+                    LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
+                    LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
+                    LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ? AND mc0005.favorita = ? AND mc0005.status = ?", [$idusuario, 1, 1]);
+                    break;
+            }
+    
+            $array["notificaciones"] = $notificaciones;
         }
-
-        $array["notificaciones"] = $notificaciones;
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
@@ -1523,9 +1543,44 @@ class EmpresaController extends Controller
     {
         $idnotificacion = $request->idnotificacion;
         $favorita = $request->favorita;
-        $array["error"] = 0;
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
 
-        DB::connection("General")->table('mc0005')->where("id", $idnotificacion)->update(["favorita" => $favorita]);
+        if ($valida[0]['error'] === 0) {
+            DB::connection("General")->table('mc0005')->where("id", $idnotificacion)->update(["favorita" => $favorita]);
+        } 
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function cambiarVistaNotificacionServicios(Request $request)
+    {
+        $idnotificacion = $request->idnotificacion;
+        $vista = $request->vista;
+        $menuRedirect = $request->menuRedirect;
+
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $array["menuRedirect"] = $menuRedirect != "" ? $menuRedirect : "";
+            DB::connection("General")->table('mc0005')->where("id", $idnotificacion)->update(["vista" => $vista]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function eliminarNotificacionServicios(Request $request)
+    {
+        $idnotificacion = $request->idnotificacion;
+        $status = $request->status;
+
+        $valida = verificaUsuario($request->usuario, $request->pwd);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            DB::connection("General")->table('mc0005')->where("id", $idnotificacion)->update(["status" => $status]);
+        }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }

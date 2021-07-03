@@ -687,7 +687,7 @@ class ProveedoresController extends Controller
             $array["servicios"] = $servicios;
             $array["count"] = count($servicios);
             for($x=0 ; $x<count($servicios) ; $x++) {
-                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $servicios[$x], "fecha" => $fecha]);
+                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $servicios[$x], "fechaContratacion" => $fecha]);
             }
         }
 

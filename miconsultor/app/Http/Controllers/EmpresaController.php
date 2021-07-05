@@ -1462,7 +1462,55 @@ class EmpresaController extends Controller
         return json_encode($array, JSON_UNESCAPED_UNICODE);
     }
 
-    public function quitarServicioEmpresaCliente(Request $request)
+    public function configurarNotificacionesServicioEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $idServicio = $request->idServicio;
+            $idEmpresa = $request->idEmpresa;
+            $idUsuarios = $request->idUsuarios;
+            $notificacionesCRM = $request->notificacionesCRM;
+            $notificacionesCorreo = $request->notificacionesCorreo;
+            $notificacionesSMS = $request->notificacionesSMS;
+            for ($x = 0; $x < count($idUsuarios); $x++) {
+                DB::connection("General")->table("mc0006")->insert(["idServicio" => $idServicio, "idUsuario" => $idUsuarios[$x], "idEmpresa" => $idEmpresa, "notificacionCRM" => $notificacionesCRM, "notificacionCorreo" => $notificacionesCorreo, "notificacionSMS" => $notificacionesSMS]);
+            }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function registrarNotificacionesServicioEmpresaCliente(Request $request)
+    {
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $idServicio = $request->idServicio;
+            $idEmpresa = $request->idEmpresa;
+            $idUsuarioCreador = $request->idUsuarioCreador;
+            $idDocumento = $request->idDocumento;
+            $linkDocumento = $request->linkDocumento;
+            $busquedaFiltro = $request->busquedaFiltro;
+            $periodo = $request->periodo;
+            $ejercicio = $request->ejercicio;
+            $fechaCorte = $request->fechaCorte;
+            $fechaEntrega = $request->fechaEntrega;
+            $horaEntrega = $request->horaEntrega;
+
+            $notificaciones = DB::connection("General")->select("SELECT * FROM mc0006 WHERE idServicio = ? AND idEmpresa = ? AND notificacioCRM", [$idServicio, $idEmpresa, 1]);
+
+            for ($x = 0; $x < count($notificaciones); $x++) {
+                DB::connection("General")->table("mc0005")->insert(["idServicio" => $idServicio, "idEmpresa" => $idEmpresa, "idUsuario" => $$notificaciones[$x]->idUsuario, "idUsuarioCreador" => $idUsuarioCreador, "idDocumento" => $idDocumento, "linkDocumento" => $linkDocumento, "busquedaFiltro" => $busquedaFiltro, "periodo" => $periodo, "ejercicio" => $ejercicio, "fechaCorte" => $fechaCorte, "fechaEntrega" => $fechaEntrega, "horaEntrega" => $horaEntrega]);
+            }
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function cancelarServicioEmpresaCliente(Request $request)
     {
         $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
         $array["error"] = $valida[0]["error"];
@@ -1501,7 +1549,7 @@ class EmpresaController extends Controller
                     LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
                     LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
                     LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu 
-                    WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ? AND mc0005.status = ? ORDER BY mc0005.fecha DESC, mc0005.hora DESC", [$idempresa, $idusuario, 1]);
+                    WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ? AND mc0005.status = ? ORDER BY mc0005.fechaEntrega DESC, mc0005.horaEntrega DESC", [$idempresa, $idusuario, 1]);
                     break;
                 case 1:
                     $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 

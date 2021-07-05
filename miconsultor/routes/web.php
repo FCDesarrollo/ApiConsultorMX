@@ -273,7 +273,9 @@ Route::put('editarDatosFacturacionEmpresa', 'EmpresaController@editarDatosFactur
 Route::post('renovarCertificadoEmpresa', 'EmpresaController@renovarCertificadoEmpresa');
 Route::get('getServiciosEmpresaCliente', 'EmpresaController@getServiciosEmpresaCliente');
 Route::post('agregarServicioEmpresaCliente', 'EmpresaController@agregarServicioEmpresaCliente');
-Route::post('quitarServicioEmpresaCliente', 'EmpresaController@quitarServicioEmpresaCliente');
+Route::post('configurarNotificacionesServicioEmpresaCliente', 'EmpresaController@configurarNotificacionesServicioEmpresaCliente');
+Route::post('registrarNotificacionesServicioEmpresaCliente', 'EmpresaController@registrarNotificacionesServicioEmpresaCliente');
+Route::post('cancelarServicioEmpresaCliente', 'EmpresaController@cancelarServicioEmpresaCliente');
 Route::get('getNotificacionesServicios', 'EmpresaController@getNotificacionesServicios');
 Route::post('agregarNotificacionFavoritas', 'EmpresaController@agregarNotificacionFavoritas');
 Route::post('cambiarVistaNotificacionServicios', 'EmpresaController@cambiarVistaNotificacionServicios');

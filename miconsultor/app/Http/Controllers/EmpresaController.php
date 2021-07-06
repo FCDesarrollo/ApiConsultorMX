@@ -1435,7 +1435,14 @@ class EmpresaController extends Controller
         if ($valida[0]['error'] === 0) {
             $idempresa = $request->idempresa;
             /*  $servicios = DB::connection("General")->select("SELECT mc0001.* FROM mc0001 INNER JOIN mc0002 ON mc0001.id = mc0002.idservicio WHERE mc0002.idempresa = $idempresa"); */
-            $servicios = DB::connection("General")->select("SELECT mc0001.*, (SELECT mc0002.id FROM mc0002 WHERE mc0002.idservicio = mc0001.id AND mc0002.idempresa = $idempresa) AS serviciocontratado FROM mc0001");
+            /* $servicios = DB::connection("General")->select("SELECT mc0001.*, (SELECT mc0002.id FROM mc0002 WHERE mc0002.idservicio = mc0001.id AND mc0002.idempresa = $idempresa) AS serviciocontratado FROM mc0001"); */
+            $servicios = DB::connection("General")->select("SELECT mc0001.*, 
+            IF(
+            ISNULL(
+            (SELECT mc0002.status FROM mc0002 WHERE mc0002.idservicio = mc0001.id AND mc0002.idempresa = ?  AND mc0002.status = ?))
+            ,0,
+            (SELECT mc0002.status FROM mc0002 WHERE mc0002.idservicio = mc0001.id AND mc0002.idempresa = ?  AND mc0002.status = ?)) 
+            AS statuscontratacion FROM mc0001", [$idempresa, 1, $idempresa, 1]);
 
             $array["servicios"] = $servicios;
         }
@@ -1453,9 +1460,10 @@ class EmpresaController extends Controller
             $idservicios = $request->idservicios;
             /* $array["idservicios"] = $idservicios;
             $array["idservicioslength"] = count($idservicios); */
-            $fecha = $request->fecha;
+            $idusuariocontratacion = $request->idusuariocontratacion;
+            $fechaContratacion = $request->fechaContratacion;
             for ($x = 0; $x < count($idservicios); $x++) {
-                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicios[$x], "fechaContratacion" => $fecha]);
+                DB::connection("General")->table("mc0002")->insert(["idempresa" => $idempresa, "idservicio" => $idservicios[$x], "fechaContratacion" => $fechaContratacion, "idusuariocontratacion" => $idusuariocontratacion]);
             }
         }
 

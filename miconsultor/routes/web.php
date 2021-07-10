@@ -276,6 +276,8 @@ Route::post('agregarServicioEmpresaCliente', 'EmpresaController@agregarServicioE
 Route::post('configurarNotificacionesServicioEmpresaCliente', 'EmpresaController@configurarNotificacionesServicioEmpresaCliente');
 Route::post('registrarNotificacionesServicioEmpresaCliente', 'EmpresaController@registrarNotificacionesServicioEmpresaCliente');
 Route::post('cancelarServicioEmpresaCliente', 'EmpresaController@cancelarServicioEmpresaCliente');
+Route::get('getNotificacionesUsuarioPorServicio', 'EmpresaController@getNotificacionesUsuarioPorServicio');
+Route::post('guardarConfiguracionUsuariosNotificaciones', 'EmpresaController@guardarConfiguracionUsuariosNotificaciones');
 Route::get('getNotificacionesServicios', 'EmpresaController@getNotificacionesServicios');
 Route::post('agregarNotificacionFavoritas', 'EmpresaController@agregarNotificacionFavoritas');
 Route::post('cambiarVistaNotificacionServicios', 'EmpresaController@cambiarVistaNotificacionServicios');

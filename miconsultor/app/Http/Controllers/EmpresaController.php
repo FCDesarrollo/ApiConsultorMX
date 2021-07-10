@@ -1492,7 +1492,9 @@ class EmpresaController extends Controller
 
     public function registrarNotificacionesServicioEmpresaCliente(Request $request)
     {
-        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        /* $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"]; */
+        $valida = verificaUsuario($request->usuario, $request->pwd);
         $array["error"] = $valida[0]["error"];
 
         if ($valida[0]['error'] === 0) {
@@ -1508,10 +1510,38 @@ class EmpresaController extends Controller
             $fechaEntrega = $request->fechaEntrega;
             $horaEntrega = $request->horaEntrega;
 
-            $notificaciones = DB::connection("General")->select("SELECT * FROM mc0006 WHERE idServicio = ? AND idEmpresa = ? AND notificacioCRM", [$idServicio, $idEmpresa, 1]);
+            DB::beginTransaction();
+            try {
+                //agregar campo para renotificaciones
+                $notificaciones = DB::connection("General")->select("SELECT * FROM mc0006 WHERE idServicio = ? AND idEmpresa = ?", [$idServicio, $idEmpresa]);
 
-            for ($x = 0; $x < count($notificaciones); $x++) {
-                DB::connection("General")->table("mc0005")->insert(["idServicio" => $idServicio, "idEmpresa" => $idEmpresa, "idUsuario" => $$notificaciones[$x]->idUsuario, "idUsuarioCreador" => $idUsuarioCreador, "idDocumento" => $idDocumento, "linkDocumento" => $linkDocumento, "busquedaFiltro" => $busquedaFiltro, "periodo" => $periodo, "ejercicio" => $ejercicio, "fechaCorte" => $fechaCorte, "fechaEntrega" => $fechaEntrega, "horaEntrega" => $horaEntrega]);
+                for ($x = 0; $x < count($notificaciones); $x++) {
+                    if($notificaciones[$x]->notificacionCRM == 1 /* && ($notificaciones[$x]->ultimaNotificacionCRM == null || $notificaciones[$x]->ultimaNotificacionCRM < $fechaEntrega) */) {
+                        DB::connection("General")->table("mc0005")->insert(["idServicio" => $idServicio, "idEmpresa" => $idEmpresa, "idUsuario" => $notificaciones[$x]->idUsuario, "idUsuarioCreador" => $idUsuarioCreador, "idDocumento" => $idDocumento, "linkDocumento" => $linkDocumento, "busquedaFiltro" => $busquedaFiltro, "periodo" => $periodo, "ejercicio" => $ejercicio, "fechaCorte" => $fechaCorte, "fechaEntrega" => $fechaEntrega, "horaEntrega" => $horaEntrega]);
+                        DB::connection("General")->table('mc0006')->where("idServicio", $idServicio)->where("idEmpresa", $idEmpresa)->where("idUsuario", $notificaciones[$x]->idUsuario)->update(["ultimaNotificacionCRM" => $fechaEntrega]);
+                    }
+                    else {
+                        //si es una notificacion del servicio ver la comparacion de fecha por el campo actualizable.
+                        //la fecha se basa en la fecha de corte, periodo y ejercicio.
+                    }
+
+                    if($notificaciones[$x]->notificacionCorreo == 1) {
+                        //aqui se manda el correo con el link que solo se envia una vez al dia y situa al usuario en una empresa en el CRM y en la pantalla de notificaciones en la pestaña todas las empresas.
+                    }
+
+                    if($notificaciones[$x]->notificacionSMS == 1) {
+                        //una vez al día
+                    }
+                    
+                }
+
+                DB::commit();
+            }
+            catch(Exception $e) {
+                DB::rollback();
+                $array["errorMessage"] = $e;
+                $array["error"] = 1000;
+                return json_encode($array, JSON_UNESCAPED_UNICODE);
             }
         }
 
@@ -1529,6 +1559,70 @@ class EmpresaController extends Controller
             $fechacancelacion = $request->fechacancelacion;
             $idusuariocancelacion = $request->idusuariocancelacion;
             DB::connection("General")->table("mc0002")->where("idempresa", $idempresa)->where("idservicio", $idservicio)->update(["fechaCancelacion" => $fechacancelacion, "idUsuarioCancelacion" => $idusuariocancelacion, "status" => 0]);
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getNotificacionesUsuarioPorServicio(Request $request)
+    {
+        $idempresa = $request->idempresa;
+        $idservicio = $request->idservicio;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $usuariosNotificaciones = DB::connection("General")->select("SELECT mc1001.idusuario, CONCAT(mc1001.nombre,' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario, 
+            mc1001.correo, mc1001.cel,
+            (SELECT mc0006.notificacionCRM FROM mc0006 WHERE mc0006.idEmpresa = ? AND mc0006.idServicio = ? AND mc0006.idUsuario = mc1001.idusuario) AS notificacionCRM,
+            (SELECT mc0006.vigenciaNotificacionCRM FROM mc0006 WHERE mc0006.idEmpresa = ? AND mc0006.idServicio = ? AND mc0006.idUsuario = mc1001.idusuario) AS vigenciaNotificacionCRM,
+            (SELECT mc0006.notificacionCorreo FROM mc0006 WHERE mc0006.idEmpresa = ? AND mc0006.idServicio = ? AND mc0006.idUsuario = mc1001.idusuario) AS notificacionCorreo,
+            (SELECT mc0006.notificacionSMS FROM mc0006 WHERE mc0006.idEmpresa = ? AND mc0006.idServicio = ? AND mc0006.idUsuario = mc1001.idusuario) AS notificacionSMS
+            FROM mc1001", [$idempresa, $idservicio, $idempresa, $idservicio, $idempresa, $idservicio, $idempresa, $idservicio]);
+            $array["usuariosNotificaciones"] = $usuariosNotificaciones;
+        }
+
+        return json_encode($array, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function guardarConfiguracionUsuariosNotificaciones(Request $request)
+    {
+        $idservicio = $request->idservicio;
+        $idempresa = $request->idempresa;
+        $valida = verificaPermisos($request->usuario, $request->pwd, $request->rfc, $request->idsubmenu);
+        $array["error"] = $valida[0]["error"];
+
+        if ($valida[0]['error'] === 0) {
+            $usuariosnotificaciones = $request->usuariosnotificaciones;
+            DB::beginTransaction();
+            try {
+                for($x=0 ; $x<count($usuariosnotificaciones) ; $x++) {
+                    $busquedaconfiguracion = DB::connection("General")->select("SELECT * FROM mc0006 WHERE idServicio = ? AND idEmpresa = ? AND idUsuario = ?", [$idservicio, $idempresa, $usuariosnotificaciones[$x]["idusuario"]]);
+                    if(count($busquedaconfiguracion) > 0) {
+                        DB::connection("General")->table('mc0006')->where("idServicio", $idservicio)->where("idEmpresa", $idempresa)->where("idUsuario", $usuariosnotificaciones[$x]["idusuario"])->update([/* "notificacionCRM" => $usuariosnotificaciones[$x]["notificacionCRM"] != null ? $usuariosnotificaciones[$x]["notificacionCRM"] : 0,  */"notificacionCorreo" => $usuariosnotificaciones[$x]["notificacionCorreo"] != null ? $usuariosnotificaciones[$x]["notificacionCorreo"] : 0, "notificacionSMS" => $usuariosnotificaciones[$x]["notificacionSMS"] != null ? $usuariosnotificaciones[$x]["notificacionSMS"] : 0]);
+                    }
+                    else {
+                        DB::connection("General")->table("mc0006")->insert(["idServicio" => $idservicio, "idEmpresa" => $idempresa, "idUsuario" => $usuariosnotificaciones[$x]["idusuario"]/* , "notificacionCRM" => $usuariosnotificaciones[$x]["notificacionCRM"] != null ? $usuariosnotificaciones[$x]["notificacionCRM"] : 0 */, "notificacionCorreo" => $usuariosnotificaciones[$x]["notificacionCorreo"] != null ? $usuariosnotificaciones[$x]["notificacionCorreo"] : 0, "notificacionSMS" => $usuariosnotificaciones[$x]["notificacionSMS"] != null ? $usuariosnotificaciones[$x]["notificacionSMS"] : 0]);
+                    }
+                }
+    
+                $usuariosNotificaciones = DB::connection("General")->select("SELECT mc1001.idusuario, CONCAT(mc1001.nombre,' ', mc1001.apellidop, ' ', mc1001.apellidom) AS usuario, 
+                mc1001.correo, mc1001.cel,
+                (SELECT mc0006.notificacionCRM FROM mc0006 WHERE mc0006.idEmpresa = ? AND mc0006.idServicio = ? AND mc0006.idUsuario = mc1001.idusuario) AS notificacionCRM,
+                (SELECT mc0006.vigenciaNotificacionCRM FROM mc0006 WHERE mc0006.idEmpresa = ? AND mc0006.idServicio = ? AND mc0006.idUsuario = mc1001.idusuario) AS vigenciaNotificacionCRM,
+                (SELECT mc0006.notificacionCorreo FROM mc0006 WHERE mc0006.idEmpresa = ? AND mc0006.idServicio = ? AND mc0006.idUsuario = mc1001.idusuario) AS notificacionCorreo,
+                (SELECT mc0006.notificacionSMS FROM mc0006 WHERE mc0006.idEmpresa = ? AND mc0006.idServicio = ? AND mc0006.idUsuario = mc1001.idusuario) AS notificacionSMS
+                FROM mc1001", [$idempresa, $idservicio, $idempresa, $idservicio, $idempresa, $idservicio, $idempresa, $idservicio]);
+                $array["usuariosNotificaciones"] = $usuariosNotificaciones;
+    
+                DB::commit();
+            }
+            catch(Exception $e) {
+                DB::rollback();
+                $array["errorMessage"] = $e;
+                $array["error"] = 1000;
+                return json_encode($array, JSON_UNESCAPED_UNICODE);
+            }
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);

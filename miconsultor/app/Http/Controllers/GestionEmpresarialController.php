@@ -327,7 +327,7 @@ class GestionEmpresarialController extends Controller
                 }
                 else {
                     $posSiguiente = DB::select('SELECT Pos + 1 AS PosSiguiente FROM mc_pry_proyactividades ORDER BY Pos DESC LIMIT 1');
-                    $Pos = $posSiguiente[0]->PosSiguiente;
+                    $Pos = count($posSiguiente) > 0 ? $posSiguiente[0]->PosSiguiente : 0;
                 }
                 DB::table('mc_pry_proyactividades')->insert(['IdProyecto' => $IdProyecto, 'Pos' => $Pos, 'Nivel' => $nivelActividadNueva, 'Actividad' => $Actividad, 'FecIni' => $FecIni, 'FecFin' => $FecFin, 'idAgente' => $idAgente, 'Avance' => $Avance, 'Estatus' => $Estatus, 'FecUltAccion' => $FecUltAccion]);
             }

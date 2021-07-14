@@ -1706,8 +1706,10 @@ class EmpresaController extends Controller
                     LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
                     LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
                     LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
-                    LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu 
-                    WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ? AND mc0005.status = ? ORDER BY mc0005.fechaEntrega DESC, mc0005.horaEntrega DESC", [$idempresa, $idusuario, 1]);
+                    LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ?  AND mc0005.status = ?", [$idusuario, 1]);
+                    for($x=0 ; $x<count($notificaciones) ; $x++) {
+                        $notificaciones[$x]->empresa = DB::connection("General")->select("SELECT * FROM mc1000 WHERE idempresa = ?", [$notificaciones[$x]->idEmpresa]);
+                    }
                     break;
                 case 1:
                     $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 
@@ -1721,7 +1723,8 @@ class EmpresaController extends Controller
                     LEFT JOIN mc1001 AS mc1001B ON mc0005.idUsuarioCreador = mc1001B.idusuario
                     LEFT JOIN mc1003 ON mc0001.idmodulo = mc1003.idmodulo
                     LEFT JOIN mc1004 ON mc0001.idmenu = mc1004.idmenu
-                    LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu WHERE mc0005.idUsuario = ?  AND mc0005.status = ?", [$idusuario, 1]);
+                    LEFT JOIN mc1005 ON mc0001.idsubmenu = mc1005.idsubmenu 
+                    WHERE mc0005.idEmpresa = ? AND mc0005.idUsuario = ? AND mc0005.status = ? ORDER BY mc0005.fechaEntrega DESC, mc0005.horaEntrega DESC", [$idempresa, $idusuario, 1]);
                     break;
                 case 2:
                     $notificaciones = DB::connection("General")->select("SELECT mc0005.*, mc0001.nombreservicio, mc1000.nombreempresa, mc1001A.nombre AS nombreusuario, CONCAT(mc1001B.nombre, ' ', mc1001B.apellidop, ' ',mc1001B.apellidom) AS nombreusuariocreador, 

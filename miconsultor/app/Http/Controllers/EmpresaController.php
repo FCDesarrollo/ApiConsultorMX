@@ -1504,45 +1504,101 @@ class EmpresaController extends Controller
             $idDocumento = $request->idDocumento;
             $linkDocumento = $request->linkDocumento;
             $busquedaFiltro = $request->busquedaFiltro;
+            $semana = $request->semana;
             $periodo = $request->periodo;
             $ejercicio = $request->ejercicio;
             $fechaCorte = $request->fechaCorte;
             $fechaEntrega = $request->fechaEntrega;
             $horaEntrega = $request->horaEntrega;
+            $reenvio = $request->reenvio;
 
-            DB::beginTransaction();
-            try {
-                //agregar campo para renotificaciones
-                $notificaciones = DB::connection("General")->select("SELECT * FROM mc0006 WHERE idServicio = ? AND idEmpresa = ?", [$idServicio, $idEmpresa]);
+            if($reenvio == 0) {
+                DB::beginTransaction();
+                try {
+                    $notificaciones = DB::connection("General")->select("SELECT mc0006.*, mc1001.correo, mc1001.cel, mc0001.actualizable FROM mc0006 
+                    INNER JOIN mc1001 ON mc0006.idUsuario = mc1001.idusuario
+                    INNER JOIN mc0001 ON mc0006.idServicio = mc0001.id
+                    WHERE mc0006.idServicio = ? AND mc0006.idEmpresa = ?", [$idServicio, $idEmpresa]);
 
-                for ($x = 0; $x < count($notificaciones); $x++) {
-                    if($notificaciones[$x]->notificacionCRM == 1 /* && ($notificaciones[$x]->ultimaNotificacionCRM == null || $notificaciones[$x]->ultimaNotificacionCRM < $fechaEntrega) */) {
-                        DB::connection("General")->table("mc0005")->insert(["idServicio" => $idServicio, "idEmpresa" => $idEmpresa, "idUsuario" => $notificaciones[$x]->idUsuario, "idUsuarioCreador" => $idUsuarioCreador, "idDocumento" => $idDocumento, "linkDocumento" => $linkDocumento, "busquedaFiltro" => $busquedaFiltro, "periodo" => $periodo, "ejercicio" => $ejercicio, "fechaCorte" => $fechaCorte, "fechaEntrega" => $fechaEntrega, "horaEntrega" => $horaEntrega]);
-                        DB::connection("General")->table('mc0006')->where("idServicio", $idServicio)->where("idEmpresa", $idEmpresa)->where("idUsuario", $notificaciones[$x]->idUsuario)->update(["ultimaNotificacionCRM" => $fechaEntrega]);
-                    }
-                    else {
-                        //si es una notificacion del servicio ver la comparacion de fecha por el campo actualizable.
-                        //la fecha se basa en la fecha de corte, periodo y ejercicio.
-                    }
+                    $Correos = [];
+                    $pos = 0;
+                    for ($x = 0; $x < count($notificaciones); $x++) {
+                        if($notificaciones[$x]->notificacionCRM == 1) {
+                            switch($notificaciones[$x]->actualizable) {
+                                case 1:
+                                    //unico
+                                    DB::connection("General")->table('mc0005')->where("idServicio", $idServicio)->where("idEmpresa", $idEmpresa)->where("idUsuario", $notificaciones[$x]->idUsuario)->delete();
+                                    DB::connection("General")->table("mc0005")->insert(["idServicio" => $idServicio, "idEmpresa" => $idEmpresa, "idUsuario" => $notificaciones[$x]->idUsuario, "idUsuarioCreador" => $idUsuarioCreador, "idDocumento" => $idDocumento, "linkDocumento" => $linkDocumento, "busquedaFiltro" => $busquedaFiltro, "periodo" => $periodo, "ejercicio" => $ejercicio, "fechaCorte" => $fechaCorte, "fechaEntrega" => $fechaEntrega, "horaEntrega" => $horaEntrega]);
+                                    break;
+                                case 2:
+                                    //semanal
+                                    DB::connection("General")->table('mc0005')->where("idServicio", $idServicio)->where("idEmpresa", $idEmpresa)->where("idUsuario", $notificaciones[$x]->idUsuario)->where(DB::raw("WEEK(fechaCorte, 1)"), DB::raw("WEEK('".$fechaCorte."', 1)"))->where("periodo", $periodo)->where("ejercicio", $ejercicio)->delete();
+                                    DB::connection("General")->table("mc0005")->insert(["idServicio" => $idServicio, "idEmpresa" => $idEmpresa, "idUsuario" => $notificaciones[$x]->idUsuario, "idUsuarioCreador" => $idUsuarioCreador, "idDocumento" => $idDocumento, "linkDocumento" => $linkDocumento, "busquedaFiltro" => $busquedaFiltro, "periodo" => $periodo, "ejercicio" => $ejercicio, "fechaCorte" => $fechaCorte, "fechaEntrega" => $fechaEntrega, "horaEntrega" => $horaEntrega]);
+                                    break;
+                                    break;
+                                case 3:
+                                    //mensual
+                                    DB::connection("General")->table('mc0005')->where("idServicio", $idServicio)->where("idEmpresa", $idEmpresa)->where("idUsuario", $notificaciones[$x]->idUsuario)->where("periodo", $periodo)->where("ejercicio", $ejercicio)->delete();
+                                    DB::connection("General")->table("mc0005")->insert(["idServicio" => $idServicio, "idEmpresa" => $idEmpresa, "idUsuario" => $notificaciones[$x]->idUsuario, "idUsuarioCreador" => $idUsuarioCreador, "idDocumento" => $idDocumento, "linkDocumento" => $linkDocumento, "busquedaFiltro" => $busquedaFiltro, "periodo" => $periodo, "ejercicio" => $ejercicio, "fechaCorte" => $fechaCorte, "fechaEntrega" => $fechaEntrega, "horaEntrega" => $horaEntrega]);
+                                    break;
+                            }
+                        }
 
-                    if($notificaciones[$x]->notificacionCorreo == 1) {
-                        //aqui se manda el correo con el link que solo se envia una vez al dia y situa al usuario en una empresa en el CRM y en la pantalla de notificaciones en la pestaña todas las empresas.
-                    }
+                        if($notificaciones[$x]->notificacionCorreo == 1  && ($notificaciones[$x]->ultimaNotificacionCorreo == null || $notificaciones[$x]->ultimaNotificacionCorreo < $fechaEntrega)) {
+                            $Correos[$pos] =  $notificaciones[$x]->correo;
+                            $pos++;
+                                
+                            DB::connection("General")->table('mc0006')->where("idServicio", $idServicio)->where("idEmpresa", $idEmpresa)->where("idUsuario", $notificaciones[$x]->idUsuario)->update(["ultimaNotificacionCorreo" => $fechaEntrega]);
+                        }
 
-                    if($notificaciones[$x]->notificacionSMS == 1) {
-                        //una vez al día
+                        if($notificaciones[$x]->notificacionSMS == 1 && ($notificaciones[$x]->ultimaNotificacionSMS == null || $notificaciones[$x]->ultimaNotificacionSMS < $fechaEntrega)) {
+                            //aquí se va a mandar el mensaje SMS a los usuarios que tengan habilitada esta notificación
+                        }
+                        
                     }
-                    
+                    DB::commit();
                 }
+                catch(Exception $e) {
+                    DB::rollback();
+                    $array["errorMessage"] = $e;
+                    $array["error"] = 1000;
+                    return json_encode($array, JSON_UNESCAPED_UNICODE);
+                }
+            }
+            else {
+                $idusuarios = $request->reenvio;
+                $notificacioncorreo = $request->reenvio;
+                $notificacionsms = $request->reenvio;
+                $Correos = [];
+                $pos = 0;
+                for($x=0 ; $x<count($idusuarios) ; $x++) {
+                    $usuarios = DB::connection("General")->select("SELECT * FROM mc1001 WHERE idusuario = ?", [$idusuarios[$x]]);
+                    if($notificacioncorreo[$x] == 1) {
+                        $Correos[$pos] = $usuarios[0]->correo;
+                        $pos++;
+                    }
+                    if($notificacionsms[$x] == 1) {
+                        //aquí va a reenviar el mensaje SMS
+                    }
+                }
+                
+            }
 
-                DB::commit();
+            if(count($Correos) > 0) {
+                $CorreoPrincipal = $Correos[0];
+                unset($Correos[0]);
+                $CorreosCC = array_values($Correos);
+                $link = "http://crm2.dublock.com/#/";
+                $data["titulo"] = "Nuevo documento en tu centro de notificaciones";
+                $data["cabecera"] = "Nuevo documento en tu centro de notificaciones";
+                $data["mensaje"] = "Un nuevo documento ha sido entregado. Favor de ingresar a tu centro de notificaciones para más detalles.\n".$link."\nEs posible que en el transcurso del día se estén entregando más documentos, así que le pedimos esté atento a su centro de notificaciones";
+                if (count($CorreosCC) == 0) {
+                    Mail::to($CorreoPrincipal)->send(new MensajesGenerales($data));
+                } else {
+                    Mail::to($CorreoPrincipal)->cc($CorreosCC)->send(new MensajesGenerales($data));
+                }
             }
-            catch(Exception $e) {
-                DB::rollback();
-                $array["errorMessage"] = $e;
-                $array["error"] = 1000;
-                return json_encode($array, JSON_UNESCAPED_UNICODE);
-            }
+            
         }
 
         return json_encode($array, JSON_UNESCAPED_UNICODE);
